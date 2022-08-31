@@ -1,0 +1,4 @@
+sanic
+diffusers==0.2.3
+transformers
+scipy
