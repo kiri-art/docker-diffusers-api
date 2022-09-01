@@ -25,10 +25,15 @@ def inference(model_inputs:dict) -> dict:
     prompt = model_inputs.get('prompt', None)
     if prompt == None:
         return {'message': "No prompt provided"}
+
+    width = model_inputs.get('width', 512);
+    height = model_inputs.get('height', 512);
+    num_inference_steps = model_inputs.get('num_inference_steps', 50);
+    guidance_scale = model_inputs.get('guidance_scale', 7.5);
     
     # Run the model
     with autocast("cuda"):
-        image = model(prompt)["sample"][0]
+        image = model(prompt, width, height, num_inference_steps, guidance_scale)["sample"][0]
     
     buffered = BytesIO()
     image.save(buffered,format="JPEG")
