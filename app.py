@@ -30,10 +30,18 @@ def inference(model_inputs:dict) -> dict:
     height = model_inputs.get('height', 512);
     num_inference_steps = model_inputs.get('num_inference_steps', 50);
     guidance_scale = model_inputs.get('guidance_scale', 7.5);
-    
+    seed = model_inputs.get('seed', None);
+
+    if seed == None:
+        #generator = None;
+        generator = torch.Generator(device="cuda");
+        generator.seed();
+    else:
+        generator = torch.Generator(device="cuda").manual_seed(seed);
+
     # Run the model
     with autocast("cuda"):
-        image = model(prompt, width, height, num_inference_steps, guidance_scale)["sample"][0]
+        image = model(prompt, width, height, num_inference_steps, guidance_scale, generator).images[0]
     
     buffered = BytesIO()
     image.save(buffered,format="JPEG")
