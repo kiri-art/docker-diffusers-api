@@ -14,7 +14,11 @@ def init():
     # this will substitute the default PNDM scheduler for K-LMS  
     lms = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 
-    model = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", scheduler=lms, use_auth_token=HF_AUTH_TOKEN).to("cuda")
+    model = StableDiffusionPipeline.from_pretrained(
+        "CompVis/stable-diffusion-v1-4",
+        revision="fp16",
+        torch_dtype=torch.float16,
+        scheduler=lms, use_auth_token=HF_AUTH_TOKEN).to("cuda")
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -26,8 +30,8 @@ def inference(model_inputs:dict) -> dict:
     if prompt == None:
         return {'message': "No prompt provided"}
 
-    width = model_inputs.get('width', 512);
     height = model_inputs.get('height', 512);
+    width = model_inputs.get('width', 512);
     num_inference_steps = model_inputs.get('num_inference_steps', 50);
     guidance_scale = model_inputs.get('guidance_scale', 7.5);
     seed = model_inputs.get('seed', None);
@@ -41,7 +45,14 @@ def inference(model_inputs:dict) -> dict:
 
     # Run the model
     with autocast("cuda"):
-        image = model(prompt, width, height, num_inference_steps, guidance_scale, generator).images[0]
+        image = model(
+            prompt=prompt,
+            width=width,
+            height=height,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            generator=generator
+        ).images[0]
     
     buffered = BytesIO()
     image.save(buffered,format="JPEG")

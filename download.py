@@ -2,6 +2,7 @@
 # It runs during container build time to get model weights built into the container
 
 from diffusers import StableDiffusionPipeline, LMSDiscreteScheduler
+import torch
 import os
 
 def download_model():
@@ -17,6 +18,8 @@ def download_model():
 
     model = StableDiffusionPipeline.from_pretrained(
         "CompVis/stable-diffusion-v1-4", 
+        revision="fp16",
+        torch_dtype=torch.float16,
         scheduler=lms,
         use_auth_token=HF_AUTH_TOKEN
     )
