@@ -14,11 +14,7 @@ def init():
     # this will substitute the default PNDM scheduler for K-LMS  
     lms = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear")
 
-    model = StableDiffusionPipeline.from_pretrained(
-        "CompVis/stable-diffusion-v1-4",
-        revision="fp16",
-        torch_dtype=torch.float16,
-        scheduler=lms, use_auth_token=HF_AUTH_TOKEN).to("cuda")
+    model = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", revision="fp16", torch_dtype=torch.float16, scheduler=lms, use_auth_token=HF_AUTH_TOKEN).to("cuda")
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
