@@ -18,6 +18,9 @@ EXPOSE 8000
 # Add your huggingface auth key here
 ENV HF_AUTH_TOKEN=***REMOVED***
 
+# Which model to download and use; fork / downstream specific.
+ADD DOWNLOAD_VARS.py .
+
 # Add your model weight files 
 # (in this case we have a python script)
 ADD download.py .
@@ -25,5 +28,8 @@ RUN python3 download.py
 
 # Add your custom app code, init() and inference()
 ADD app.py .
+
+# Runtime vars (for init and inference); fork / downstream specific.
+ADD APP_VARS.py .
 
 CMD python3 -u server.py
