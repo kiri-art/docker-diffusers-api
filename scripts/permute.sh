@@ -6,6 +6,12 @@
 # Requires `yq` from https://github.com/mikefarah/yq
 # Note, there are two yqs.  In Archlinux the package is "go-yq".
 
+if [ -d "permutations" ]; then 
+  echo "./permutations already exists, aborting..."
+  echo "Run 'rm -rf permutations' first and then rerun this script"
+  exit 1
+fi
+
 if [ -z "$1" ]; then 
   INFILE='scripts/permutations.yaml'
 else 
@@ -16,12 +22,14 @@ permutations=$(yq e -o=j -I=0 '.list[]' $INFILE)
 
 # Needed for ! expansion in cp command further down.
 shopt -s extglob
+# Include dot files in expansion for .git .gitignore
+shopt -s dotglob
 
 COUNTER=0
 declare -A vars
 
-echo "rm -rf permutations"
-rm -rf permutations
+#echo "rm -rf permutations"
+#rm -rf permutations
 echo "mkdir permutations"
 mkdir permutations
 
@@ -57,7 +65,7 @@ while IFS="=" read permutation; do
     do
       value="${vars[$key]}"
       # echo "key $key value $value"
-      echo sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
+      # echo sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
       sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
     done
   done
@@ -70,7 +78,7 @@ while IFS="=" read permutation; do
 
   git remote rm origin
   git remote add upstream git@github.com/gadicc/banana-sd-base.git
-  rm remote add origin git@github.com:gadicc/$NAME.git
+  git remote add origin git@github.com:gadicc/$NAME.git
 
   echo git commit -a -m "$NAME variables"
   git commit -a -m "$NAME variables"
