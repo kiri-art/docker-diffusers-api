@@ -1,0 +1,49 @@
+list:
+
+  - name: banana-sd-txt2img
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: CompVis/stable-diffusion-v1-4
+    PIPELINE: StableDiffusionPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-img2img
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: CompVis/stable-diffusion-v1-4
+    PIPELINE: StableDiffusionImg2ImgPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-inpaint
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: CompVis/stable-diffusion-v1-4
+    PIPELINE: StableDiffusionInpaintPipeline
+    SCHEDULER: DDIM
+
+  - name: banana-sd-txt2img-waifu
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: hakurei/waifu-diffusion
+    PIPELINE: StableDiffusionPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-img2img-waifu
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: hakurei/waifu-diffusion
+    PIPELINE: StableDiffusionImg2ImgPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-inpaint-waifu
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: hakurei/waifu-diffusion
+    PIPELINE: StableDiffusionInpaintPipeline
+    SCHEDULER: DDIM
+
+  - name: banana-sd-txt2img-jp
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: rinnakk/japanese-stable-diffusion
+    PIPELINE: JapaneseStableDiffusionPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-img2img-jp
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: rinnakk/japanese-stable-diffusion
+    PIPELINE: JapaneseStableDiffusionImg2ImgPipeline
+    SCHEDULER: LMS
+  - name: banana-sd-inpaint-jp
+    HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    MODEL_ID: rinnakk/japanese-stable-diffusion
+    PIPELINE: JapaneseStableDiffusionInpaintPipeline
+    SCHEDULER: DDIM
