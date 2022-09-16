@@ -15,8 +15,10 @@ RUN pip3 install -r requirements.txt
 ADD server.py .
 EXPOSE 8000
 
-# Add your huggingface auth key here
-ENV HF_AUTH_TOKEN=***REMOVED***
+# Dev: docker build --build-arg HF_AUTH_TOKEN=${HF_AUTH_TOKEN} ...
+# Banana: currently, comment out ARG and set by hand ENV line.
+ARG HF_AUTH_TOKEN
+ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
 # Which model to download and use; fork / downstream specific.
 ADD DOWNLOAD_VARS.py .
