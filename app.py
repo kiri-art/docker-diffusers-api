@@ -115,6 +115,8 @@ def inference(model_inputs: dict) -> dict:
             last_model_id = model_id
             last_pipeline_name = pipeline_name
             last_scheduler_name = scheduler_name
+    else:
+        pipeline_name = PIPELINE
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
