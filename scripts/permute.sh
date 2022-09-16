@@ -77,7 +77,7 @@ while IFS="=" read permutation; do
   fi
 
   git remote rm origin
-  git remote add upstream git@github.com/gadicc/banana-sd-base.git
+  git remote add upstream git@github.com:gadicc/banana-sd-base.git
   git remote add origin git@github.com:gadicc/$NAME.git
 
   echo git commit -a -m "$NAME variables"
