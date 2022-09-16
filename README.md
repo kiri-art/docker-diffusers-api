@@ -1,3 +1,15 @@
+# banana-sd-base
+
+Multiple Stable Diffusion models, pipelines, schedulers in a repo.  Use them all in a single dev image, or set the variables to deploy with a specific permutation.
+
+*"One repo to rule them all" :)*
+
+## Usage:
+
+TODO, see sd-mui source.
+But note `HF_AUTH_TOKEN` in Dockerfile, `DOWNLOAD_VARS.py` and `APP_VARS.py`.
+
+*Original Template README follows*
 
 # 🍌 Banana Serverless
 
