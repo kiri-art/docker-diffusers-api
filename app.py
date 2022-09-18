@@ -150,7 +150,7 @@ def inference(model_inputs: dict) -> dict:
         generator.seed()
     else:
         generator = torch.Generator(device="cuda").manual_seed(seed)
-        del model_inputs.seed
+        del model_inputs["seed"]
 
     model_inputs.update({"generator": generator})
 
