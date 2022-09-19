@@ -82,19 +82,33 @@ def decodeBase64Image(imageStr: str) -> PIL.Image:
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
-def inference(model_inputs: dict) -> dict:
+def inference(all_inputs: dict) -> dict:
     global model
     global last_model_id, last_pipeline_name, last_scheduler_name
+    model_inputs = all_inputs.get("modelInputs", None)
+    call_inputs = all_inputs.get("callInputs", None)
+
+    # Fallback until all clients on new code
+    if model_inputs == None:
+        model_inputs = all_inputs
+        model_inputs.pop("CALL_ID", None)
+    if call_inputs == None:
+        call_inputs = all_inputs
+    print("model_inputs")
+    print(model_inputs)
+    print("call_inputs")
+    print(call_inputs)
 
     if MODEL_ID == "ALL":
         HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
-        model_id = model_inputs.get("MODEL_ID")
-        pipeline_name = model_inputs.get("PIPELINE")
-        scheduler_name = model_inputs.get("SCHEDULER")
-        del model_inputs["MODEL_ID"]
-        del model_inputs["PIPELINE"]
-        del model_inputs["SCHEDULER"]
+        model_id = call_inputs.get("MODEL_ID")
+        pipeline_name = call_inputs.get("PIPELINE")
+        scheduler_name = call_inputs.get("SCHEDULER")
+        # Temporary, not needed with new clients.
+        model_inputs.pop("MODEL_ID", None)
+        model_inputs.pop("PIPELINE", None)
+        model_inputs.pop("SCHEDULER", None)
 
         if (
             last_model_id != model_id
@@ -136,7 +150,8 @@ def inference(model_inputs: dict) -> dict:
         model_inputs.update(
             {"init_image": decodeBase64Image(model_inputs.get("init_image"))}
         )
-        strength = model_inputs.get("strength", 0.75)
+
+    #   strength = model_inputs.get("strength", 0.75)
 
     if pipeline_name == "StableDiffusionInpaintPipeline":
         model_inputs.update(
@@ -145,7 +160,6 @@ def inference(model_inputs: dict) -> dict:
 
     seed = model_inputs.get("seed", None)
     if seed == None:
-        # generator = None;
         generator = torch.Generator(device="cuda")
         generator.seed()
     else:
