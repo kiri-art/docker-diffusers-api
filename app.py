@@ -80,6 +80,15 @@ def decodeBase64Image(imageStr: str) -> PIL.Image:
     return PIL.Image.open(BytesIO(base64.decodebytes(bytes(imageStr, "utf-8"))))
 
 
+def truncateInputs(inputs: dict):
+    clone = inputs.copy()
+    for item in ["init_image", "mask_image"]:
+        image = clone.get(item, None)
+        if image != None:
+            clone[item] = image[0:6] + "..."
+    return clone
+
+
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
 def inference(all_inputs: dict) -> dict:
@@ -95,9 +104,9 @@ def inference(all_inputs: dict) -> dict:
     if call_inputs == None:
         call_inputs = all_inputs
     print("model_inputs")
-    print(model_inputs)
+    print(truncateInputs(model_inputs))
     print("call_inputs")
-    print(call_inputs)
+    print(truncateInputs(call_inputs))
 
     if MODEL_ID == "ALL":
         HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
