@@ -55,7 +55,7 @@ while IFS="=" read permutation; do
   # echo "mkdir permutations/$NAME"
   mkdir permutations/$NAME
   # echo 'cp -a ./!(permutations) permutations/$NAME'
-  cp -a ./!(permutations) permutations/$NAME
+  cp -a ./!(permutations|scripts) permutations/$NAME
   # echo cd permutations/$NAME
   cd permutations/$NAME
 
@@ -69,6 +69,11 @@ while IFS="=" read permutation; do
       sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
     done
   done
+
+  # Hopefully soon we'll get build vars through Banana
+  echo "Substituting variables HF_AUTH_TOKEN in Dockerfile"
+  sed -i 's/ARG HF_AUTH_TOKEN/# ARG HF_AUTH_TOKEN/' Dockerfile
+  sed -i "s/ENV HF_AUTH_TOKEN=\${HF_AUTH_TOKEN}/ENV HF_AUTH_TOKEN=\"${HF_AUTH_TOKEN}\"/" Dockerfile
 
   diffusers=${vars[diffusers]}
   if [ "$diffusers" ]; then
