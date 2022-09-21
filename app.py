@@ -85,10 +85,11 @@ def decodeBase64Image(imageStr: str) -> PIL.Image:
 
 def truncateInputs(inputs: dict):
     clone = inputs.copy()
-    for item in ["init_image", "mask_image"]:
-        image = clone.get(item, None)
-        if image != None:
-            clone[item] = image[0:6] + "..."
+    if "modelInputs" in clone:
+        modelInputs = clone["modelInputs"] = clone["modelInputs"].copy()
+        for item in ["init_image", "mask_image"]:
+            if item in modelInputs:
+                modelInputs[item] = modelInputs[item][0:6] + "..."
     return clone
 
 
@@ -101,7 +102,7 @@ def inference(all_inputs: dict) -> dict:
     global schedulers
     global dummy_safety_checker
 
-    print(json.dumps(all_inputs, indent=2))
+    print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
 
