@@ -9,9 +9,9 @@ from diffusers import (
 )
 import base64
 from io import BytesIO
-import os
 import PIL
 import json
+from loadModel import loadModel
 
 from APP_VARS import MODEL_ID
 
@@ -54,8 +54,6 @@ def init():
     global schedulers
     global dummy_safety_checker
 
-    HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
-
     schedulers = {
         "LMS": LMSDiscreteScheduler(
             beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear"
@@ -77,15 +75,7 @@ def init():
         last_model_id = None
         return
 
-    print("Loading model " + MODEL_ID)
-
-    model = _pipelines.StableDiffusionPipeline.from_pretrained(
-        MODEL_ID,
-        revision="fp16",
-        torch_dtype=torch.float16,
-        use_auth_token=HF_AUTH_TOKEN,
-    ).to("cuda")
-
+    model = loadModel(MODEL_ID)
     pipelines = createPipelinesFromModel(MODEL_ID)
 
 
@@ -120,17 +110,9 @@ def inference(all_inputs: dict) -> dict:
         return {"$error": "UPGRADE CLIENT - no model_inputs specified"}
 
     if MODEL_ID == "ALL":
-        HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
         model_id = call_inputs.get("MODEL_ID")
         if last_model_id != model_id:
-            print("Loading model " + model_id)
-            model = _pipelines.StableDiffusionPipeline.from_pretrained(
-                model_id,
-                revision="fp16",
-                torch_dtype=torch.float16,
-                use_auth_token=HF_AUTH_TOKEN,
-            ).to("cuda")
-
+            model = loadModel(model_id)
             pipelines = createPipelinesFromModel(model_id)
             last_model_id = model_id
 
@@ -155,18 +137,11 @@ def inference(all_inputs: dict) -> dict:
     # seed = model_inputs.get("seed", None)
     #   strength = model_inputs.get("strength", 0.75)
 
-    if call_inputs.get("PIPELINE") in [
-        "StableDiffusionImg2ImgPipeline",
-        "StableDiffusionInpaintPipeline",
-    ]:
-        model_inputs.update(
-            {"init_image": decodeBase64Image(model_inputs.get("init_image"))}
-        )
+    if "init_image" in model_inputs:
+        model_inputs["init_image"] = decodeBase64Image(model_inputs.get("init_image"))
 
-    if all_inputs.get("PIPELINE") == "StableDiffusionInpaintPipeline":
-        model_inputs.update(
-            {"mask_image": decodeBase64Image(model_inputs.get("mask_image"))}
-        )
+    if "mask_image" in model_inputs:
+        model_inputs["mask_image"] = decodeBase64Image(model_inputs.get("mask_image"))
 
     seed = model_inputs.get("seed", None)
     if seed == None:
