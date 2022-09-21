@@ -9,6 +9,7 @@ Multiple Stable Diffusion models, pipelines, schedulers in a repo.  Use them all
 TODO, see sd-mui source.
 But note `HF_AUTH_TOKEN` in Dockerfile, `DOWNLOAD_VARS.py` and `APP_VARS.py`.
 `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
+`git fetch upstream && git merge upstream/main --no-edit && git push`
 
 *Original Template README follows*
 
