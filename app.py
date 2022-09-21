@@ -2,9 +2,7 @@ from sched import scheduler
 import torch
 from torch import autocast
 from diffusers import (
-    StableDiffusionPipeline,
-    StableDiffusionImg2ImgPipeline,
-    StableDiffusionInpaintPipeline,
+    pipelines as _pipelines,
     LMSDiscreteScheduler,
     DDIMScheduler,
     PNDMScheduler,
@@ -13,7 +11,9 @@ import base64
 from io import BytesIO
 import os
 import PIL
-from APP_VARS import MODEL_ID, PIPELINE, SCHEDULER
+import json
+
+from APP_VARS import MODEL_ID
 
 PIPELINES = [
     "StableDiffusionPipeline",
@@ -21,59 +21,72 @@ PIPELINES = [
     "StableDiffusionInpaintPipeline",
 ]
 
-
-def getPipeline(PIPELINE: str):
-    print("PIPELINE = '" + PIPELINE + "'")
-    if PIPELINE == "StableDiffusionPipeline":
-        return StableDiffusionPipeline
-    if PIPELINE == "StableDiffusionImg2ImgPipeline":
-        return StableDiffusionImg2ImgPipeline
-    if PIPELINE == "StableDiffusionInpaintPipeline":
-        return StableDiffusionInpaintPipeline
+SCHEDULERS = ["LMS", "DDIM", "PNDM"]
 
 
-def initScheduler(SCHEDULER: str):
-    print("SCHEDULER = '" + SCHEDULER + "'")
-    if SCHEDULER == "LMS":
-        return LMSDiscreteScheduler(
-            beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear"
+def createPipelinesFromModel(MODEL: str):
+    global model
+    pipelines = dict()
+    for pipeline in PIPELINES:
+        pipelines[pipeline] = getattr(_pipelines, pipeline)(
+            vae=model.vae,
+            text_encoder=model.text_encoder,
+            tokenizer=model.tokenizer,
+            unet=model.unet,
+            scheduler=model.scheduler,
+            safety_checker=model.safety_checker,
+            feature_extractor=model.feature_extractor,
         )
-    elif SCHEDULER == "DDIM":
-        return DDIMScheduler(
-            beta_start=0.00085,
-            beta_end=0.012,
-            beta_schedule="scaled_linear",
-            clip_sample=False,
-            set_alpha_to_one=False,
-        )
-    else:
-        return PNDMScheduler()
+    return pipelines
+
+
+class DummySafetyChecker:
+    @staticmethod
+    def __call__(images, clip_input):
+        return images, False
 
 
 # Init is ran on server startup
 # Load your model to GPU as a global variable here using the variable name "model"
 def init():
-    global model
+    global model  # needed for bananna optimizations
+    global pipelines
+    global schedulers
+    global dummy_safety_checker
+
     HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
+    schedulers = {
+        "LMS": LMSDiscreteScheduler(
+            beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear"
+        ),
+        "DDIM": DDIMScheduler(
+            beta_start=0.00085,
+            beta_end=0.012,
+            beta_schedule="scaled_linear",
+            clip_sample=False,
+            set_alpha_to_one=False,
+        ),
+        "PNDM": PNDMScheduler(),
+    }
+
+    dummy_safety_checker = DummySafetyChecker()
+
     if MODEL_ID == "ALL":
-        global last_model_id, last_pipeline_name, last_scheduler_name
+        global last_model_id
         last_model_id = None
-        last_pipeline_name = None
-        last_scheduler_name = None
         return
 
-    print("MODEL_ID = '" + MODEL_ID + "'")
-    pipeline = getPipeline(PIPELINE)
-    scheduler = initScheduler(SCHEDULER)
+    print("Loading model " + MODEL_ID)
 
-    model = pipeline.from_pretrained(
+    model = _pipelines.StableDiffusionPipeline.from_pretrained(
         MODEL_ID,
         revision="fp16",
         torch_dtype=torch.float16,
-        scheduler=scheduler,
         use_auth_token=HF_AUTH_TOKEN,
     ).to("cuda")
+
+    pipelines = createPipelinesFromModel(MODEL_ID)
 
 
 def decodeBase64Image(imageStr: str) -> PIL.Image:
@@ -93,53 +106,42 @@ def truncateInputs(inputs: dict):
 # Reference your preloaded global model variable here.
 def inference(all_inputs: dict) -> dict:
     global model
-    global last_model_id, last_pipeline_name, last_scheduler_name
+    global pipelines
+    global last_model_id
+    global schedulers
+    global dummy_safety_checker
+
+    print(json.dumps(all_inputs, indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
 
     # Fallback until all clients on new code
     if model_inputs == None:
-        model_inputs = all_inputs
-        model_inputs.pop("CALL_ID", None)
-    if call_inputs == None:
-        call_inputs = all_inputs
-    print("model_inputs")
-    print(truncateInputs(model_inputs))
-    print("call_inputs")
-    print(truncateInputs(call_inputs))
+        return {"$error": "UPGRADE CLIENT - no model_inputs specified"}
 
     if MODEL_ID == "ALL":
         HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
-
         model_id = call_inputs.get("MODEL_ID")
-        pipeline_name = call_inputs.get("PIPELINE")
-        scheduler_name = call_inputs.get("SCHEDULER")
-        # Temporary, not needed with new clients.
-        model_inputs.pop("MODEL_ID", None)
-        model_inputs.pop("PIPELINE", None)
-        model_inputs.pop("SCHEDULER", None)
-
-        if (
-            last_model_id != model_id
-            or last_pipeline_name != pipeline_name
-            or last_scheduler_name != scheduler_name
-        ):
-            print("Loading model...")
-            print("MODEL_ID = '" + model_id + "'")
-            pipeline = getPipeline(pipeline_name)
-            scheduler = initScheduler(scheduler_name)
-            model = pipeline.from_pretrained(
+        if last_model_id != model_id:
+            print("Loading model " + model_id)
+            model = _pipelines.StableDiffusionPipeline.from_pretrained(
                 model_id,
                 revision="fp16",
                 torch_dtype=torch.float16,
-                scheduler=scheduler,
                 use_auth_token=HF_AUTH_TOKEN,
             ).to("cuda")
+
+            pipelines = createPipelinesFromModel(model_id)
             last_model_id = model_id
-            last_pipeline_name = pipeline_name
-            last_scheduler_name = scheduler_name
-    else:
-        pipeline_name = PIPELINE
+
+    pipeline = pipelines.get(call_inputs.get("PIPELINE"))
+
+    pipeline.scheduler = schedulers.get(call_inputs.get("SCHEDULER"))
+
+    safety_checker = call_inputs.get("safety_checker", True)
+    pipeline.safety_checker = (
+        model.safety_checker if safety_checker else dummy_safety_checker
+    )
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
@@ -151,18 +153,17 @@ def inference(all_inputs: dict) -> dict:
     # num_inference_steps = model_inputs.get("num_inference_steps", 50)
     # guidance_scale = model_inputs.get("guidance_scale", 7.5)
     # seed = model_inputs.get("seed", None)
+    #   strength = model_inputs.get("strength", 0.75)
 
-    if (
-        pipeline_name == "StableDiffusionImg2ImgPipeline"
-        or pipeline_name == "StableDiffusionInpaintPipeline"
-    ):
+    if call_inputs.get("PIPELINE") in [
+        "StableDiffusionImg2ImgPipeline",
+        "StableDiffusionInpaintPipeline",
+    ]:
         model_inputs.update(
             {"init_image": decodeBase64Image(model_inputs.get("init_image"))}
         )
 
-    #   strength = model_inputs.get("strength", 0.75)
-
-    if pipeline_name == "StableDiffusionInpaintPipeline":
+    if all_inputs.get("PIPELINE") == "StableDiffusionInpaintPipeline":
         model_inputs.update(
             {"mask_image": decodeBase64Image(model_inputs.get("mask_image"))}
         )
@@ -179,7 +180,7 @@ def inference(all_inputs: dict) -> dict:
 
     # Run the model
     with autocast("cuda"):
-        image = model(**model_inputs).images[0]
+        image = pipeline(**model_inputs).images[0]
 
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
