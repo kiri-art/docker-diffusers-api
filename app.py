@@ -12,6 +12,8 @@ from io import BytesIO
 import PIL
 import json
 from loadModel import loadModel
+from send import send
+import os
 
 from APP_VARS import MODEL_ID
 
@@ -54,6 +56,13 @@ def init():
     global schedulers
     global dummy_safety_checker
 
+    send(
+        "init",
+        "start",
+        {"device": torch.cuda.get_device_name(), "hostname": os.getenv("HOSTNAME")},
+        True,
+    )
+
     schedulers = {
         "LMS": LMSDiscreteScheduler(
             beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear"
@@ -76,7 +85,10 @@ def init():
         return
 
     model = loadModel(MODEL_ID)
+
     pipelines = createPipelinesFromModel(MODEL_ID)
+
+    send("init", "done")
 
 
 def decodeBase64Image(imageStr: str) -> PIL.Image:
@@ -105,6 +117,7 @@ def inference(all_inputs: dict) -> dict:
     print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
+    callID = call_inputs.get("callID", None)
 
     # Fallback until all clients on new code
     if model_inputs == None:
@@ -164,6 +177,8 @@ def inference(all_inputs: dict) -> dict:
 
     model_inputs.update({"generator": generator})
 
+    send("inference", "start", {"callID": callID}, True)
+
     # Run the model
     with autocast("cuda"):
         image = pipeline(**model_inputs).images[0]
@@ -171,6 +186,8 @@ def inference(all_inputs: dict) -> dict:
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
     image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    send("inference", "done", {"callID": callID})
 
     # Return the results as a dictionary
     return {"image_base64": image_base64}

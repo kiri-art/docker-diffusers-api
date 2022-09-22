@@ -30,6 +30,7 @@ ADD download.py .
 RUN python3 download.py
 
 # Add your custom app code, init() and inference()
+ADD send.py .
 ADD app.py .
 
 # Runtime vars (for init and inference); fork / downstream specific.
