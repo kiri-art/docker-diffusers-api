@@ -59,7 +59,11 @@ def init():
     send(
         "init",
         "start",
-        {"device": torch.cuda.get_device_name(), "hostname": os.getenv("HOSTNAME")},
+        {
+            "device": torch.cuda.get_device_name(),
+            "hostname": os.getenv("HOSTNAME"),
+            "model_id": MODEL_ID,
+        },
         True,
     )
 
