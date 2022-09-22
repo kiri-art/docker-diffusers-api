@@ -1,6 +1,5 @@
 import json
 import os
-import uuid
 import time
 import requests
 import hashlib
@@ -13,12 +12,22 @@ def get_now():
     return round(time.time() * 1000)
 
 
-container_id = uuid.uuid4()
 send_url = os.getenv("SEND_URL")
 sign_key = os.getenv("SIGN_KEY")
 init_time = get_now()
 session = FuturesSession()
 last_time = init_time
+
+with open("/proc/self/mountinfo") as file:
+    line = file.readline().strip()
+    while line:
+        if "/docker/containers/" in line:
+            container_id = line.split("/docker/containers/")[
+                -1
+            ]  # Take only text to the right
+            container_id = container_id.split("/")[0]  # Take only text to the left
+            break
+        line = file.readline().strip()
 
 
 def send(type: str, status: str, payload: dict = {}, init=False):
@@ -38,7 +47,7 @@ def send(type: str, status: str, payload: dict = {}, init=False):
     data = {
         "type": type,
         "status": status,
-        "container_id": str(container_id),
+        "container_id": container_id,
         "time": now,
         "t": now - init_time,
         "tsl": now - last_time,

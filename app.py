@@ -121,7 +121,7 @@ def inference(all_inputs: dict) -> dict:
     print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
-    callID = call_inputs.get("callID", None)
+    startRequestId = call_inputs.get("startRequestId", None)
 
     # Fallback until all clients on new code
     if model_inputs == None:
@@ -181,7 +181,7 @@ def inference(all_inputs: dict) -> dict:
 
     model_inputs.update({"generator": generator})
 
-    send("inference", "start", {"callID": callID}, True)
+    send("inference", "start", {"startRequestId": startRequestId}, True)
 
     # Run the model
     with autocast("cuda"):
@@ -191,7 +191,7 @@ def inference(all_inputs: dict) -> dict:
     image.save(buffered, format="JPEG")
     image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    send("inference", "done", {"callID": callID})
+    send("inference", "done", {"startRequestId": startRequestId})
 
     # Return the results as a dictionary
     return {"image_base64": image_base64}
