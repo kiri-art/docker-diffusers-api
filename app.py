@@ -110,12 +110,22 @@ def inference(all_inputs: dict) -> dict:
     if model_inputs == None:
         return {"$error": "UPGRADE CLIENT - no model_inputs specified"}
 
+    model_id = call_inputs.get("MODEL_ID")
     if MODEL_ID == "ALL":
-        model_id = call_inputs.get("MODEL_ID")
         if last_model_id != model_id:
             model = loadModel(model_id)
             pipelines = createPipelinesFromModel(model_id)
             last_model_id = model_id
+    else:
+        if model_id != MODEL_ID:
+            return {
+                "$error": {
+                    "code": "MODEL_MISMATCH",
+                    "message": f'Model "{model_id}" not available on this container which hosts "{MODEL_ID}"',
+                    "requested": model_id,
+                    "available": MODEL_ID,
+                }
+            }
 
     pipeline = pipelines.get(call_inputs.get("PIPELINE"))
 
