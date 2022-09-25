@@ -6,15 +6,11 @@
 # Requires `yq` from https://github.com/mikefarah/yq
 # Note, there are two yqs.  In Archlinux the package is "go-yq".
 
-if [ -d "permutations" ]; then 
-  echo "./permutations already exists, aborting..."
-  echo "Run 'rm -rf permutations' first and then rerun this script"
-  exit 1
-fi
-
 if [ -z "$1" ]; then 
+  echo "Using 'scripts/permutations.yaml' as default INFILE"
+  echo "You can also run: permutate.sh MY_INFILE"
   INFILE='scripts/permutations.yaml'
-else 
+else
   INFILE=$1
 fi
 
@@ -28,15 +24,13 @@ shopt -s dotglob
 COUNTER=0
 declare -A vars
 
-#echo "rm -rf permutations"
-#rm -rf permutations
-echo "mkdir permutations"
-mkdir permutations
+mkdir -p permutations
 
 while IFS="=" read permutation; do
   # e.g. Permutation #1: banana-sd-txt2img
   NAME=$(echo "$permutation" | yq e '.name')
   COUNTER=$[$COUNTER + 1]
+  echo
   echo "Permutation #$COUNTER: $NAME"
 
   while IFS="=" read -r key value
@@ -51,6 +45,13 @@ while IFS="=" read permutation; do
       fi
     fi
   done < <(echo $permutation | yq e 'to_entries | .[] | (.key + "=" + .value)')
+
+  if [ -d "permutations/$NAME" ]; then 
+    echo "./permutations/$NAME already exists, skipping..."
+    echo "Run 'rm -rf permutations/$NAME' first to remake this permutation"
+    echo "In a later release, we'll merge updates in this case."
+    continue
+  fi
 
   # echo "mkdir permutations/$NAME"
   mkdir permutations/$NAME
