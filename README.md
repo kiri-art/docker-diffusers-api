@@ -72,6 +72,9 @@ Sorry, but this format might change without notice based on the needs of SD-MUI.
 It's been stable for a while but we make no promises.  Your best bet is always to
 keep up-to-date with the SD-MUI source.
 
+There are also very basic examples in [test.py](./test.py), which you can view
+and call `python test.py` if the container is already running on port 8000.
+
 ## Keeping forks up to date
 
 Per your personal preferences, rebase or merge, e.g.
