@@ -1,7 +1,7 @@
 from sched import scheduler
 import torch
 
-# from torch import autocast
+from torch import autocast
 from diffusers import (
     pipelines as _pipelines,
     LMSDiscreteScheduler,
@@ -186,7 +186,14 @@ def inference(all_inputs: dict) -> dict:
 
     # Run the model
     # with autocast("cuda"):
-    image = pipeline(**model_inputs).images[0]
+    # image = pipeline(**model_inputs).images[0]
+
+    # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
+    if call_inputs.get("PIPELINE") == "StableDiffusionPipeline":
+        image = pipeline(**model_inputs).images[0]
+    else:
+        with autocast("cuda"):
+            image = pipeline(**model_inputs).images[0]
 
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
