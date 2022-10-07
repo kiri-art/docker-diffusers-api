@@ -1,6 +1,7 @@
 from sched import scheduler
 import torch
-from torch import autocast
+
+# from torch import autocast
 from diffusers import (
     pipelines as _pipelines,
     LMSDiscreteScheduler,
@@ -184,8 +185,8 @@ def inference(all_inputs: dict) -> dict:
     send("inference", "start", {"startRequestId": startRequestId}, True)
 
     # Run the model
-    with autocast("cuda"):
-        image = pipeline(**model_inputs).images[0]
+    # with autocast("cuda"):
+    image = pipeline(**model_inputs).images[0]
 
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
