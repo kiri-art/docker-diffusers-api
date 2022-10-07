@@ -1,2 +1,3 @@
 # "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion"
-MODEL_ID = "ALL"
+# "ALL" - build all models (great for dev, bad for serverless)
+MODEL_ID = "CompVis/stable-diffusion-v1-4"
