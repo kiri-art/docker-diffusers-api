@@ -5,9 +5,17 @@ RUN mkdir /api
 WORKDIR /api
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install git
-RUN apt-get update && apt-get install -y git
+# Install git and OpenCV
+RUN apt-get update && apt-get install -yqq git libopencv-dev python3-opencv
+
+# Compile PyPatchMatch
+WORKDIR /PyPatchMatch
+ADD PyPatchMatch .
+RUN make
+
+WORKDIR /
 
 COPY root-cache/. /root/.cache
 

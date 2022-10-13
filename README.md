@@ -24,6 +24,15 @@ assumptions.  If anything is unclear, please open an issue.
 
 1. Clone or fork this repo.
 
+1. install libopencv-dev for your platform
+
+1. compile PyPatchMatch
+
+```bash
+cd PyPatchMatch
+make
+```
+
 1. **Variables**:
 
     1. *EITHER*:
