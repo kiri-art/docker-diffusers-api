@@ -15,6 +15,9 @@ import json
 from loadModel import loadModel
 from send import send
 import os
+import numpy as np
+import skimage
+import skimage.measure
 
 from APP_VARS import MODEL_ID
 
@@ -183,6 +186,18 @@ def inference(all_inputs: dict) -> dict:
     model_inputs.update({"generator": generator})
 
     send("inference", "start", {"startRequestId": startRequestId}, True)
+
+    # Run patchmatch for inpainting
+    if call_inputs.get("FILL_MODE", None) == "patchmatch":
+        sel_buffer = np.array(model_inputs.get("init_image"))
+        img = sel_buffer[:, :, 0:3]
+        mask = sel_buffer[:, :, -1]
+        img = patch_match.inpaint(img, mask=255-mask, patch_size=3)
+        model_inputs["init_image"] = PIL.Image.fromarray(img)
+        mask = 255 - mask
+        mask = skimage.measure.block_reduce(mask, (8, 8), np.max)
+        mask = mask.repeat(8, axis=0).repeat(8, axis=1)
+        model_inputs["mask_image"] = PIL.Image.fromarray(mask)
 
     # Run the model
     # with autocast("cuda"):

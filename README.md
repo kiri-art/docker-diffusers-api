@@ -26,6 +26,15 @@ assumptions.
 
 1. Clone or fork this repo.
 
+1. install libopencv-dev for your platform
+
+1. compile PyPatchMatch
+
+```bash
+cd PyPatchMatch
+make
+```
+
 1. **Variables**:
     1. *EITHER*:
         1. Set in `DOWNLOAD_VARS.py`, `APP_VARS.py` and `Dockerfile`;
@@ -34,7 +43,7 @@ assumptions.
         1. Edit `scripts/permutations.yaml`,
         1. Run `scripts/permute.sh` to create a bunch of distinct forks.
 
-2. **Dev mode**:
+1. **Dev mode**:
     1. Leave `MODEL_ID` as `ALL` and *all* models will be downloaded,
     allowing you to switch at request time (great for dev, useless for
     serverless).
