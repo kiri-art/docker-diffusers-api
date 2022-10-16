@@ -1,8 +1,7 @@
 sanic==22.6.2
-diffusers==0.4.1
-#git+https://github.com/huggingface/diffusers@v0.3.0
-# [img2img, inpainting] fix fp16 inference (#769) 
-#git+https://github.com/huggingface/diffusers@92d70863663662669ee3c376909be1f876e00965
+#diffusers==0.4.1
+#git+https://github.com/huggingface/diffusers@v0.5.1
+#git+https://github.com/HazyResearch/diffusers
 transformers==4.22.2
 scipy==1.9.1
 requests_futures==1.0.0

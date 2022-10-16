@@ -1,7 +1,10 @@
 # Must use a Cuda version 11+
-FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime
+FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel
 
-WORKDIR /
+RUN mkdir /api
+WORKDIR /api
+
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
 # Install git
 RUN apt-get update && apt-get install -y git
@@ -10,6 +13,19 @@ RUN apt-get update && apt-get install -y git
 RUN pip3 install --upgrade pip
 ADD requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
+
+RUN git clone https://github.com/HazyResearch/flash-attention.git
+WORKDIR flash-attention
+RUN git checkout cutlass
+RUN git submodule init
+RUN git submodule update
+ENV TORCH_CUDA_ARCH_LIST="compute capability 8.0"
+RUN python setup.py install
+
+RUN git clone https://github.com/HazyResearch/diffusers.git
+RUN pip install -e diffusers
+
+WORKDIR /api
 
 # We add the banana boilerplate here
 ADD server.py .
