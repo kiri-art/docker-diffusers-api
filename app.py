@@ -26,6 +26,8 @@ PIPELINES = [
 
 SCHEDULERS = ["LMS", "DDIM", "PNDM"]
 
+torch.set_grad_enabled(False)
+
 
 def createPipelinesFromModel(MODEL: str):
     global model
@@ -189,11 +191,14 @@ def inference(all_inputs: dict) -> dict:
     # image = pipeline(**model_inputs).images[0]
 
     # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
-    if call_inputs.get("PIPELINE") == "StableDiffusionPipeline":
+    # if call_inputs.get("PIPELINE") == "StableDiffusionPipeline":
+    #    image = pipeline(**model_inputs).images[0]
+    # else:
+    #     with autocast("cuda"):
+    #        image = pipeline(**model_inputs).images[0]
+
+    with torch.inference_mode():
         image = pipeline(**model_inputs).images[0]
-    else:
-        with autocast("cuda"):
-            image = pipeline(**model_inputs).images[0]
 
     buffered = BytesIO()
     image.save(buffered, format="JPEG")

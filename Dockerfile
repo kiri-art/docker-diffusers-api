@@ -15,13 +15,14 @@ ADD requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
 RUN git clone https://github.com/HazyResearch/flash-attention.git
-WORKDIR flash-attention
+WORKDIR /api/flash-attention
 RUN git checkout cutlass
 RUN git submodule init
 RUN git submodule update
-ENV TORCH_CUDA_ARCH_LIST="compute capability 8.0"
+ENV TORCH_CUDA_ARCH_LIST="8.0"
 RUN python setup.py install
 
+WORKDIR /api
 RUN git clone https://github.com/HazyResearch/diffusers.git
 RUN pip install -e diffusers
 
