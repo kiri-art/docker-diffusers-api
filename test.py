@@ -63,7 +63,7 @@ test(
     {
         "modelInputs": {
             "prompt": "realistic field of grass",
-            "num_images_per_prompt": 5,
+            "num_images_per_prompt": 2,
         },
         "callInputs": {
             "MODEL_ID": "CompVis/stable-diffusion-v1-4",
