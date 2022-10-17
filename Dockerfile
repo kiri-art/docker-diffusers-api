@@ -19,7 +19,9 @@ WORKDIR /api/flash-attention
 RUN git checkout cutlass
 RUN git submodule init
 RUN git submodule update
-ENV TORCH_CUDA_ARCH_LIST="8.0"
+# Turing: 7.5 (RTX 20s, Quadro), Ampere: 8.0 (A100), 8.6 (RTX 30s)
+# https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
+ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 RUN python setup.py install
 
 WORKDIR /api
