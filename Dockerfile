@@ -34,6 +34,20 @@ EXPOSE 8000
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
+# "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion", etc.
+ARG MODEL_ID="CompVis/stable-diffusion-v1-4"
+ENV MODEL_ID=${MODEL_ID}
+
+# If set, it will be downloaded and converted to diffusers format, and
+# saved in a directory with same MODEL_ID name to be loaded by diffusers.
+ARG CHECKPOINT_URL=""
+ENV CHECKPOINT_URL=${CHECKPOINT_URL}
+ADD download-checkpoint.py .
+RUN python3 download-checkpoint.py
+ADD convert-to-diffusers.py .
+RUN python3 convert-to-diffusers.py
+# RUN rm -rf checkpoints
+
 # Which model to download and use; fork / downstream specific.
 ADD DOWNLOAD_VARS.py .
 
