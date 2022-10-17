@@ -198,13 +198,19 @@ def inference(all_inputs: dict) -> dict:
     #        image = pipeline(**model_inputs).images[0]
 
     with torch.inference_mode():
-        image = pipeline(**model_inputs).images[0]
+        # image = pipeline(**model_inputs).images[0]
+        images = pipeline(**model_inputs).images
 
-    buffered = BytesIO()
-    image.save(buffered, format="JPEG")
-    image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    images_base64 = []
+    for image in images:
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
     send("inference", "done", {"startRequestId": startRequestId})
 
     # Return the results as a dictionary
-    return {"image_base64": image_base64}
+    if len(images_base64) > 1:
+        return {"images_base64": images_base64}
+
+    return {"image_base64": images_base64[0]}
