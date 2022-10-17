@@ -18,21 +18,14 @@ RUN pip3 install --upgrade pip
 ADD requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 
-RUN git clone https://github.com/HazyResearch/flash-attention.git
-WORKDIR /api/flash-attention
-RUN git checkout cutlass
-RUN git submodule init
-RUN git submodule update
+# Required to build flash attention
 # Turing: 7.5 (RTX 20s, Quadro), Ampere: 8.0 (A100), 8.6 (RTX 30s)
 # https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
-ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
-RUN python setup.py install
+# ENV FLASH_ATTENTION=1
+# ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 
-WORKDIR /api
-RUN git clone https://github.com/HazyResearch/diffusers.git
-RUN pip install -e diffusers
-
-WORKDIR /api
+ADD scripts/install.sh .
+RUN bash install.sh
 
 # We add the banana boilerplate here
 ADD server.py .
