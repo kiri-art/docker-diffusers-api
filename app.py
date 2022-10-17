@@ -190,16 +190,14 @@ def inference(all_inputs: dict) -> dict:
     # with autocast("cuda"):
     # image = pipeline(**model_inputs).images[0]
 
-    # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
-    # if call_inputs.get("PIPELINE") == "StableDiffusionPipeline":
-    #    image = pipeline(**model_inputs).images[0]
-    # else:
-    #     with autocast("cuda"):
-    #        image = pipeline(**model_inputs).images[0]
-
     with torch.inference_mode():
-        # image = pipeline(**model_inputs).images[0]
-        images = pipeline(**model_inputs).images
+        # ~~autocast im2img and inpaint which are broken in 0.4.0, 0.4.1~~
+        # autocast inpaint which is still broken in 0.5.1
+        if call_inputs.get("PIPELINE") == "StableDiffusionInpaintPipeline":
+            with autocast("cuda"):
+                images = pipeline(**model_inputs).images
+        else:
+            images = pipeline(**model_inputs).images
 
     images_base64 = []
     for image in images:
