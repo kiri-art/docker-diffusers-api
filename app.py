@@ -191,9 +191,9 @@ def inference(all_inputs: dict) -> dict:
     # image = pipeline(**model_inputs).images[0]
 
     with torch.inference_mode():
-        # ~~autocast im2img and inpaint which are broken in 0.4.0, 0.4.1~~
-        # autocast inpaint which is still broken in 0.5.1
-        if call_inputs.get("PIPELINE") == "StableDiffusionInpaintPipeline":
+        # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
+        # still broken in 0.5.1
+        if call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
             with autocast("cuda"):
                 images = pipeline(**model_inputs).images
         else:
