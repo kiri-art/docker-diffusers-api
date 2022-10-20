@@ -1,11 +1,6 @@
-# banana-sd-base
+# docker-diffusers-api ("banana-sd-base")
 
-Banana image with multiple Stable Diffusion models, pipelines, schedulers in
-a single base that can be automatically forked in various permutations.
-Used by
-[sd-mui.vercel.app](https://sd-mui.vercel.app)
-([github](https://github.com/gadicc/stable-diffusion-react-nextjs-mui-pwa)).
-*"One repo to rule them all" :)*
+Diffusers / Stable Diffusion in docker with a REST API, supporting various models, pipelines & schedulers.  Used by [kiri.art](https://kiri.art/), perfect for [banana.dev](https://www.banana.dev/).
 
 Copyright (c) Gadi Cohen, 2022.  MIT Licensed.
 Please give credit and link back to this repo if you use it in a public project.
@@ -17,10 +12,11 @@ Please give credit and link back to this repo if you use it in a public project.
 * All model inputs supported, including setting nsfw filter per request
 * *Permute* base config to multiple forks based on yaml config with vars
 * Optionally send signed event logs / performance data to a REST endpoint
+* Can automatically download a checkpoint file and convert to diffusers.
 
-Note: This image is created for [sd-mui.vercel.app](https://sd-mui.vercel.app).
+Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
-assumptions.
+assumptions.  If anything is unclear, please open an issue.
 
 ## Usage:
 
