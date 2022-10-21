@@ -78,6 +78,7 @@ while IFS="=" read permutation; do
   fi
 
   mkdir root-cache
+  git add root-cache
 
   git remote rm origin
   git remote add upstream git@github.com:kiri-art/docker-diffusers-api.git
