@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ -n "$FLASH_ATTENTION" ]; then
+if [ "$FLASH_ATTENTION" == "1" ]; then
 
   echo "Building with flash attention"
   git clone https://github.com/HazyResearch/flash-attention.git
@@ -19,7 +19,7 @@ else
   echo "Building without flash attention"
   git clone https://github.com/huggingface/diffusers
   cd diffusers
-  git checkout v0.5.1
+  git checkout v0.6.0
   cd ..
   pip install -e diffusers
 

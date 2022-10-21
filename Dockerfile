@@ -19,7 +19,7 @@ RUN pip3 install -r requirements.txt
 # Required to build flash attention
 # Turing: 7.5 (RTX 20s, Quadro), Ampere: 8.0 (A100), 8.6 (RTX 30s)
 # https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
-ENV FLASH_ATTENTION=1
+ENV FLASH_ATTENTION=0
 ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 
 ADD scripts/install.sh .
@@ -34,7 +34,8 @@ EXPOSE 8000
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
-# "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion", etc.
+# "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion",
+# "runwayml/stable-diffusion-inpainting", etc. (huggingface)
 ARG MODEL_ID="CompVis/stable-diffusion-v1-4"
 ENV MODEL_ID=${MODEL_ID}
 
