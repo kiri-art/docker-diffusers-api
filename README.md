@@ -18,25 +18,40 @@ Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
 assumptions.  If anything is unclear, please open an issue.
 
+## [Read the CHANGELOG for Important Updates.](./CHANGELOG.md)
+
 ## Usage:
 
 1. Clone or fork this repo.
 
 1. **Variables**:
+
     1. *EITHER*:
-        1. Set in `DOWNLOAD_VARS.py`, `APP_VARS.py` and `Dockerfile`;
+        1. Set in `Dockerfile`.
     2. *OR*:
         1. Set `HF_AUTH_TOKEN` environment variable,
         1. Edit `scripts/permutations.yaml`,
         1. Run `scripts/permute.sh` to create a bunch of distinct forks.
+    3. *DEV MODE*:
+        1. Leave `MODEL_ID` as `ALL` and *all* models will be downloaded,
+           (as listed in [`loadModel.py`](./loadModel.py)) allowing you
+           to switch at request time (great for dev, useless for serverless).
 
-2. **Dev mode**:
-    1. Leave `MODEL_ID` as `ALL` and *all* models will be downloaded,
-    allowing you to switch at request time (great for dev, useless for
-    serverless).
-    1. Set `HF_AUTH_TOKEN` environment var and run
-    `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
-    1. `docker run --gpus all -p 8000:8000 banana-sd`
+1. **Building**
+
+    1. Set `HF_AUTH_TOKEN` environment var if you haven't set it elsewhere.
+    1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
+    1. Optionally add `DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker` to
+       start of the line, depending on your preferences.  (Recommended if
+       you're using the `root-cache` feature.)
+
+1. **Running**
+
+    1. `docker run -it --gpus all -p 8000:8000 banana-sd python3 server.py`
+    1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
+       container using `Ctrl-C`.
+    1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
+       just stop the container, `rmmod nvidia_uvm`, and restart.
 
 ## Sending requests
 
