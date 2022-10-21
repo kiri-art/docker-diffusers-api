@@ -98,15 +98,17 @@ def init():
     send("init", "done")
 
 
-def decodeBase64Image(imageStr: str) -> PIL.Image:
-    return PIL.Image.open(BytesIO(base64.decodebytes(bytes(imageStr, "utf-8"))))
+def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
+    image = PIL.Image.open(BytesIO(base64.decodebytes(bytes(imageStr, "utf-8"))))
+    print(f'Decoded image "{name}": {image.format} {image.width}x{image.height}')
+    return image
 
 
 def truncateInputs(inputs: dict):
     clone = inputs.copy()
     if "modelInputs" in clone:
         modelInputs = clone["modelInputs"] = clone["modelInputs"].copy()
-        for item in ["init_image", "mask_image"]:
+        for item in ["init_image", "mask_image", "image"]:
             if item in modelInputs:
                 modelInputs[item] = modelInputs[item][0:6] + "..."
     return clone
@@ -169,10 +171,17 @@ def inference(all_inputs: dict) -> dict:
     #   strength = model_inputs.get("strength", 0.75)
 
     if "init_image" in model_inputs:
-        model_inputs["init_image"] = decodeBase64Image(model_inputs.get("init_image"))
+        model_inputs["init_image"] = decodeBase64Image(
+            model_inputs.get("init_image"), "init_image"
+        )
+
+    if "image" in model_inputs:
+        model_inputs["image"] = decodeBase64Image(model_inputs.get("image"), "image")
 
     if "mask_image" in model_inputs:
-        model_inputs["mask_image"] = decodeBase64Image(model_inputs.get("mask_image"))
+        model_inputs["mask_image"] = decodeBase64Image(
+            model_inputs.get("mask_image"), "mask_image"
+        )
 
     seed = model_inputs.get("seed", None)
     if seed == None:

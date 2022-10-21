@@ -13,6 +13,8 @@
     this means we're back to having a separate container for inpainting,
     as it's a different model.
 
+    Note also: you need to send the image as `image` now, and not `init_image`.
+
   * **Flash attention** now disabled by default.  1) Because it's built on
     an older version of diffusers, but also because 2) I didn't succeed in
     getting much improvement out of it.  Maybe someone else will have better
