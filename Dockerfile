@@ -22,7 +22,7 @@ RUN pip3 install -r requirements.txt
 ENV FLASH_ATTENTION=0
 ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 
-ADD scripts/install.sh .
+ADD install.sh .
 RUN bash install.sh
 
 # We add the banana boilerplate here
