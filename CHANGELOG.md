@@ -2,18 +2,24 @@
 
 * **2022-10-21**
 
-  * Upgrade to **Diffusers 0.6.0**
-  
-  * Biggest news of the above release is support for
+  * **Stable Diffusion 1.5 released!!!**
+
+    Accept the license at:
+    ["runwayml/stable-diffusion-v1-5"](https://huggingface.co/runwayml/stable-diffusion-v1-5)
+
+    It's the new default model.
+
+  * **Official Stable Diffusion inpainting model**
+
+    Accept the license at:
     ["runwayml/stable-diffusion-inpainting"](https://huggingface.co/runwayml/stable-diffusion-inpainting),
-    the first official stable diffusion checkpoint fine-tuned on **inpainting**.
 
-    You need to use the above link to *accept the license terms* on the
-    model card before you'll be able to download it.  Also, unfortunately,
-    this means we're back to having a separate container for inpainting,
-    as it's a different model.
+    Unfortunately, as it's a different model, it means we're back to having a
+    separate container for inpainting.
 
-    Note also: you need to send the image as `image` now, and not `init_image`.
+    NB: `model_input` takes `image` now, and not `init_image` like the legacy model.
+
+  * Upgrade to **Diffusers v0.7.0.dev0**
 
   * **Flash attention** now disabled by default.  1) Because it's built on
     an older version of diffusers, but also because 2) I didn't succeed in

@@ -35,8 +35,9 @@ ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
 # "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion",
-# "runwayml/stable-diffusion-inpainting", etc. (huggingface)
-ARG MODEL_ID="CompVis/stable-diffusion-v1-4"
+# "runwayml/stable-diffusion-inpainting",
+# "runwayml/stable-diffusion-v1-5" etc. (huggingface)
+ARG MODEL_ID="runwayml/stable-diffusion-v1-5"
 ENV MODEL_ID=${MODEL_ID}
 
 # If set, it will be downloaded and converted to diffusers format, and

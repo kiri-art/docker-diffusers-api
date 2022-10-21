@@ -3,7 +3,13 @@ import os
 from diffusers import StableDiffusionPipeline
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
-MODEL_IDS = ["CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion"]
+MODEL_IDS = [
+    "CompVis/stable-diffusion-v1-4",
+    "hakurei/waifu-diffusion",
+    "hakurei/waifu-diffusion-v1-3",
+    "runwayml/stable-diffusion-inpainting",
+    "runwayml/stable-diffusion-v1-5",
+]
 
 
 def loadModel(model_id: str, load=True):
