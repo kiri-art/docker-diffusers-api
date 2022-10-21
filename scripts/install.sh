@@ -19,7 +19,8 @@ else
   echo "Building without flash attention"
   git clone https://github.com/huggingface/diffusers
   cd diffusers
-  git checkout v0.6.0
+  # .components, lpw fixes
+  git checkout v0.7.0.dev0
   cd ..
   pip install -e diffusers
 

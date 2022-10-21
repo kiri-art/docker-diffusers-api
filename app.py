@@ -7,6 +7,7 @@ from diffusers import (
     LMSDiscreteScheduler,
     DDIMScheduler,
     PNDMScheduler,
+    DiffusionPipeline,
 )
 import base64
 from io import BytesIO
@@ -29,19 +30,10 @@ SCHEDULERS = ["LMS", "DDIM", "PNDM"]
 torch.set_grad_enabled(False)
 
 
-def createPipelinesFromModel(MODEL: str):
-    global model
+def createPipelinesFromModel(model):
     pipelines = dict()
     for pipeline in PIPELINES:
-        pipelines[pipeline] = getattr(_pipelines, pipeline)(
-            vae=model.vae,
-            text_encoder=model.text_encoder,
-            tokenizer=model.tokenizer,
-            unet=model.unet,
-            scheduler=model.scheduler,
-            safety_checker=model.safety_checker,
-            feature_extractor=model.feature_extractor,
-        )
+        pipelines[pipeline] = getattr(_pipelines, pipeline)(**model.components)
     return pipelines
 
 
@@ -93,7 +85,7 @@ def init():
 
     model = loadModel(MODEL_ID)
 
-    pipelines = createPipelinesFromModel(MODEL_ID)
+    pipelines = createPipelinesFromModel(model)
 
     send("init", "done")
 
@@ -136,7 +128,7 @@ def inference(all_inputs: dict) -> dict:
     if MODEL_ID == "ALL":
         if last_model_id != model_id:
             model = loadModel(model_id)
-            pipelines = createPipelinesFromModel(model_id)
+            pipelines = createPipelinesFromModel(model)
             last_model_id = model_id
     else:
         if model_id != MODEL_ID:
