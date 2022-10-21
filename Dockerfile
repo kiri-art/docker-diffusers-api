@@ -34,11 +34,16 @@ EXPOSE 8000
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
-# "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion",
-# "runwayml/stable-diffusion-inpainting",
-# "runwayml/stable-diffusion-v1-5" etc. (huggingface)
+# Hugging face model name or directory
+# "runwayml/stable-diffusion-v1-5", "runwayml/stable-diffusion-inpainting"
+# "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion", etc.
+# ARG MODEL_ID="ALL" # Useful for dev
 ARG MODEL_ID="runwayml/stable-diffusion-v1-5"
 ENV MODEL_ID=${MODEL_ID}
+
+# ARG PIPELINE="StableDiffusionInpaintPipeline"
+ARG PIPELINE="ALL"
+ENV PIPELINE=${PIPELINE}
 
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.

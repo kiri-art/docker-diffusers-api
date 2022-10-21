@@ -10,6 +10,7 @@ list:
 
   - name: sd-inpaint
     HF_AUTH_TOKEN: $HF_AUTH_TOKEN
+    PIPELINE: StableDiffusionInpaintPipeline
     MODEL_ID: runwayml/stable-diffusion-inpainting
 
   - name: sd-waifu

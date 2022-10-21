@@ -1,8 +1,10 @@
 import torch
 import os
-from diffusers import StableDiffusionPipeline
+from diffusers import pipelines as _pipelines, StableDiffusionPipeline
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
+PIPELINE = os.getenv("PIPELINE")
+
 MODEL_IDS = [
     "CompVis/stable-diffusion-v1-4",
     "hakurei/waifu-diffusion",
@@ -15,7 +17,11 @@ MODEL_IDS = [
 def loadModel(model_id: str, load=True):
     print(("Loading" if load else "Downloading") + " model: " + model_id)
 
-    model = StableDiffusionPipeline.from_pretrained(
+    pipeline = (
+        StableDiffusionPipeline if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
+    )
+
+    model = pipeline.from_pretrained(
         model_id,
         revision="fp16",
         torch_dtype=torch.float16,

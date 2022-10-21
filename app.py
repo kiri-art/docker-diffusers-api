@@ -18,11 +18,13 @@ from send import send
 import os
 
 MODEL_ID = os.environ.get("MODEL_ID")
+PIPELINE = os.environ.get("PIPELINE")
 
 PIPELINES = [
     "StableDiffusionPipeline",
     "StableDiffusionImg2ImgPipeline",
     "StableDiffusionInpaintPipeline",
+    "StableDiffusionInpaintPipelineLegacy",
 ]
 
 SCHEDULERS = ["LMS", "DDIM", "PNDM"]
@@ -85,7 +87,8 @@ def init():
 
     model = loadModel(MODEL_ID)
 
-    pipelines = createPipelinesFromModel(model)
+    if PIPELINES == "ALL":
+        pipelines = createPipelinesFromModel(model)
 
     send("init", "done")
 
@@ -141,7 +144,10 @@ def inference(all_inputs: dict) -> dict:
                 }
             }
 
-    pipeline = pipelines.get(call_inputs.get("PIPELINE"))
+    if PIPELINES == "all":
+        pipeline = pipelines.get(call_inputs.get("PIPELINE"))
+    else:
+        pipeline = model
 
     pipeline.scheduler = schedulers.get(call_inputs.get("SCHEDULER"))
 
