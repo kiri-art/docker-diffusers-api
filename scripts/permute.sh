@@ -55,8 +55,8 @@ while IFS="=" read permutation; do
 
   # echo "mkdir permutations/$NAME"
   mkdir permutations/$NAME
-  # echo 'cp -a ./!(permutations) permutations/$NAME'
-  cp -a ./!(permutations|scripts) permutations/$NAME
+  # echo 'cp -a ./!(permutations|scripts|root-cache) permutations/$NAME'
+  cp -a ./!(permutations|scripts|root-cache) permutations/$NAME
   # echo cd permutations/$NAME
   cd permutations/$NAME
 
@@ -83,7 +83,7 @@ while IFS="=" read permutation; do
   fi
 
   git remote rm origin
-  git remote add upstream git@github.com:gadicc/banana-sd-base.git
+  git remote add upstream git@github.com:kiri-art/docker-diffusers-api.git
   git remote add origin git@github.com:gadicc/$NAME.git
 
   echo git commit -a -m "$NAME variables"
