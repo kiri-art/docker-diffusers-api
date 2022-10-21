@@ -14,10 +14,13 @@
     Accept the license at:
     ["runwayml/stable-diffusion-inpainting"](https://huggingface.co/runwayml/stable-diffusion-inpainting),
 
-    Unfortunately, as it's a different model, it means we're back to having a
-    separate container for inpainting.
+    A few big caveats!
 
-    NB: `model_input` takes `image` now, and not `init_image` like the legacy model.
+    1) Different model - so back to a separate container for inpainting, also because:
+    2) New pipeline that can't share model struct with other pipelines
+       (see [diffusers#920](https://github.com/huggingface/diffusers/issues/920)).
+    3) Old pipeline is now called `StableDiffusionInpaintPipelineLegacy` (for sd-1.4)
+    4) `model_input` takes `image` now, and not `init_image` like the legacy model.
 
   * Upgrade to **Diffusers v0.7.0.dev0**
 
