@@ -2,7 +2,7 @@ list:
 
   - name: sd-v1-5
     HF_AUTH_TOKEN: $HF_AUTH_TOKEN
-    MODEL_ID: runwayml/stable-diffusion-inpainting
+    MODEL_ID: runwayml/stable-diffusion-v1-5
 
   - name: sd-v1-4
     HF_AUTH_TOKEN: $HF_AUTH_TOKEN
