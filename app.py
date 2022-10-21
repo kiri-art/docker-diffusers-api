@@ -17,7 +17,7 @@ from loadModel import loadModel
 from send import send
 import os
 
-from APP_VARS import MODEL_ID
+MODEL_ID = os.environ.get("MODEL_ID")
 
 PIPELINES = [
     "StableDiffusionPipeline",

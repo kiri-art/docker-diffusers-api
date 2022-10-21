@@ -1,8 +1,10 @@
 # In this file, we define download_model
 # It runs during container build time to get model weights built into the container
 
-from DOWNLOAD_VARS import MODEL_ID
+import os
 from loadModel import loadModel, MODEL_IDS
+
+MODEL_ID = os.environ.get("MODEL_ID")
 
 
 def download_model():
