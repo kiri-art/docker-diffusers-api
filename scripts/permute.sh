@@ -77,6 +77,8 @@ while IFS="=" read permutation; do
     echo "!!! NOT DONE YET !!!"
   fi
 
+  mkdir root-cache
+
   git remote rm origin
   git remote add upstream git@github.com:kiri-art/docker-diffusers-api.git
   git remote add origin $TARGET_REPO_BASE/$NAME.git
