@@ -78,6 +78,7 @@ while IFS="=" read permutation; do
   fi
 
   mkdir root-cache
+  touch root-cache/non-empty-directory
   git add root-cache
 
   git remote rm origin
