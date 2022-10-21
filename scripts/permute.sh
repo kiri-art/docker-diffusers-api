@@ -14,6 +14,11 @@ else
   INFILE=$1
 fi
 
+if [ -z "$TARGET_REPO_BASE" ]; then
+  TARGET_REPO_BASE="git@github.com:kiri-art"
+  echo 'No TARGET_REPO_BASE found, using "$TARGET_REPO_BASE"'
+fi
+
 permutations=$(yq e -o=j -I=0 '.list[]' $INFILE)
 
 # Needed for ! expansion in cp command further down.
@@ -60,21 +65,11 @@ while IFS="=" read permutation; do
   # echo cd permutations/$NAME
   cd permutations/$NAME
 
-  for file in DOWNLOAD_VARS.py APP_VARS.py ; do
-    echo "Substiting variables in $file"
-    for key in "${!vars[@]}"
-    do
-      value="${vars[$key]}"
-      # echo "key $key value $value"
-      # echo sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
-      sed -i "s@^$key = .*\$@$key = \"$value\"@" $file
-    done
+  echo "Substituting variables in Dockerfile"
+  for key in "${!vars[@]}"; do
+    value="${vars[$key]}"
+    sed -i "s@^ARG $key.*\$@ARG $key=\"$value\"@" Dockerfile
   done
-
-  # Hopefully soon we'll get build vars through Banana
-  echo "Substituting variables HF_AUTH_TOKEN in Dockerfile"
-  sed -i 's/ARG HF_AUTH_TOKEN/# ARG HF_AUTH_TOKEN/' Dockerfile
-  sed -i "s/ENV HF_AUTH_TOKEN=\${HF_AUTH_TOKEN}/ENV HF_AUTH_TOKEN=\"${HF_AUTH_TOKEN}\"/" Dockerfile
 
   diffusers=${vars[diffusers]}
   if [ "$diffusers" ]; then
@@ -84,10 +79,10 @@ while IFS="=" read permutation; do
 
   git remote rm origin
   git remote add upstream git@github.com:kiri-art/docker-diffusers-api.git
-  git remote add origin git@github.com:gadicc/$NAME.git
+  git remote add origin $TARGET_REPO_BASE/$NAME.git
 
-  echo git commit -a -m "$NAME variables"
-  git commit -a -m "$NAME variables"
+  echo git commit -a -m "$NAME permutation variables"
+  git commit -a -m "$NAME permutation variables"
 
   # echo "cd ../.."
   cd ../..
