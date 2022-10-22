@@ -4,6 +4,7 @@
 import requests
 import base64
 import os
+import json
 from io import BytesIO
 from PIL import Image
 
@@ -30,10 +31,15 @@ def decode_and_save(image_byte_string: str, name: str):
     print("Saved " + fp)
 
 
-def test(name, json):
+def test(name, inputs):
     print("Running test: " + name)
-    response = requests.post("http://localhost:8000/", json=json)
+    response = requests.post("http://localhost:8000/", json=inputs)
     result = response.json()
+
+    if not result.get("images_base64"):
+        print(json.dumps(result, indent=4))
+        print()
+        return
 
     images_base64 = result.get("images_base64", None)
     if images_base64:
