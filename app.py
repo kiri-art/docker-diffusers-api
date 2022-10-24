@@ -8,6 +8,7 @@ from diffusers import (
     DDIMScheduler,
     PNDMScheduler,
     DiffusionPipeline,
+    __version__,
 )
 import base64
 from io import BytesIO
@@ -74,6 +75,7 @@ def init():
             "device": torch.cuda.get_device_name(),
             "hostname": os.getenv("HOSTNAME"),
             "model_id": MODEL_ID,
+            "diffusers": __version__,
         },
         True,
     )
