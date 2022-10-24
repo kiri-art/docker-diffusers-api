@@ -36,9 +36,6 @@ def send(type: str, status: str, payload: dict = {}, init=False):
     global init_time
     global last_time
 
-    if not send_url:
-        return
-
     now = get_now()
 
     if init:
@@ -58,13 +55,15 @@ def send(type: str, status: str, payload: dict = {}, init=False):
     if init:
         data["init"] = True
 
-    input = json.dumps(data, separators=(",", ":")) + sign_key
-    sig = hashlib.md5(input.encode("utf-8")).hexdigest()
-    data["sig"] = sig
+    if send_url:
+        input = json.dumps(data, separators=(",", ":")) + sign_key
+        sig = hashlib.md5(input.encode("utf-8")).hexdigest()
+        data["sig"] = sig
 
     print(data)
 
-    session.post(send_url, json=data)
+    if send_url:
+        session.post(send_url, json=data)
 
     # try:
     #    requests.post(send_url, json=data)  # , timeout=0.0000000001)
