@@ -34,6 +34,8 @@
        (see [diffusers#920](https://github.com/huggingface/diffusers/issues/920)).
     3) Old pipeline is now called `StableDiffusionInpaintPipelineLegacy` (for sd-1.4)
     4) `model_input` takes `image` now, and not `init_image` like the legacy model.
+    5) There is no `strength` parameter in the new model
+       (see [diffusers#920](https://github.com/huggingface/diffusers/issues/920)).
 
   * Upgrade to **Diffusers v0.7.0.dev0**
 
