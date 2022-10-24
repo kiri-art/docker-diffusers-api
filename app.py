@@ -20,6 +20,7 @@ import os
 import numpy as np
 import skimage
 import skimage.measure
+import patch_match
 
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
@@ -217,7 +218,7 @@ def inference(all_inputs: dict) -> dict:
         sel_buffer = np.array(model_inputs.get("init_image"))
         img = sel_buffer[:, :, 0:3]
         mask = sel_buffer[:, :, -1]
-        img = patch_match.inpaint(img, mask=255-mask, patch_size=3)
+        img = patch_match.inpaint(img, mask=255 - mask, patch_size=3)
         model_inputs["init_image"] = PIL.Image.fromarray(img)
         mask = 255 - mask
         mask = skimage.measure.block_reduce(mask, (8, 8), np.max)

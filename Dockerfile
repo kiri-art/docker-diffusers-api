@@ -8,16 +8,17 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install git and OpenCV
-RUN apt-get update && apt-get install -yqq git libopencv-dev python3-opencv
-
-# Compile PyPatchMatch
-WORKDIR /PyPatchMatch
-ADD PyPatchMatch .
-RUN make
+RUN apt-get update && apt-get install -yqq git
 
 WORKDIR /
 
 COPY root-cache/. /root/.cache
+
+# Compile PyPatchMatch
+RUN apt-get install -yqq libopencv-dev python3-opencv
+WORKDIR /PyPatchMatch
+ADD PyPatchMatch .
+RUN make
 
 # Install python packages
 RUN pip3 install --upgrade pip
