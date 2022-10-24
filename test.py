@@ -36,7 +36,7 @@ def test(name, inputs):
     response = requests.post("http://localhost:8000/", json=inputs)
     result = response.json()
 
-    if not result.get("images_base64"):
+    if result.get("images_base64", None) == "None":
         print(json.dumps(result, indent=4))
         print()
         return
