@@ -103,7 +103,7 @@ def init():
 
     model = loadModel(MODEL_ID)
 
-    if PIPELINES == "ALL":
+    if PIPELINE == "ALL":
         pipelines = createPipelinesFromModel(model)
 
     send("init", "done")
@@ -160,7 +160,7 @@ def inference(all_inputs: dict) -> dict:
                 }
             }
 
-    if PIPELINES == "all":
+    if PIPELINE == "ALL":
         pipeline = pipelines.get(call_inputs.get("PIPELINE"))
     else:
         pipeline = model
