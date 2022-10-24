@@ -1,24 +1,20 @@
 # Must use a Cuda version 11+
-FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel
-
-RUN mkdir /api
-WORKDIR /api
-
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel as base
 ENV DEBIAN_FRONTEND=noninteractive
-
-# Install git and OpenCV
+RUN mkdir -p /root/.cache/pip
+COPY root-cache/pip /root/.cache/pip
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 RUN apt-get update && apt-get install -yqq git
 
-WORKDIR /
+FROM base AS patchmatch
+ARG USE_PATCHMATCH=0
+WORKDIR /tmp
+COPY scripts/patchmatch-setup.sh .
+RUN sh patchmatch-setup.sh
 
-COPY root-cache/. /root/.cache
-
-# Compile PyPatchMatch
-RUN apt-get install -yqq libopencv-dev python3-opencv
-WORKDIR /PyPatchMatch
-ADD PyPatchMatch .
-RUN make
+FROM base as output
+RUN mkdir /api
+WORKDIR /api
 
 # Install python packages
 RUN pip3 install --upgrade pip
@@ -56,6 +52,9 @@ ENV PIPELINE=${PIPELINE}
 
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
+COPY root-cache/huggingface /root/.cache/huggingface
+COPY root-cache/checkpoints /root/.cache/checkpoints
+RUN du -sh /root/.cache/*
 ARG CHECKPOINT_URL=""
 ENV CHECKPOINT_URL=${CHECKPOINT_URL}
 ADD download-checkpoint.py .
@@ -69,6 +68,11 @@ RUN python3 convert-to-diffusers.py
 ADD loadModel.py .
 ADD download.py .
 RUN python3 download.py
+
+# Deps for RUNNING (not building) earlier options
+ARG USE_PATCHMATCH=0
+RUN if [ "$USE_PATCHMATCH" = "1" ] ; then apt-get install -yqq python3-opencv ; fi
+COPY --from=patchmatch /tmp/PyPatchMatch PyPatchMatch
 
 # Add your custom app code, init() and inference()
 ADD send.py .

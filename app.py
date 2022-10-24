@@ -20,7 +20,7 @@ import os
 import numpy as np
 import skimage
 import skimage.measure
-import patch_match
+from PyPatchMatch import patch_match
 
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")

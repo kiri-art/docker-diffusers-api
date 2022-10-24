@@ -128,3 +128,22 @@ test(
         },
     },
 )
+
+if os.getenv("USE_PATCHMATCH"):
+    test(
+        "outpaint",
+        {
+            "modelInputs": {
+                "prompt": "girl with a pearl earing standing in a big room",
+                "init_image": b64encode_file(
+                    "girl_with_pearl_earing_outpainting_in.png"
+                ),
+            },
+            "callInputs": {
+                "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+                "PIPELINE": "StableDiffusionInpaintPipelineLegacy",
+                "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
+                "FILL_MODE": "patchmatch",
+            },
+        },
+    )
