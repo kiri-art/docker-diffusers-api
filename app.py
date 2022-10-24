@@ -35,18 +35,21 @@ torch.set_grad_enabled(False)
 def createPipelinesFromModel(model):
     pipelines = dict()
     for pipeline in PIPELINES:
-        if hasattr(model, "components"):
-            pipelines[pipeline] = getattr(_pipelines, pipeline)(**model.components)
+        if hasattr(_pipelines, pipeline):
+            if hasattr(model, "components"):
+                pipelines[pipeline] = getattr(_pipelines, pipeline)(**model.components)
+            else:
+                pipelines[pipeline] = getattr(_pipelines, pipeline)(
+                    vae=model.vae,
+                    text_encoder=model.text_encoder,
+                    tokenizer=model.tokenizer,
+                    unet=model.unet,
+                    scheduler=model.scheduler,
+                    safety_checker=model.safety_checker,
+                    feature_extractor=model.feature_extractor,
+                )
         else:
-            pipelines[pipeline] = getattr(_pipelines, pipeline)(
-                vae=model.vae,
-                text_encoder=model.text_encoder,
-                tokenizer=model.tokenizer,
-                unet=model.unet,
-                scheduler=model.scheduler,
-                safety_checker=model.safety_checker,
-                feature_extractor=model.feature_extractor,
-            )
+            print(f'Skipping non-existent pipeline "{PIPELINE}"')
     return pipelines
 
 
