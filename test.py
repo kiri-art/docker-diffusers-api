@@ -7,10 +7,12 @@ import os
 import json
 from io import BytesIO
 from PIL import Image
+from pathlib import Path
 
 TESTS = "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
+Path(OUTPUT).mkdir(parents=True, exist_ok=True)
 
 
 def b64encode_file(filename: str):
@@ -96,7 +98,7 @@ test(
 )
 
 test(
-    "inpaint",
+    "inpaint-v1-4",
     {
         "modelInputs": {
             "prompt": "a cat sitting on a bench",
@@ -105,6 +107,22 @@ test(
         },
         "callInputs": {
             "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+            "PIPELINE": "StableDiffusionInpaintPipelineLegacy",
+            "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
+        },
+    },
+)
+
+test(
+    "inpaint-sd",
+    {
+        "modelInputs": {
+            "prompt": "a cat sitting on a bench",
+            "image": b64encode_file("overture-creations-5sI6fQgYIuo.png"),
+            "mask_image": b64encode_file("overture-creations-5sI6fQgYIuo_mask.png"),
+        },
+        "callInputs": {
+            "MODEL_ID": "runwayml/stable-diffusion-inpainting",
             "PIPELINE": "StableDiffusionInpaintPipeline",
             "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
         },
