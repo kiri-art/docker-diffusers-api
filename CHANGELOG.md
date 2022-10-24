@@ -1,5 +1,18 @@
 # CHANGELOG
 
+* **2022-10-24**
+
+  * **Fixed img2img and inpainting pipelines**.  To my great shame, in my rush to get
+    the new models out before the weekend, I inadvertently broke the above two models.
+    Please accept my sincere apology for any confusion this may have caused and
+    especially any of your wasted time in debugging this 🙇
+
+  * **Event logs now shown without `SEND_URL`**.  We optionally log useful info at the
+    start and end of `init()` and `inference()`.  Previously this was only logged if
+    `SEND_URL` was set, to send to an external REST API for logging.  But now, even if
+    we don't send it anywhere, we'll still log this useful info.  It now also logs
+    the `diffusers` version too.
+
 * **2022-10-21**
 
   * **Stable Diffusion 1.5 released!!!**
