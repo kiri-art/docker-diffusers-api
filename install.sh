@@ -20,7 +20,7 @@ else
   git clone https://github.com/huggingface/diffusers
   cd diffusers
   # .components, lpw fixes
-  git checkout v0.7.0.dev0
+  git checkout ba74a8be7a620da0558f27802a19736627e9e64a
   cd ..
   pip install -e diffusers
 
