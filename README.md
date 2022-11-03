@@ -55,8 +55,7 @@ assumptions.  If anything is unclear, please open an issue.
 
 ## Sending requests
 
-See [sd-mui source](https://github.com/gadicc/stable-diffusion-react-nextjs-mui-pwa)
-for more info, but basically, it's:
+The container expects an `HTTP POST` request with the following JSON body:
 
 ```json
 {
@@ -79,12 +78,22 @@ for more info, but basically, it's:
 
 If provided, `init_image` and `mask_image` should be base64 encoded.
 
-Sorry, but this format might change without notice based on the needs of SD-MUI.
-It's been stable for a while but we make no promises.  Your best bet is always to
-keep up-to-date with the SD-MUI source.
+If you're using banana's SDK, it looks something like this:
+
+```js
+const out = await banana.run(apiKey, modelKey, { modelInputs, callInputs });
+```
+
+NB: if you're coming from another banana starter repo, note that we
+explicitly name `modelInputs` above, and send a bigger object (with
+`modelInputs` and `callInputs` keys) for the banana-sdk's
+"modelInputs" argument.
 
 There are also very basic examples in [test.py](./test.py), which you can view
 and call `python test.py` if the container is already running on port 8000.
+
+The best example of course is https://kiri.art/ and it's
+[source code](https://github.com/kiri-art/stable-diffusion-react-nextjs-mui-pwa).
 
 ## Keeping forks up to date
 
