@@ -39,10 +39,13 @@ EXPOSE 8000
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
-# Hugging face model name or directory
+# MODEL_ID
+# 1) Hugging face model name
+# 2) A directory containing a diffusers model
+# 3) Your own unique model id if using CHECKPOINT_URL below.
+# 4) "ALL" to download all known models (useful for dev)
 # "runwayml/stable-diffusion-v1-5", "runwayml/stable-diffusion-inpainting"
 # "CompVis/stable-diffusion-v1-4", "hakurei/waifu-diffusion", etc.
-# ARG MODEL_ID="ALL" # Useful for dev
 ARG MODEL_ID="runwayml/stable-diffusion-v1-5"
 ENV MODEL_ID=${MODEL_ID}
 
@@ -50,11 +53,12 @@ ENV MODEL_ID=${MODEL_ID}
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
 
-# If set, it will be downloaded and converted to diffusers format, and
-# saved in a directory with same MODEL_ID name to be loaded by diffusers.
 COPY root-cache/huggingface /root/.cache/huggingface
 COPY root-cache/checkpoints /root/.cache/checkpoints
 RUN du -sh /root/.cache/*
+
+# If set, it will be downloaded and converted to diffusers format, and
+# saved in a directory with same MODEL_ID name to be loaded by diffusers.
 ARG CHECKPOINT_URL=""
 ENV CHECKPOINT_URL=${CHECKPOINT_URL}
 ADD download-checkpoint.py .
