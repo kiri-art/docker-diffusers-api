@@ -39,7 +39,7 @@ EXPOSE 8000
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 
-# MODEL_ID
+# MODEL_ID, can be any of:
 # 1) Hugging face model name
 # 2) A directory containing a diffusers model
 # 3) Your own unique model id if using CHECKPOINT_URL below.
