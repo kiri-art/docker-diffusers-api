@@ -38,7 +38,10 @@ def test(name, inputs):
     response = requests.post("http://localhost:8000/", json=inputs)
     result = response.json()
 
-    if result.get("images_base64", None) == "None":
+    if (
+        result.get("images_base64", None) == None
+        and result.get("image_base64", None) == None
+    ):
         print(json.dumps(result, indent=4))
         print()
         return
@@ -65,6 +68,7 @@ test(
     },
 )
 
+"""
 # multiple images
 test(
     "txt2img",
@@ -147,3 +151,4 @@ if os.getenv("USE_PATCHMATCH"):
             },
         },
     )
+"""
