@@ -58,7 +58,7 @@ test(
     {
         "modelInputs": {"prompt": "realistic field of grass"},
         "callInputs": {
-            "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMS",
         },
@@ -74,7 +74,7 @@ test(
             "num_images_per_prompt": 2,
         },
         "callInputs": {
-            "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMS",
         },
@@ -90,7 +90,7 @@ test(
             "init_image": b64encode_file("sketch-mountains-input.jpg"),
         },
         "callInputs": {
-            "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
             "SCHEDULER": "LMS",
         },

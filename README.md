@@ -74,7 +74,7 @@ The container expects an `HTTP POST` request with the following JSON body:
     "seed": 3239022079
   },
   "callInputs": {
-    "MODEL_ID": "CompVis/stable-diffusion-v1-4",
+    "MODEL_ID": "runwayml/stable-diffusion-v1-5",
     "PIPELINE": "StableDiffusionPipeline",
     "SCHEDULER": "LMS",
     "safety_checker": true,
