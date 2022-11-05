@@ -7,3 +7,4 @@ scipy==1.9.1
 requests_futures==1.0.0
 numpy==1.23.3
 scikit-image==0.19.3
+accelerate==0.13.2
