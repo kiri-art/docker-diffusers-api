@@ -68,7 +68,6 @@ test(
     },
 )
 
-"""
 # multiple images
 test(
     "txt2img",
@@ -151,4 +150,3 @@ if os.getenv("USE_PATCHMATCH"):
             },
         },
     )
-"""

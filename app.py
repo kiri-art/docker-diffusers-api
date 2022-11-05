@@ -4,6 +4,7 @@ import torch
 from torch import autocast
 from diffusers import (
     pipelines as _pipelines,
+    schedulers as _schedulers,
     LMSDiscreteScheduler,
     DDIMScheduler,
     PNDMScheduler,
@@ -21,9 +22,11 @@ import numpy as np
 import skimage
 import skimage.measure
 from PyPatchMatch import patch_match
+import re
 
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
+HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
 PIPELINES = [
     "StableDiffusionPipeline",
@@ -32,7 +35,13 @@ PIPELINES = [
     "StableDiffusionInpaintPipelineLegacy",
 ]
 
-SCHEDULERS = ["LMS", "DDIM", "PNDM"]
+SCHEDULERS = [
+    "LMSDiscreteScheduler",
+    "DDIMScheduler",
+    "PNDMScheduler",
+    "EulerAncestralDiscreteScheduler",
+    "EulerDiscreteScheduler",
+]
 
 torch.set_grad_enabled(False)
 
@@ -84,19 +93,29 @@ def init():
         True,
     )
 
-    schedulers = {
-        "LMS": LMSDiscreteScheduler(
-            beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear"
-        ),
-        "DDIM": DDIMScheduler(
-            beta_start=0.00085,
-            beta_end=0.012,
-            beta_schedule="scaled_linear",
-            clip_sample=False,
-            set_alpha_to_one=False,
-        ),
-        "PNDM": PNDMScheduler(),
-    }
+    schedulers = {}
+    """
+    # This was a nice idea but until we have default init vars for all schedulers
+    # via from_config(), it's a no go.
+    isScheduler = re.compile(r".+Scheduler$")
+    for key, val in _schedulers.__dict__.items():
+        if isScheduler.match(key):
+            schedulers.update(
+                {
+                    key: val.from_config(
+                        MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
+                    )
+                }
+            )
+    """
+    for scheduler_name in SCHEDULERS:
+        schedulers.update(
+            {
+                scheduler_name: getattr(_schedulers, scheduler_name).from_config(
+                    MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
+                ),
+            }
+        )
 
     dummy_safety_checker = DummySafetyChecker()
 
@@ -169,7 +188,32 @@ def inference(all_inputs: dict) -> dict:
     else:
         pipeline = model
 
-    pipeline.scheduler = schedulers.get(call_inputs.get("SCHEDULER"))
+    # Check for use of all names
+    scheduler_name = call_inputs.get("SCHEDULER", None)
+    deprecated_map = {
+        "LMS": "LMSDiscreteScheduler",
+        "DDIM": "DDIMScheduler",
+        "PNDM": "PNDMScheduler",
+    }
+    scheduler_renamed = deprecated_map.get(scheduler_name, None)
+    if scheduler_renamed != None:
+        print(
+            f'[Deprecation Warning]: Scheduler "{scheduler_name}" is now '
+            f'called "{scheduler_renamed}".  Please rename as this will '
+            f"stop working in a future release."
+        )
+        scheduler_name = scheduler_renamed
+
+    pipeline.scheduler = schedulers.get(scheduler_name, None)
+    if pipeline.scheduler == None:
+        return {
+            "$error": {
+                "code": "INVALID_SCHEDULER",
+                "message": "",
+                "requeted": call_inputs.get("SCHEDULER", None),
+                "available": ", ".join(schedulers.keys()),
+            }
+        }
 
     safety_checker = call_inputs.get("safety_checker", True)
     pipeline.safety_checker = (
