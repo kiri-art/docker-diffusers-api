@@ -31,9 +31,9 @@ WORKDIR /api
 
 # We need python 3.9 or 3.10 for xformers
 # Yes, we install pytorch twice... will switch base image in future
-# RUN conda update -n base -c defaults conda
+RUN conda update -n base -c defaults conda
 RUN conda create -n xformers python=3.10
-SHELL ["conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
+SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
 RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
 RUN conda install xformers -c xformers/label/dev
