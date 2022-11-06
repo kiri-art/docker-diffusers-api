@@ -6,6 +6,9 @@ import base64
 import os
 import json
 import sys
+import time
+import argparse
+from uuid import uuid4
 from io import BytesIO
 from PIL import Image
 from pathlib import Path
@@ -43,13 +46,42 @@ def test(name, inputs):
     tests.update({name: inputs})
 
 
-def runTest(name):
+def runTest(name, banana):
     inputs = tests.get(name)
 
     print("Running test: " + name)
-    response = requests.post("http://localhost:8000/", json=inputs)
-    result = response.json()
 
+    if banana:
+        BANANA_API_KEY = os.getenv("BANANA_API_KEY")
+        BANANA_MODEL_KEY = os.getenv("BANANA_MODEL_KEY")
+        if BANANA_MODEL_KEY == None or BANANA_API_KEY == None:
+            print("Error: BANANA_API_KEY or BANANA_MODEL_KEY not set, aborting...")
+            sys.exit(1)
+
+        start = time.time()
+        payload = {
+            "id": str(uuid4()),
+            "created": int(time.time()),
+            "apiKey": BANANA_API_KEY,
+            "modelKey": BANANA_MODEL_KEY,
+            "modelInputs": inputs,
+            "startOnly": False,
+        }
+        response = requests.post("https://api.banana.dev/start/v4/", json=payload)
+        finish = time.time() - start
+        print(f"Request took {finish:.2f}s")
+
+        result = response.json()
+        modelOutputs = result.get("modelOutputs", None)
+        if modelOutputs == None:
+            print(result)
+            return
+        result = modelOutputs[0]
+    else:
+        response = requests.post("http://localhost:8000/", json=inputs)
+        result = response.json()
+
+    print(json.dumps(result.get("timings")))
     if (
         result.get("images_base64", None) == None
         and result.get("image_base64", None) == None
@@ -82,7 +114,7 @@ test(
 
 # multiple images
 test(
-    "txt2img",
+    "txt2img-multiple",
     {
         "modelInputs": {
             "prompt": "realistic field of grass",
@@ -164,7 +196,7 @@ if os.getenv("USE_PATCHMATCH"):
     )
 
 
-def main(tests_to_run):
+def main(tests_to_run, banana):
     invalid_tests = []
     for test in tests_to_run:
         if tests.get(test, None) == None:
@@ -175,9 +207,11 @@ def main(tests_to_run):
         exit(1)
 
     for test in tests_to_run:
-        runTest(test)
+        runTest(test, banana)
 
 
 if __name__ == "__main__":
-    tests_to_run = sys.argv[1:] if len(sys.argv) > 1 else list(tests.keys())
-    main(tests_to_run)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--banana", required=False, action="store_true")
+    args, tests_to_run = parser.parse_known_args()
+    main(tests_to_run, banana=args.banana)
