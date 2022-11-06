@@ -273,6 +273,8 @@ def inference(all_inputs: dict) -> dict:
     # with autocast("cuda"):
     # image = pipeline(**model_inputs).images[0]
 
+    pipeline.enable_xformers_memory_efficient_attention()
+
     with torch.inference_mode():
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
         # still broken in 0.5.1
