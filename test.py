@@ -5,11 +5,13 @@ import requests
 import base64
 import os
 import json
+import sys
 from io import BytesIO
 from PIL import Image
 from pathlib import Path
 
-TESTS = "tests"
+path = os.path.dirname(os.path.realpath(sys.argv[0]))
+TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
@@ -33,7 +35,17 @@ def decode_and_save(image_byte_string: str, name: str):
     print("Saved " + fp)
 
 
+tests = {}
+
+
 def test(name, inputs):
+    global tests
+    tests.update({name: inputs})
+
+
+def runTest(name):
+    inputs = tests.get(name)
+
     print("Running test: " + name)
     response = requests.post("http://localhost:8000/", json=inputs)
     result = response.json()
@@ -150,3 +162,22 @@ if os.getenv("USE_PATCHMATCH"):
             },
         },
     )
+
+
+def main(tests_to_run):
+    invalid_tests = []
+    for test in tests_to_run:
+        if tests.get(test, None) == None:
+            invalid_tests.append(test)
+
+    if len(invalid_tests) > 0:
+        print("No such tests: " + ", ".join(invalid_tests))
+        exit(1)
+
+    for test in tests_to_run:
+        runTest(test)
+
+
+if __name__ == "__main__":
+    tests_to_run = sys.argv[1:] if len(sys.argv) > 1 else list(tests.keys())
+    main(tests_to_run)
