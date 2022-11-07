@@ -16,7 +16,7 @@ from io import BytesIO
 import PIL
 import json
 from loadModel import loadModel
-from send import send
+from send import send, get_now
 import os
 import numpy as np
 import skimage
@@ -80,7 +80,9 @@ def init():
     global pipelines
     global schedulers
     global dummy_safety_checker
+    global initTime
 
+    initStart = get_now()
     send(
         "init",
         "start",
@@ -130,6 +132,7 @@ def init():
         pipelines = createPipelinesFromModel(model)
 
     send("init", "done")
+    initTime = get_now() - initStart
 
 
 def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
@@ -255,6 +258,7 @@ def inference(all_inputs: dict) -> dict:
 
     model_inputs.update({"generator": generator})
 
+    inferenceStart = get_now()
     send("inference", "start", {"startRequestId": startRequestId}, True)
 
     # Run patchmatch for inpainting
@@ -291,9 +295,11 @@ def inference(all_inputs: dict) -> dict:
         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
     send("inference", "done", {"startRequestId": startRequestId})
+    inferenceTime = get_now() - inferenceStart
+    timings = {"init": initTime, "inference": inferenceTime}
 
     # Return the results as a dictionary
     if len(images_base64) > 1:
-        return {"images_base64": images_base64}
+        return {"images_base64": images_base64, "$timings": timings}
 
-    return {"image_base64": images_base64[0]}
+    return {"image_base64": images_base64[0], "$timings": timings}
