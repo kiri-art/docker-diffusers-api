@@ -1,16 +1,19 @@
-# Must use a Cuda version 11+
+# Banana requires Cuda version 11+.  Below is banana default:
 # FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel as base
 # xformers available precompiled for:
 #   Python 3.9 or 3.10, CUDA 11.3 or 11.6, and PyTorch 1.12.1
 #   https://github.com/facebookresearch/xformers/#getting-started
-#FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
-#FROM nvcr.io/nvidia/pytorch:22.08-py3 as base
-FROM continuumio/miniconda3:4.12.0 as base
+# Below: pytorch base images only have Python 3.7 :(
+FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
+# Below: our ideal image, but Optimization fails with it.
+#FROM continuumio/miniconda3:4.12.0 as base
 ENV DEBIAN_FRONTEND=noninteractive
 #RUN apt-get install gnupg2
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 RUN apt-get update && apt-get install -yqq git
 
+# This would have been great but Python is via conda,
+# and conda doesn't support python >= 3.7 for base.
 #RUN apt install -yqq software-properties-common
 #RUN add-apt-repository ppa:deadsnakes/ppa
 #RUN apt update
