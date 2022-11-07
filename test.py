@@ -8,6 +8,7 @@ import json
 import sys
 import time
 import argparse
+import distutils
 from uuid import uuid4
 from io import BytesIO
 from PIL import Image
@@ -46,8 +47,9 @@ def test(name, inputs):
     tests.update({name: inputs})
 
 
-def runTest(name, banana):
+def runTest(name, banana, extraCallInputs):
     inputs = tests.get(name)
+    inputs.get("callInputs").update(extraCallInputs)
 
     print("Running test: " + name)
 
@@ -208,7 +210,7 @@ if os.getenv("USE_PATCHMATCH"):
     )
 
 
-def main(tests_to_run, banana):
+def main(tests_to_run, banana, extraCallInputs):
     invalid_tests = []
     for test in tests_to_run:
         if tests.get(test, None) == None:
@@ -219,11 +221,26 @@ def main(tests_to_run, banana):
         exit(1)
 
     for test in tests_to_run:
-        runTest(test, banana)
+        runTest(test, banana, extraCallInputs)
 
 
 if __name__ == "__main__":
+    print(
+        "Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [test1] [test2] [etc]"
+    )
     parser = argparse.ArgumentParser()
     parser.add_argument("--banana", required=False, action="store_true")
+    parser.add_argument(
+        "--xmfe",
+        required=False,
+        default=True,
+        type=lambda x: bool(distutils.util.strtobool(x)),
+    )
+    parser.add_argument("--scheduler", required=False, type=str)
+
     args, tests_to_run = parser.parse_known_args()
-    main(tests_to_run, banana=args.banana)
+    extraCallInputs = {"xformers_memory_efficient_attention": args.xmfe}
+    if args.scheduler:
+        extraCallInputs.update({"SCHEDULER": args.scheduler})
+
+    main(tests_to_run, banana=args.banana, extraCallInputs=extraCallInputs)
