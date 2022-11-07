@@ -22,42 +22,46 @@ assumptions.  If anything is unclear, please open an issue.
 
 ## Usage:
 
-1. Clone or fork this repo.
+Firstly, fork and clone this repo.
 
-1. Most of the configuration happens via docker build variables.  You can
-  see all the options in the [Dockerfile](./Dockerfile), and edit them
-  there directly, or set via docker command line or e.g. Banana's dashboard
-  UI once support for build variables land (any day now).
+Most of the configuration happens via docker build variables.  You can
+see all the options in the [Dockerfile](./Dockerfile), and edit them
+there directly, or set via docker command line or e.g. Banana's dashboard
+UI once support for build variables land (any day now).
 
-  If you're only deploying one container, that's all you need!  If you
-  intend to deploy multiple containers each with different variables
-  (e.g. a few different models), you can edit the example
-  [`scripts/permutations.yaml`](scripts/permutations.yaml)] file and
-  run [`scripts/permute.sh`](scripts/permute.sh)` to create a number
-  of sub-repos in the `permutations` directory.
+If you're only deploying one container, that's all you need!  If you
+intend to deploy multiple containers each with different variables
+(e.g. a few different models), you can edit the example
+[`scripts/permutations.yaml`](scripts/permutations.yaml)] file and
+run [`scripts/permute.sh`](scripts/permute.sh) to create a number
+of sub-repos in the `permutations` directory.
 
-  Lastly, there's an option to set `MODEL_ID=ALL`, and *all* models will
-  be downloaded, and switched at request time (great for dev, useless for
-  serverless).
+Lastly, there's an option to set `MODEL_ID=ALL`, and *all* models will
+be downloaded, and switched at request time (great for dev, useless for
+serverless).
 
-1. **Building**
+**Deploying to banana?** That's it!  You're done.  Commit your changes and push.
 
-    1. Set `HF_AUTH_TOKEN` environment var if you haven't set it elsewhere.
-    1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
-    1. Optionally add `DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain` to
-       start of the line, depending on your preferences.  (Recommended if
-       you're using the `root-cache` feature.)
-    1. Note: your first build can take a really long time, depending on
-       your PC & network speed, and *especially when using the `CHECKPOINT_URL`
-       feature*.  Great time to grab a coffee or take a walk.
+## Running locally / development:
 
-1. **Running**
+**Building**
 
-    1. `docker run -it --gpus all -p 8000:8000 banana-sd python3 server.py`
-    1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
-       container using `Ctrl-C`.
-    1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
-       just stop the container, `rmmod nvidia_uvm`, and restart.
+1. Set `HF_AUTH_TOKEN` environment var if you haven't set it elsewhere.
+1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
+1. Optionally add `DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain` to
+    start of the line, depending on your preferences.  (Recommended if
+    you're using the `root-cache` feature.)
+1. Note: your first build can take a really long time, depending on
+    your PC & network speed, and *especially when using the `CHECKPOINT_URL`
+    feature*.  Great time to grab a coffee or take a walk.
+
+**Running**
+
+1. `docker run -it --gpus all -p 8000:8000 banana-sd python3 server.py`
+1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
+    container using `Ctrl-C`.
+1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
+    just stop the container, `rmmod nvidia_uvm`, and restart.
 
 ## Sending requests
 
@@ -76,7 +80,7 @@ The container expects an `HTTP POST` request with the following JSON body:
   "callInputs": {
     "MODEL_ID": "runwayml/stable-diffusion-v1-5",
     "PIPELINE": "StableDiffusionPipeline",
-    "SCHEDULER": "LMS",
+    "SCHEDULER": "LMSDiscreteScheduler",
     "safety_checker": true,
   },
 }
@@ -97,9 +101,29 @@ explicitly name `modelInputs` above, and send a bigger object (with
 
 There are also very basic examples in [test.py](./test.py), which you can view
 and call `python test.py` if the container is already running on port 8000.
+You can also specify a specific test, change some options, and run against a
+deployed banana image:
+
+```bash
+# Run against http://localhost:8000/
+$ python test.py txt2img
+Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [test1] [test2] [etc]
+Running test: txt2img
+Request took 5.2s (init: 9.2s, inference: 5.1s)
+Saved /home/dragon/www/banana/banana-sd-base/tests/output/txt2img.png
+
+# Run against deployed banana image
+$ export BANANA_API_KEY=XXX
+$ BANANA_MODEL_KEY=XXX python3 test.py --banana txt2img
+Running test: txt2img
+Request took 4.3s (init: 6.5s, inference: 2.3s)
+Saved /home/dragon/www/banana/banana-sd-base/tests/output/txt2img.png
+```
 
 The best example of course is https://kiri.art/ and it's
 [source code](https://github.com/kiri-art/stable-diffusion-react-nextjs-mui-pwa).
+
+
 
 ## Troubleshooting
 
@@ -142,38 +166,10 @@ Set `CALL_URL` and `SIGN_KEY` environment variables to send timing data on `init
 and `inference` start and end data.  You'll need to check the source code of here
 and sd-mui as the format is in flux.
 
-***Original Template README follows***
+This info is now logged regardless, and `init()` and `inference()` times are sent
+back via `{ $timings: { init: timeInMs, inference: timeInMs } }`.
 
-# 🍌 Banana Serverless
+## Acknowledgements
 
-This repo gives a basic framework for serving Stable Diffusion in production using simple HTTP servers.
+Originally based on https://github.com/bananaml/serverless-template-stable-diffusion.
 
-## Quickstart:
-
-1. Create your own private repo and copy the files from this template repo into it. You'll want a private repo so that your huggingface keys are secure.
-
-2. Install the [Banana Github App](https://github.com/apps/banana-serverless) to your new repo.
-
-3. Login in to the [Banana Dashboard](https://app.banana.dev) and setup your account by saving your payment details and linking your Github.
-
-4. Create huggingface account to get permission to download and run [Stable Diffusion](https://huggingface.co/CompVis/stable-diffusion-v1-4) text-to-image model.
-  - Accept terms and conditions for the use of the v1-4 [Stable Diffusion](https://huggingface.co/CompVis/stable-diffusion-v1-4)
-
-5. Edit the `dockerfile` in your forked repo with `ENV HF_AUTH_TOKEN=your_auth_token`
-
-6. Push that repo to main.
-
-From then onward, any pushes to the default repo branch (usually "main" or "master") trigger Banana to build and deploy your server, using the Dockerfile.
-Throughout the build we'll sprinkle in some secret sauce to make your server extra snappy 🔥
-
-It'll then be deployed on our Serverless GPU cluster and callable with any of our serverside SDKs:
-
-- [Python](https://github.com/bananaml/banana-python-sdk)
-- [Node JS / Typescript](https://github.com/bananaml/banana-node-sdk)
-- [Go](https://github.com/bananaml/banana-go)
-
-You can monitor buildtime and runtime logs by clicking the logs button in the model view on the [Banana Dashboard](https://app.banana.dev)
-
-<br>
-
-## Use Banana for scale.
