@@ -3,11 +3,10 @@
 # xformers available precompiled for:
 #   Python 3.9 or 3.10, CUDA 11.3 or 11.6, and PyTorch 1.12.1
 #   https://github.com/facebookresearch/xformers/#getting-started
-FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
+#FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
 #FROM nvcr.io/nvidia/pytorch:22.08-py3 as base
+FROM continuumio/miniconda3:4.12.0 as base
 ENV DEBIAN_FRONTEND=noninteractive
-RUN mkdir -p /root/.cache/pip
-COPY root-cache/pip /root/.cache/pip
 #RUN apt-get install gnupg2
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 RUN apt-get update && apt-get install -yqq git
@@ -31,15 +30,18 @@ WORKDIR /api
 
 # We need python 3.9 or 3.10 for xformers
 # Yes, we install pytorch twice... will switch base image in future
+RUN mkdir -p /opt/conda/pkgs
+COPY /conda-pkgs/* /opt/conda/pkgs/
 RUN conda update -n base -c defaults conda
 RUN conda create -n xformers python=3.10
 SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
 RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
 RUN conda install xformers -c xformers/label/dev
-RUN pip install triton==2.0.0.dev20221105
 
 # Install python packages
+RUN mkdir -p /root/.cache/pip
+COPY root-cache/pip /root/.cache/pip
 RUN pip3 install --upgrade pip
 ADD requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
