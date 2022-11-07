@@ -151,6 +151,8 @@ def truncateInputs(inputs: dict):
     return clone
 
 
+last_xformers_memory_efficient_attention = None
+
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
 def inference(all_inputs: dict) -> dict:
@@ -159,15 +161,22 @@ def inference(all_inputs: dict) -> dict:
     global last_model_id
     global schedulers
     global dummy_safety_checker
+    global last_xformers_memory_efficient_attention
 
     print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
-    startRequestId = call_inputs.get("startRequestId", None)
 
-    # Fallback until all clients on new code
-    if model_inputs == None:
-        return {"$error": "UPGRADE CLIENT - no model_inputs specified"}
+    if model_inputs == None or call_inputs == None:
+        return {
+            "$error": {
+                "code": "INVALID_INPUTS",
+                "message": "Expecting on object like { modelInputs: {}, callInputs: {} } but got "
+                + json.dumps(all_inputs),
+            }
+        }
+
+    startRequestId = call_inputs.get("startRequestId", None)
 
     model_id = call_inputs.get("MODEL_ID")
     if MODEL_ID == "ALL":
@@ -273,22 +282,25 @@ def inference(all_inputs: dict) -> dict:
         mask = mask.repeat(8, axis=0).repeat(8, axis=1)
         model_inputs["mask_image"] = PIL.Image.fromarray(mask)
 
+    # Turning on takes 3ms and turning off 1ms... don't worry, I've got your back :)
     x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", None)
-    if x_m_e_a == None:
-        pipeline.enable_xformers_memory_efficient_attention()  # default on
-    elif x_m_e_a == True:
-        pipeline.enable_xformers_memory_efficient_attention()
-    elif x_m_e_a == False:
-        pipeline.disable_xformers_memory_efficient_attention()
-    else:
-        return {
-            "$error": {
-                "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
-                "message": f'Model "{model_id}" not available on this container which hosts "{MODEL_ID}"',
-                "requested": x_m_e_a,
-                "available": [True, False],
+    if x_m_e_a != last_xformers_memory_efficient_attention:
+        last_xformers_memory_efficient_attention = x_m_e_a
+        if x_m_e_a == None:
+            pipeline.enable_xformers_memory_efficient_attention()  # default on
+        elif x_m_e_a == True:
+            pipeline.enable_xformers_memory_efficient_attention()
+        elif x_m_e_a == False:
+            pipeline.disable_xformers_memory_efficient_attention()
+        else:
+            return {
+                "$error": {
+                    "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
+                    "message": f'Model "{model_id}" not available on this container which hosts "{MODEL_ID}"',
+                    "requested": x_m_e_a,
+                    "available": [True, False],
+                }
             }
-        }
 
     # Run the model
     # with autocast("cuda"):
