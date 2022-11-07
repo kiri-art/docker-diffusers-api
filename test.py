@@ -51,6 +51,7 @@ def runTest(name, banana):
 
     print("Running test: " + name)
 
+    start = time.time()
     if banana:
         BANANA_API_KEY = os.getenv("BANANA_API_KEY")
         BANANA_MODEL_KEY = os.getenv("BANANA_MODEL_KEY")
@@ -58,7 +59,6 @@ def runTest(name, banana):
             print("Error: BANANA_API_KEY or BANANA_MODEL_KEY not set, aborting...")
             sys.exit(1)
 
-        start = time.time()
         payload = {
             "id": str(uuid4()),
             "created": int(time.time()),
@@ -68,12 +68,12 @@ def runTest(name, banana):
             "startOnly": False,
         }
         response = requests.post("https://api.banana.dev/start/v4/", json=payload)
-        finish = time.time() - start
-        print(f"Request took {finish:.2f}s")
 
         result = response.json()
         modelOutputs = result.get("modelOutputs", None)
         if modelOutputs == None:
+            finish = time.time() - start
+            print(f"Request took {finish:.1f}s")
             print(result)
             return
         result = modelOutputs[0]
@@ -81,7 +81,18 @@ def runTest(name, banana):
         response = requests.post("http://localhost:8000/", json=inputs)
         result = response.json()
 
-    print(json.dumps(result.get("timings")))
+    finish = time.time() - start
+    timings = result.get("$timings")
+    if timings:
+        init = timings.get("init") / 1000
+        inference = timings.get("inference") / 1000
+        print(
+            f"Request took {finish:.1f}s ("
+            + f"init: {init:.1f}s, inference: {inference:.1f}s)"
+        )
+    else:
+        print(f"Request took {finish:.1f}s")
+
     if (
         result.get("images_base64", None) == None
         and result.get("image_base64", None) == None
