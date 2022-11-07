@@ -120,7 +120,7 @@ test(
         "callInputs": {
             "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "LMS",
+            "SCHEDULER": "LMSDiscreteScheduler",
             # "xformers_memory_efficient_attention": False,
         },
     },
@@ -137,7 +137,7 @@ test(
         "callInputs": {
             "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "LMS",
+            "SCHEDULER": "LMSDiscreteScheduler",
         },
     },
 )
@@ -153,7 +153,7 @@ test(
         "callInputs": {
             "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
-            "SCHEDULER": "LMS",
+            "SCHEDULER": "LMSDiscreteScheduler",
         },
     },
 )
@@ -169,7 +169,7 @@ test(
         "callInputs": {
             "MODEL_ID": "CompVis/stable-diffusion-v1-4",
             "PIPELINE": "StableDiffusionInpaintPipelineLegacy",
-            "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
+            "SCHEDULER": "DDIMScheduler",  # Note, as of diffusers 0.3.0, no LMS yet
         },
     },
 )
@@ -185,7 +185,7 @@ test(
         "callInputs": {
             "MODEL_ID": "runwayml/stable-diffusion-inpainting",
             "PIPELINE": "StableDiffusionInpaintPipeline",
-            "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
+            "SCHEDULER": "DDIMScheduler",  # Note, as of diffusers 0.3.0, no LMS yet
         },
     },
 )
@@ -203,7 +203,7 @@ if os.getenv("USE_PATCHMATCH"):
             "callInputs": {
                 "MODEL_ID": "CompVis/stable-diffusion-v1-4",
                 "PIPELINE": "StableDiffusionInpaintPipelineLegacy",
-                "SCHEDULER": "DDIM",  # Note, as of diffusers 0.3.0, no LMS yet
+                "SCHEDULER": "DDIMScheduler",  # Note, as of diffusers 0.3.0, no LMS yet
                 "FILL_MODE": "patchmatch",
             },
         },
