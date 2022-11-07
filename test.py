@@ -119,6 +119,7 @@ test(
             "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMS",
+            # "xformers_memory_efficient_attention": False,
         },
     },
 )

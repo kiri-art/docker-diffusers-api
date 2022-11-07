@@ -273,11 +273,26 @@ def inference(all_inputs: dict) -> dict:
         mask = mask.repeat(8, axis=0).repeat(8, axis=1)
         model_inputs["mask_image"] = PIL.Image.fromarray(mask)
 
+    x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", None)
+    if x_m_e_a == None:
+        pipeline.enable_xformers_memory_efficient_attention()  # default on
+    elif x_m_e_a == True:
+        pipeline.enable_xformers_memory_efficient_attention()
+    elif x_m_e_a == False:
+        pipeline.disable_xformers_memory_efficient_attention()
+    else:
+        return {
+            "$error": {
+                "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
+                "message": f'Model "{model_id}" not available on this container which hosts "{MODEL_ID}"',
+                "requested": x_m_e_a,
+                "available": [True, False],
+            }
+        }
+
     # Run the model
     # with autocast("cuda"):
     # image = pipeline(**model_inputs).images[0]
-
-    pipeline.enable_xformers_memory_efficient_attention()
 
     with torch.inference_mode():
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1

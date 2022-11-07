@@ -30,9 +30,7 @@ WORKDIR /api
 
 # We need python 3.9 or 3.10 for xformers
 # Yes, we install pytorch twice... will switch base image in future
-RUN mkdir -p /opt/conda/pkgs
-COPY /conda-pkgs/* /opt/conda/pkgs/
-RUN conda update -n base -c defaults conda
+# RUN conda update -n base -c defaults conda
 RUN conda create -n xformers python=3.10
 SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
