@@ -30,6 +30,7 @@ def loadModel(model_id: str, load=True):
         torch_dtype=torch.float16,
         use_auth_token=HF_AUTH_TOKEN,
         scheduler=scheduler,
+        local_files_only=load,
     )
 
     return model.to("cuda") if load else None
