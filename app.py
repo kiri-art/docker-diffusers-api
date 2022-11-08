@@ -4,7 +4,6 @@ import torch
 from torch import autocast
 from diffusers import (
     pipelines as _pipelines,
-    schedulers as _schedulers,
     LMSDiscreteScheduler,
     DDIMScheduler,
     PNDMScheduler,
@@ -22,6 +21,7 @@ import numpy as np
 import skimage
 import skimage.measure
 from PyPatchMatch import patch_match
+from getScheduler import getScheduler, SCHEDULERS
 import re
 
 MODEL_ID = os.environ.get("MODEL_ID")
@@ -33,14 +33,6 @@ PIPELINES = [
     "StableDiffusionImg2ImgPipeline",
     "StableDiffusionInpaintPipeline",
     "StableDiffusionInpaintPipelineLegacy",
-]
-
-SCHEDULERS = [
-    "LMSDiscreteScheduler",
-    "DDIMScheduler",
-    "PNDMScheduler",
-    "EulerAncestralDiscreteScheduler",
-    "EulerDiscreteScheduler",
 ]
 
 torch.set_grad_enabled(False)
@@ -94,30 +86,6 @@ def init():
         },
         True,
     )
-
-    schedulers = {}
-    """
-    # This was a nice idea but until we have default init vars for all schedulers
-    # via from_config(), it's a no go.
-    isScheduler = re.compile(r".+Scheduler$")
-    for key, val in _schedulers.__dict__.items():
-        if isScheduler.match(key):
-            schedulers.update(
-                {
-                    key: val.from_config(
-                        MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
-                    )
-                }
-            )
-    """
-    for scheduler_name in SCHEDULERS:
-        schedulers.update(
-            {
-                scheduler_name: getattr(_schedulers, scheduler_name).from_config(
-                    MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
-                ),
-            }
-        )
 
     dummy_safety_checker = DummySafetyChecker()
 
@@ -200,30 +168,14 @@ def inference(all_inputs: dict) -> dict:
     else:
         pipeline = model
 
-    # Check for use of all names
-    scheduler_name = call_inputs.get("SCHEDULER", None)
-    deprecated_map = {
-        "LMS": "LMSDiscreteScheduler",
-        "DDIM": "DDIMScheduler",
-        "PNDM": "PNDMScheduler",
-    }
-    scheduler_renamed = deprecated_map.get(scheduler_name, None)
-    if scheduler_renamed != None:
-        print(
-            f'[Deprecation Warning]: Scheduler "{scheduler_name}" is now '
-            f'called "{scheduler_renamed}".  Please rename as this will '
-            f"stop working in a future release."
-        )
-        scheduler_name = scheduler_renamed
-
-    pipeline.scheduler = schedulers.get(scheduler_name, None)
+    pipeline.scheduler = getScheduler(MODEL_ID, call_inputs.get("SCHEDULER", None))
     if pipeline.scheduler == None:
         return {
             "$error": {
                 "code": "INVALID_SCHEDULER",
                 "message": "",
                 "requeted": call_inputs.get("SCHEDULER", None),
-                "available": ", ".join(schedulers.keys()),
+                "available": ", ".join(SCHEDULERS),
             }
         }
 
@@ -286,10 +238,8 @@ def inference(all_inputs: dict) -> dict:
     x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", None)
     if x_m_e_a != last_xformers_memory_efficient_attention:
         last_xformers_memory_efficient_attention = x_m_e_a
-        if x_m_e_a == None:
+        if x_m_e_a == None or x_m_e_a == True:
             pipeline.enable_xformers_memory_efficient_attention()  # default on
-        elif x_m_e_a == True:
-            pipeline.enable_xformers_memory_efficient_attention()
         elif x_m_e_a == False:
             pipeline.disable_xformers_memory_efficient_attention()
         else:

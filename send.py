@@ -5,7 +5,9 @@ import requests
 import hashlib
 from requests_futures.sessions import FuturesSession
 
+print()
 print(os.environ)
+print()
 
 
 def get_now():
