@@ -3,7 +3,6 @@
 
 import os
 from loadModel import loadModel, MODEL_IDS
-from getScheduler import getScheduler, SCHEDULERS, DEFAULT_SCHEDULER
 
 MODEL_ID = os.environ.get("MODEL_ID")
 
@@ -16,8 +15,6 @@ def download_model():
             loadModel(MODEL_I, False)
     else:
         loadModel(MODEL_ID, False)
-
-    getScheduler(MODEL_ID, DEFAULT_SCHEDULER)
 
 
 if __name__ == "__main__":

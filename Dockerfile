@@ -94,11 +94,6 @@ ADD convert-to-diffusers.py .
 RUN python3 convert-to-diffusers.py
 # RUN rm -rf checkpoints
 
-# Loading a new scheduler for the first time takes an extra ~800ms,
-# so set this to your most common one.
-ARG DEFAULT_SCHEDULER="LMSDiscreteScheduler"
-ENV DEFAULT_SCHEDULER=${DEFAULT_SCHEDULER}
-
 # Add your model weight files 
 # (in this case we have a python script)
 ADD getScheduler.py .

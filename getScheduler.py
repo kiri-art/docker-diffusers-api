@@ -4,7 +4,6 @@ import time
 from diffusers import schedulers as _schedulers
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
-DEFAULT_SCHEDULER = os.getenv("DEFAULT_SCHEDULER")
 
 SCHEDULERS = [
     "LMSDiscreteScheduler",
@@ -13,6 +12,9 @@ SCHEDULERS = [
     "EulerAncestralDiscreteScheduler",
     "EulerDiscreteScheduler",
 ]
+
+DEFAULT_SCHEDULER = os.getenv("DEFAULT_SCHEDULER", SCHEDULERS[0])
+
 
 """
 # This was a nice idea but until we have default init vars for all schedulers
@@ -31,7 +33,7 @@ for key, val in _schedulers.__dict__.items():
 """
 
 
-def initScheduler(MODEL_ID: str, scheduler_id: str):
+def initScheduler(MODEL_ID: str, scheduler_id: str, download=False):
     print(f"Initializing {scheduler_id} for {MODEL_ID}...")
     start = time.time()
     scheduler = getattr(_schedulers, scheduler_id)
@@ -39,7 +41,10 @@ def initScheduler(MODEL_ID: str, scheduler_id: str):
         return None
 
     inittedScheduler = scheduler.from_config(
-        MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
+        MODEL_ID,
+        subfolder="scheduler",
+        use_auth_token=HF_AUTH_TOKEN,
+        local_files_only=not download,
     )
     diff = round((time.time() - start) * 1000)
     print(f"Initialized {scheduler_id} for {MODEL_ID} in {diff}ms")
@@ -50,7 +55,7 @@ def initScheduler(MODEL_ID: str, scheduler_id: str):
 schedulers = {}
 
 
-def getScheduler(MODEL_ID: str, scheduler_id: str):
+def getScheduler(MODEL_ID: str, scheduler_id: str, download=False):
     schedulersByModel = schedulers.get(MODEL_ID, None)
     if schedulersByModel == None:
         schedulersByModel = {}
@@ -73,7 +78,7 @@ def getScheduler(MODEL_ID: str, scheduler_id: str):
 
     scheduler = schedulersByModel.get(scheduler_id, None)
     if scheduler == None:
-        scheduler = initScheduler(MODEL_ID, scheduler_id)
+        scheduler = initScheduler(MODEL_ID, scheduler_id, download)
         schedulersByModel.update({scheduler_id: scheduler})
 
     return scheduler
