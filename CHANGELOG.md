@@ -12,6 +12,8 @@
     * [Cold] Previously: 3.8s, now: 3.3s (13% speed gain)
     * [Warm] Previously: 3.2s, now: 2.1s (34% speed gain)
 
+  * **Improved `test.py`**, see [Testing](./README.md#testing)
+
 * **2022-11-05**
 
   * Upgrade to **Diffusers v0.7.0**.  There is a lot of fun stuff in this release,
