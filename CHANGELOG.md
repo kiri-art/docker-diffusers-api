@@ -1,5 +1,17 @@
 # CHANGELOG
 
+* **2022-11-08**
+
+  * **Much faster `init()` times!**  For `runwayml/stable-diffusion-v1-5`:
+
+    * Previously: 4.0s, now: 2.4s (40% speed gain)
+
+  * **Much faster `inference()` times!** Particularly from the 2nd inference onwards.
+    Here's a brief comparison of *inference* average times (for 512x512 x50 steps):
+
+    * [Cold] Previously: 3.8s, now: 3.3s (13% speed gain)
+    * [Warm] Previously: 3.2s, now: 2.1s (34% speed gain)
+
 * **2022-11-05**
 
   * Upgrade to **Diffusers v0.7.0**.  There is a lot of fun stuff in this release,
@@ -12,8 +24,8 @@
 
   * We now use the **full scheduler name** for `callInputs.SCHEDULER`.  `"LMS"`,
     `"DDIM"`, `"PNDM"` all still work fine for now but give a deprecation warning
-    and stop working in a future update.  The full list of supported schedulers is:
-    `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
+    and will stop working in a future update.  The full list of supported schedulers
+    is: `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
     `EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.  These cover the
     most commonly used / requested schedulers, but we already have code in place to
     support every scheduler provided by diffusers, which will work in a later

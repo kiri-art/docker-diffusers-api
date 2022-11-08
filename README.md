@@ -86,8 +86,6 @@ The container expects an `HTTP POST` request with the following JSON body:
 }
 ```
 
-If provided, `init_image` and `mask_image` should be base64 encoded.
-
 If you're using banana's SDK, it looks something like this:
 
 ```js
@@ -99,25 +97,41 @@ explicitly name `modelInputs` above, and send a bigger object (with
 `modelInputs` and `callInputs` keys) for the banana-sdk's
 "modelInputs" argument.
 
+If provided, `init_image` and `mask_image` should be base64 encoded.
+
+Available schedulers: `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
+`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.  These cover the
+most commonly used / requested schedulers, but we already have code in place to
+support every scheduler provided by diffusers, which will work in a later
+diffusers release when they have better defaults.
+
+<a name="testing"></a>
+## Examples and testing
+
 There are also very basic examples in [test.py](./test.py), which you can view
 and call `python test.py` if the container is already running on port 8000.
 You can also specify a specific test, change some options, and run against a
 deployed banana image:
 
 ```bash
-# Run against http://localhost:8000/
+$ python test.py
+Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [all / test1] [test2] [etc]
+
+# Run against http://localhost:8000/ (Nvidia Quadro RTX 5000)
 $ python test.py txt2img
-Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [test1] [test2] [etc]
 Running test: txt2img
-Request took 5.2s (init: 9.2s, inference: 5.1s)
+Request took 5.9s (init: 3.2s, inference: 5.9s)
 Saved /home/dragon/www/banana/banana-sd-base/tests/output/txt2img.png
 
-# Run against deployed banana image
+# Run against deployed banana image (Nvidia A100)
 $ export BANANA_API_KEY=XXX
 $ BANANA_MODEL_KEY=XXX python3 test.py --banana txt2img
 Running test: txt2img
-Request took 4.3s (init: 6.5s, inference: 2.3s)
+Request took 19.4s (init: 2.5s, inference: 3.5s)
 Saved /home/dragon/www/banana/banana-sd-base/tests/output/txt2img.png
+
+# Note that 2nd runs are much faster (ignore init, that isn't run again)
+Request took 3.0s (init: 2.4s, inference: 2.1s)
 ```
 
 The best example of course is https://kiri.art/ and it's
