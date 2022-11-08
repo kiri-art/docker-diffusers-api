@@ -39,16 +39,16 @@ def decode_and_save(image_byte_string: str, name: str):
     print("Saved " + fp)
 
 
-tests = {}
+all_tests = {}
 
 
 def test(name, inputs):
-    global tests
-    tests.update({name: inputs})
+    global all_tests
+    all_tests.update({name: inputs})
 
 
 def runTest(name, banana, extraCallInputs):
-    inputs = tests.get(name)
+    inputs = all_tests.get(name)
     inputs.get("callInputs").update(extraCallInputs)
 
     print("Running test: " + name)
@@ -213,7 +213,7 @@ if os.getenv("USE_PATCHMATCH"):
 def main(tests_to_run, banana, extraCallInputs):
     invalid_tests = []
     for test in tests_to_run:
-        if tests.get(test, None) == None:
+        if all_tests.get(test, None) == None:
             invalid_tests.append(test)
 
     if len(invalid_tests) > 0:
@@ -225,9 +225,6 @@ def main(tests_to_run, banana, extraCallInputs):
 
 
 if __name__ == "__main__":
-    print(
-        "Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [test1] [test2] [etc]"
-    )
     parser = argparse.ArgumentParser()
     parser.add_argument("--banana", required=False, action="store_true")
     parser.add_argument(
@@ -239,8 +236,19 @@ if __name__ == "__main__":
     parser.add_argument("--scheduler", required=False, type=str)
 
     args, tests_to_run = parser.parse_known_args()
+
     extraCallInputs = {"xformers_memory_efficient_attention": args.xmfe}
     if args.scheduler:
         extraCallInputs.update({"SCHEDULER": args.scheduler})
+
+    if len(tests_to_run) < 1:
+        print(
+            "Usage: python3 test.py [--banana] [--xmfe=1/0] [--scheduler=SomeScheduler] [all / test1] [test2] [etc]"
+        )
+        sys.exit()
+    elif len(tests_to_run) == 1 and (
+        tests_to_run[0] == "ALL" or tests_to_run[0] == "all"
+    ):
+        tests_to_run = list(all_tests.keys())
 
     main(tests_to_run, banana=args.banana, extraCallInputs=extraCallInputs)
