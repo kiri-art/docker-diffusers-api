@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# This is my common way of building, but you can build however you like.
+# Note if you using a proxy, you need to have it running first.
+
+DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain \
+  docker build -t banana-sd \
+  --build-arg proxy=1 \
+  --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN \
+  --build-arg http_proxy="http://172.17.0.1:3128" \
+  --build-arg https_proxy="http://172.17.0.1:3128" \
+  "$@" .

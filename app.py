@@ -119,7 +119,7 @@ def truncateInputs(inputs: dict):
     return clone
 
 
-last_xformers_memory_efficient_attention = None
+last_xformers_memory_efficient_attention = {}
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -235,12 +235,14 @@ def inference(all_inputs: dict) -> dict:
         model_inputs["mask_image"] = PIL.Image.fromarray(mask)
 
     # Turning on takes 3ms and turning off 1ms... don't worry, I've got your back :)
-    x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", None)
-    if x_m_e_a != last_xformers_memory_efficient_attention:
-        last_xformers_memory_efficient_attention = x_m_e_a
-        if x_m_e_a == None or x_m_e_a == True:
+    x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", True)
+    last_x_m_e_a = last_xformers_memory_efficient_attention.get(pipeline, None)
+    if x_m_e_a != last_x_m_e_a:
+        if x_m_e_a == True:
+            print("pipeline.enable_xformers_memory_efficient_attention()")
             pipeline.enable_xformers_memory_efficient_attention()  # default on
         elif x_m_e_a == False:
+            print("pipeline.disable_xformers_memory_efficient_attention()")
             pipeline.disable_xformers_memory_efficient_attention()
         else:
             return {
@@ -251,6 +253,7 @@ def inference(all_inputs: dict) -> dict:
                     "available": [True, False],
                 }
             }
+        last_xformers_memory_efficient_attention.update({pipeline: x_m_e_a})
 
     # Run the model
     # with autocast("cuda"):

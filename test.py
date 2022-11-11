@@ -230,14 +230,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--xmfe",
         required=False,
-        default=True,
+        default=None,
         type=lambda x: bool(distutils.util.strtobool(x)),
     )
     parser.add_argument("--scheduler", required=False, type=str)
 
     args, tests_to_run = parser.parse_known_args()
 
-    extraCallInputs = {"xformers_memory_efficient_attention": args.xmfe}
+    extraCallInputs = {}
+    if args.xmfe != None:
+        extraCallInputs.update({"xformers_memory_efficient_attention": args.xmfe})
     if args.scheduler:
         extraCallInputs.update({"SCHEDULER": args.scheduler})
 

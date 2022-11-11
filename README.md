@@ -46,11 +46,8 @@ serverless).
 
 **Building**
 
-1. Set `HF_AUTH_TOKEN` environment var if you haven't set it elsewhere.
 1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
-1. Optionally add `DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain` to
-    start of the line, depending on your preferences.  (Recommended if
-    you're using the `root-cache` feature.)
+1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
 1. Note: your first build can take a really long time, depending on
     your PC & network speed, and *especially when using the `CHECKPOINT_URL`
     feature*.  Great time to grab a coffee or take a walk.

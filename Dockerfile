@@ -1,12 +1,31 @@
+ARG proxy=""
+
 # Banana requires Cuda version 11+.  Below is banana default:
 # FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel as base
 # xformers available precompiled for:
 #   Python 3.9 or 3.10, CUDA 11.3 or 11.6, and PyTorch 1.12.1
 #   https://github.com/facebookresearch/xformers/#getting-started
 # Below: pytorch base images only have Python 3.7 :(
-FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
+FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as parent
 # Below: our ideal image, but Optimization fails with it.
 #FROM continuumio/miniconda3:4.12.0 as base
+
+FROM parent as base-1
+# Note, docker uses HTTP_PROXY and HTTPS_PROXY (uppercase)
+# We purposefully want those managed independently, as we want docker
+# to manage its own cache.  This is just for pip, models, etc.
+ARG http_proxy
+ENV http_proxy=${http_proxy}
+ARG https_proxy
+ENV https_proxy=${https_proxy}
+ADD http://172.17.0.1:3129/squid-self-signed.crt /usr/local/share/ca-certificates/squid-self-signed.crt
+RUN update-ca-certificates
+ENV REQUESTS_CA_BUNDLE=/usr/local/share/ca-certificates/squid-self-signed.crt
+
+FROM parent as base-
+
+FROM base-${proxy} as base
+
 ENV DEBIAN_FRONTEND=noninteractive
 #RUN apt-get install gnupg2
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
@@ -41,8 +60,6 @@ RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
 RUN conda install xformers -c xformers/label/dev
 
 # Install python packages
-RUN mkdir -p /root/.cache/pip
-COPY root-cache/pip /root/.cache/pip
 RUN pip3 install --upgrade pip
 ADD requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
@@ -79,10 +96,6 @@ ENV MODEL_ID=${MODEL_ID}
 # ARG PIPELINE="StableDiffusionInpaintPipeline"
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
-
-COPY root-cache/huggingface /root/.cache/huggingface
-COPY root-cache/checkpoints /root/.cache/checkpoints
-RUN du -sh /root/.cache/*
 
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
