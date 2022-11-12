@@ -50,9 +50,13 @@ FROM base as output
 RUN mkdir /api
 WORKDIR /api
 
+## XXXX playing around a lot.
+# pip installs pytorch 1.13 and uninstalls 1.12 (needed by xformers)
+# recomment conda update; didn't help.  need to solve above issue.
+
+RUN conda update -n base -c defaults conda
 # We need python 3.9 or 3.10 for xformers
 # Yes, we install pytorch twice... will switch base image in future
-# RUN conda update -n base -c defaults conda
 RUN conda create -n xformers python=3.10
 SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
@@ -60,9 +64,10 @@ RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
 RUN conda install xformers -c xformers/label/dev
 
 # Install python packages
-RUN pip3 install --upgrade pip
+# RUN pip3 install --upgrade pip
+RUN https_proxy="" REQUESTS_CA_BUNDLE="" conda install pip
 ADD requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Required to build flash attention
 # Turing: 7.5 (RTX 20s, Quadro), Ampere: 8.0 (A100), 8.6 (RTX 30s)
@@ -119,7 +124,13 @@ ARG USE_PATCHMATCH=0
 RUN if [ "$USE_PATCHMATCH" = "1" ] ; then apt-get install -yqq python3-opencv ; fi
 COPY --from=patchmatch /tmp/PyPatchMatch PyPatchMatch
 
+ARG USE_DREAMBOOTH=1
+RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
+    pip install -r diffusers/examples/dreambooth/requirements.txt ; \
+  fi
+
 # Add your custom app code, init() and inference()
+ADD train_dreambooth.py .
 ADD send.py .
 ADD app.py .
 

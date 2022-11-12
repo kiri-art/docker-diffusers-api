@@ -266,7 +266,7 @@ if True or os.getenv("USE_DREAMBOOTH"):
     name = "dreambooth"
     inputs = {
         "modelInputs": {
-            "prompt": "girl with a pearl earing standing in a big room",
+            "instance_prompt": "a photo of sks dog",
             "instance_images": list(
                 map(b64encode_file, list(Path("tests/fixtures/dreambooth").iterdir()))
             ),
@@ -276,29 +276,12 @@ if True or os.getenv("USE_DREAMBOOTH"):
             "MODEL_ID": "runwayml/stable-diffusion-v1-5",
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMSDiscreteScheduler",
+            "train": "dreambooth",
         },
     }
-    print(inputs)
 
-    # print(json.dumps(inputs, indent=4))
-    exit
-
-    """
     print("Running test: " + name)
     response = requests.post("http://localhost:8000/", json=inputs)
     result = response.json()
 
-    if result.get("images_base64", None) == "None":
-        print(json.dumps(result, indent=4))
-        print()
-        exit
-
-    images_base64 = result.get("images_base64", None)
-    if images_base64:
-        for idx, image_byte_string in enumerate(images_base64):
-            decode_and_save(image_byte_string, f"{name}_{idx}")
-    else:
-        decode_and_save(result["image_base64"], name)
-
-    print()
-    """
+    print(result)

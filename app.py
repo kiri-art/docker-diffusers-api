@@ -22,6 +22,7 @@ import skimage
 import skimage.measure
 from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
+from train_dreambooth import TrainDreamBooth
 import re
 
 MODEL_ID = os.environ.get("MODEL_ID")
@@ -116,6 +117,10 @@ def truncateInputs(inputs: dict):
         for item in ["init_image", "mask_image", "image"]:
             if item in modelInputs:
                 modelInputs[item] = modelInputs[item][0:6] + "..."
+        if "instance_images" in modelInputs:
+            modelInputs["instance_images"] = list(
+                map(lambda str: str[0:6] + "...", modelInputs["instance_images"])
+            )
     return clone
 
 
@@ -209,6 +214,14 @@ def inference(all_inputs: dict) -> dict:
             model_inputs.get("mask_image"), "mask_image"
         )
 
+    if "instance_images" in model_inputs:
+        model_inputs["instance_images"] = list(
+            map(
+                lambda str: decodeBase64Image(str, "instance_image"),
+                model_inputs["instance_images"],
+            )
+        )
+
     seed = model_inputs.get("seed", None)
     if seed == None:
         generator = torch.Generator(device="cuda")
@@ -258,6 +271,14 @@ def inference(all_inputs: dict) -> dict:
     # Run the model
     # with autocast("cuda"):
     # image = pipeline(**model_inputs).images[0]
+
+    if call_inputs.get("train", None) == "dreambooth":
+        result = TrainDreamBooth(pipeline, model_inputs)
+        send("inference", "done", {"startRequestId": startRequestId})
+        inferenceTime = get_now() - inferenceStart
+        timings = {"init": initTime, "inference": inferenceTime}
+        result.update({"timings": timings})
+        return result
 
     with torch.inference_mode():
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
