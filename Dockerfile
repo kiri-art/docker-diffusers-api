@@ -127,7 +127,7 @@ ARG USE_DREAMBOOTH=1
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # By specifying the same torch version as conda, it won't download again.
     # Without this, it will upgrade torch, break xformers, make bigger image.
-    pip install -r diffusers/examples/dreambooth/requirements.txt torch==1.12.1 ; \
+    pip install -r diffusers/examples/dreambooth/requirements.txt bitsandbytes torch==1.12.1 ; \
   fi
 
 # Add your custom app code, init() and inference()

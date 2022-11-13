@@ -41,11 +41,83 @@ from transformers import CLIPTextModel, CLIPTokenizer
 # TODO, in download.py download the pretrained tokenizers, encoders, etc.
 # we might have them already.
 
+HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
-def TrainDreamBooth(pipeline, model_inputs):
+
+def TrainDreamBooth(model_id: str, pipeline, model_inputs):
+    # required inputs: instance_images instance_prompt
+
+    # TODO, not save at all... we're just getting it working
+    # if its a hassle, in interim, at least save to unique dir
+    if not os.path.exists("instance_data_dir"):
+        os.mkdir("instance_data_dir")
+    for i, image in enumerate(model_inputs["instance_images"]):
+        image.save("instance_data_dir/image" + str(i) + ".png")
+    del model_inputs["instance_images"]
+
+    # TODO allow pass through of seed
+    del model_inputs["generator"]
+
+    # TODO in app.py
+    torch.set_grad_enabled(True)
+
+    import subprocess
+
+    subprocess.run(["ls", "-l", "instance_data_dir"])
+
+    params = {
+        # Defaults
+        "pretrained_model_name_or_path": model_id,  # DDA, TODO
+        "revision": "fp16",  # DDA, was: None
+        "tokenizer_name": None,
+        "instance_data_dir": "instance_data_dir",  # DDA TODO
+        "class_data_dir": None,
+        # instance_prompt
+        "class_prompt": None,
+        "with_prior_preservation": False,
+        "prior_loss_weight": 1.0,
+        "num_class_images": 100,
+        "output_dir": "text-inversion-model",
+        "seed": None,
+        "resolution": 512,
+        "center_crop": None,
+        "train_text_encoder": None,
+        "train_batch_size": 1,  # DDA, was: 4
+        "sample_batch_size": 1,  # DDA, was: 4,
+        "num_train_epochs": 1,
+        "max_train_steps": None,
+        "gradient_accumulation_steps": 1,
+        "gradient_checkpointing": None,
+        "learning_rate": 5e-6,
+        "scale_lr": False,
+        "lr_scheduler": "constant",
+        "lr_warmup_steps": 0,  # DDA, was: 500,
+        "use_8bit_adam": True,  # DDA, was: None
+        "adam_beta1": 0.9,
+        "adam_beta2": 0.999,
+        "adam_weight_decay": 1e-2,
+        "adam_epsilon": 1e-08,
+        "max_grad_norm": 1.0,
+        "push_to_hub": None,
+        "hub_token": HF_AUTH_TOKEN,
+        "hub_model_id": None,
+        "logging_dir": "logs",
+        "mixed_precision": "fp16",  # DDA, was: "no"
+        "local_rank": -1,
+    }
+
+    params.update(model_inputs)
     print(model_inputs)
-    dict = {}
-    args = argparse.Namespace(**dict)
+
+    # params.update(
+    #    {
+    #        "pipeline": pipeline,
+    #    }
+    # )
+    args = argparse.Namespace(**params)
+
+    print(args)
+    main(args)
     return {"done": True}
 
 
@@ -208,12 +280,15 @@ def main(args):
             torch_dtype = (
                 torch.float16 if accelerator.device.type == "cuda" else torch.float32
             )
-            pipeline = StableDiffusionPipeline.from_pretrained(
-                args.pretrained_model_name_or_path,
-                torch_dtype=torch_dtype,
-                safety_checker=None,
-                revision=args.revision,
-            )
+            # DDA
+            pipeline = args.pipeline
+            pipeline.safety_checker = None
+            # pipeline = StableDiffusionPipeline.from_pretrained(
+            #     args.pretrained_model_name_or_path,
+            #     torch_dtype=torch_dtype,
+            #     safety_checker=None,
+            #     revision=args.revision,
+            # )
             pipeline.set_progress_bar_config(disable=True)
 
             num_new_images = args.num_class_images - cur_class_images
@@ -270,12 +345,14 @@ def main(args):
         tokenizer = CLIPTokenizer.from_pretrained(
             args.tokenizer_name,
             revision=args.revision,
+            use_auth_token=args.hub_token,  # DDA
         )
     elif args.pretrained_model_name_or_path:
         tokenizer = CLIPTokenizer.from_pretrained(
             args.pretrained_model_name_or_path,
             subfolder="tokenizer",
             revision=args.revision,
+            use_auth_token=args.hub_token,  # DDA
         )
 
     # Load models and create wrapper for stable diffusion
@@ -283,16 +360,19 @@ def main(args):
         args.pretrained_model_name_or_path,
         subfolder="text_encoder",
         revision=args.revision,
+        use_auth_token=args.hub_token,  # DDA
     )
     vae = AutoencoderKL.from_pretrained(
         args.pretrained_model_name_or_path,
         subfolder="vae",
         revision=args.revision,
+        use_auth_token=args.hub_token,  # DDA
     )
     unet = UNet2DConditionModel.from_pretrained(
         args.pretrained_model_name_or_path,
         subfolder="unet",
         revision=args.revision,
+        use_auth_token=args.hub_token,  # DDA
     )
 
     vae.requires_grad_(False)
@@ -339,7 +419,9 @@ def main(args):
     )
 
     noise_scheduler = DDPMScheduler.from_config(
-        "CompVis/stable-diffusion-v1-4", subfolder="scheduler"
+        "CompVis/stable-diffusion-v1-4",
+        subfolder="scheduler",
+        use_auth_token=args.hub_token,  # DDA
     )
 
     train_dataset = DreamBoothDataset(
