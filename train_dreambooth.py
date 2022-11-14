@@ -104,7 +104,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
         "hub_token": HF_AUTH_TOKEN,
         "hub_model_id": None,
         "logging_dir": "logs",
-        "mixed_precision": revision,  # DDA, was: "no"
+        "mixed_precision": "no" if revision == "" else revision,  # DDA, was: "no"
         "local_rank": -1,
     }
 
@@ -119,7 +119,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
     args = argparse.Namespace(**params)
 
     print(args)
-    main(args)
+    main(args, pipeline)
     return {"done": True}
 
 
@@ -246,7 +246,7 @@ def get_full_repo_name(
         return f"{organization}/{model_id}"
 
 
-def main(args):
+def main(args, init_pipeline):
     logging_dir = Path(args.output_dir, args.logging_dir)
 
     accelerator = Accelerator(
@@ -279,11 +279,12 @@ def main(args):
         cur_class_images = len(list(class_images_dir.iterdir()))
 
         if cur_class_images < args.num_class_images:
-            torch_dtype = (
-                torch.float16 if accelerator.device.type == "cuda" else torch.float32
-            )
             # DDA
-            pipeline = args.pipeline
+            # torch_dtype = (
+            #    torch.float16 if accelerator.device.type == "cuda" else torch.float32
+            # )
+            # DDA
+            pipeline = init_pipeline
             pipeline.safety_checker = None
             # pipeline = StableDiffusionPipeline.from_pretrained(
             #     args.pretrained_model_name_or_path,
@@ -302,7 +303,7 @@ def main(args):
             )
 
             sample_dataloader = accelerator.prepare(sample_dataloader)
-            pipeline.to(accelerator.device)
+            # pipeline.to(accelerator.device) # DDA already done
 
             for example in tqdm(
                 sample_dataloader,
@@ -351,36 +352,42 @@ def main(args):
             local_files_only=True,  # DDA
         )
     elif args.pretrained_model_name_or_path:
-        tokenizer = CLIPTokenizer.from_pretrained(
-            args.pretrained_model_name_or_path,
-            subfolder="tokenizer",
-            revision=args.revision,
-            use_auth_token=args.hub_token,  # DDA
-            local_files_only=True,  # DDA
-        )
+        tokenizer = init_pipeline.components["tokenizer"]  # DDA
+        # tokenizer = CLIPTokenizer.from_pretrained(
+        #     args.pretrained_model_name_or_path,
+        #     subfolder="tokenizer",
+        #     revision=args.revision,
+        #     use_auth_token=args.hub_token,  # DDA
+        #     local_files_only=True,  # DDA
+        # )
 
     # Load models and create wrapper for stable diffusion
-    text_encoder = CLIPTextModel.from_pretrained(
-        args.pretrained_model_name_or_path,
-        subfolder="text_encoder",
-        revision=args.revision,
-        use_auth_token=args.hub_token,  # DDA
-        local_files_only=True,  # DDA
-    )
-    vae = AutoencoderKL.from_pretrained(
-        args.pretrained_model_name_or_path,
-        subfolder="vae",
-        revision=args.revision,
-        use_auth_token=args.hub_token,  # DDA
-        local_files_only=True,  # DDA
-    )
-    unet = UNet2DConditionModel.from_pretrained(
-        args.pretrained_model_name_or_path,
-        subfolder="unet",
-        revision=args.revision,
-        use_auth_token=args.hub_token,  # DDA
-        local_files_only=True,  # DDA
-    )
+    # text_encoder = CLIPTextModel.from_pretrained(
+    #     args.pretrained_model_name_or_path,
+    #     subfolder="text_encoder",
+    #     revision=args.revision,
+    #     use_auth_token=args.hub_token,  # DDA
+    #     local_files_only=True,  # DDA
+    # )
+    # vae = AutoencoderKL.from_pretrained(
+    #     args.pretrained_model_name_or_path,
+    #     subfolder="vae",
+    #     revision=args.revision,
+    #     use_auth_token=args.hub_token,  # DDA
+    #     local_files_only=True,  # DDA
+    # )
+    # unet = UNet2DConditionModel.from_pretrained(
+    #     args.pretrained_model_name_or_path,
+    #     subfolder="unet",
+    #     revision=args.revision,
+    #     use_auth_token=args.hub_token,  # DDA
+    #     local_files_only=True,  # DDA
+    # )
+    print("pipeline.disable_xformers_memory_efficient_attention()")
+    init_pipeline.disable_xformers_memory_efficient_attention()
+    text_encoder = init_pipeline.components["text_encoder"]  # DDA
+    vae = init_pipeline.components["vae"]  # DDA
+    unet = init_pipeline.components["unet"]  # DDA
 
     vae.requires_grad_(False)
     if not args.train_text_encoder:
@@ -515,9 +522,10 @@ def main(args):
     # Move text_encode and vae to gpu.
     # For mixed precision training we cast the text_encoder and vae weights to half-precision
     # as these models are only used for inference, keeping weights in full precision is not required.
-    vae.to(accelerator.device, dtype=weight_dtype)
-    if not args.train_text_encoder:
-        text_encoder.to(accelerator.device, dtype=weight_dtype)
+    # DDA already loaded
+    # vae.to(accelerator.device, dtype=weight_dtype)
+    # if not args.train_text_encoder:
+    #    text_encoder.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(
