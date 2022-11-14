@@ -333,7 +333,12 @@ def main(args, init_pipeline):
                 )
             else:
                 repo_name = args.hub_model_id
-            repo = Repository(args.output_dir, clone_from=repo_name)
+            repo = Repository(
+                args.output_dir,
+                clone_from=repo_name,
+                use_auth_token=args.hub_token,  # DDA
+                private=True,  # DDA
+            )
 
             with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
                 if "step_*" not in gitignore:
@@ -659,12 +664,18 @@ def main(args, init_pipeline):
             unet=accelerator.unwrap_model(unet),
             text_encoder=accelerator.unwrap_model(text_encoder),
             revision=args.revision,
+            local_files_only=True,  # DDA
         )
         pipeline.save_pretrained(args.output_dir)
 
         if args.push_to_hub:
             repo.push_to_hub(
-                commit_message="End of training", blocking=False, auto_lfs_prune=True
+                commit_message="End of training",
+                # DDA need to think about this, quite nice to not block, then could
+                # upload while training next request.  But, timeout will kill an unused
+                # process...  what else?
+                blocking=True,  # DDA, was: False,
+                auto_lfs_prune=True,
             )
 
     accelerator.end_training()

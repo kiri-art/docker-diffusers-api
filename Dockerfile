@@ -135,6 +135,7 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # Without this, it will upgrade torch, break xformers, make bigger image.
     pip install -r diffusers/examples/dreambooth/requirements.txt bitsandbytes torch==1.12.1 ; \
   fi
+RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 
 # Add your custom app code, init() and inference()
 ADD train_dreambooth.py .
