@@ -87,14 +87,14 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
         "train_batch_size": 1,  # DDA, was: 4
         "sample_batch_size": 1,  # DDA, was: 4,
         "num_train_epochs": 1,
-        "max_train_steps": None,
+        "max_train_steps": 400,  # DDA, was: None,
         "gradient_accumulation_steps": 1,
-        "gradient_checkpointing": None,
+        "gradient_checkpointing": True,  # DDA was: None (needed for 16GB)
         "learning_rate": 5e-6,
         "scale_lr": False,
         "lr_scheduler": "constant",
         "lr_warmup_steps": 0,  # DDA, was: 500,
-        "use_8bit_adam": True,  # DDA, was: None
+        "use_8bit_adam": True,  # DDA, was: None (needed for 16GB)
         "adam_beta1": 0.9,
         "adam_beta2": 0.999,
         "adam_weight_decay": 1e-2,
