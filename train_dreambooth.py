@@ -348,6 +348,7 @@ def main(args):
             args.tokenizer_name,
             revision=args.revision,
             use_auth_token=args.hub_token,  # DDA
+            local_files_only=True,  # DDA
         )
     elif args.pretrained_model_name_or_path:
         tokenizer = CLIPTokenizer.from_pretrained(
@@ -355,6 +356,7 @@ def main(args):
             subfolder="tokenizer",
             revision=args.revision,
             use_auth_token=args.hub_token,  # DDA
+            local_files_only=True,  # DDA
         )
 
     # Load models and create wrapper for stable diffusion
@@ -363,18 +365,21 @@ def main(args):
         subfolder="text_encoder",
         revision=args.revision,
         use_auth_token=args.hub_token,  # DDA
+        local_files_only=True,  # DDA
     )
     vae = AutoencoderKL.from_pretrained(
         args.pretrained_model_name_or_path,
         subfolder="vae",
         revision=args.revision,
         use_auth_token=args.hub_token,  # DDA
+        local_files_only=True,  # DDA
     )
     unet = UNet2DConditionModel.from_pretrained(
         args.pretrained_model_name_or_path,
         subfolder="unet",
         revision=args.revision,
         use_auth_token=args.hub_token,  # DDA
+        local_files_only=True,  # DDA
     )
 
     vae.requires_grad_(False)

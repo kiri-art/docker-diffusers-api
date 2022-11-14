@@ -105,6 +105,9 @@ ADD precision.py .
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
 
+ARG USE_DREAMBOOTH=1
+ENV USE_DREAMBOOTH=${USE_DREAMBOOTH}
+
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
 ARG CHECKPOINT_URL=""
@@ -127,8 +130,6 @@ ARG USE_PATCHMATCH=0
 RUN if [ "$USE_PATCHMATCH" = "1" ] ; then apt-get install -yqq python3-opencv ; fi
 COPY --from=patchmatch /tmp/PyPatchMatch PyPatchMatch
 
-ARG cache=1
-ARG USE_DREAMBOOTH=1
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # By specifying the same torch version as conda, it won't download again.
     # Without this, it will upgrade torch, break xformers, make bigger image.
