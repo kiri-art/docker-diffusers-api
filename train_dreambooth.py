@@ -35,6 +35,8 @@ from PIL import Image
 from torchvision import transforms
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
+from precision import revision, torch_dtype
+
 
 # Our original code in docker-diffusers-api:
 
@@ -68,7 +70,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
     params = {
         # Defaults
         "pretrained_model_name_or_path": model_id,  # DDA, TODO
-        "revision": "fp16",  # DDA, was: None
+        "revision": revision,  # DDA, was: None
         "tokenizer_name": None,
         "instance_data_dir": "instance_data_dir",  # DDA TODO
         "class_data_dir": None,
@@ -102,7 +104,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
         "hub_token": HF_AUTH_TOKEN,
         "hub_model_id": None,
         "logging_dir": "logs",
-        "mixed_precision": "fp16",  # DDA, was: "no"
+        "mixed_precision": revision,  # DDA, was: "no"
         "local_rank": -1,
     }
 

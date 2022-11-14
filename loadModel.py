@@ -2,6 +2,7 @@ import torch
 import os
 from diffusers import pipelines as _pipelines, StableDiffusionPipeline
 from getScheduler import getScheduler, DEFAULT_SCHEDULER
+from precision import revision, torch_dtype
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 PIPELINE = os.getenv("PIPELINE")
@@ -26,8 +27,8 @@ def loadModel(model_id: str, load=True):
 
     model = pipeline.from_pretrained(
         model_id,
-        revision="fp16",
-        torch_dtype=torch.float16,
+        revision=revision,
+        torch_dtype=torch_dtype,
         use_auth_token=HF_AUTH_TOKEN,
         scheduler=scheduler,
         local_files_only=load,

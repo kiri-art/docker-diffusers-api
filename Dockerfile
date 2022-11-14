@@ -96,6 +96,11 @@ ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
 ARG MODEL_ID="runwayml/stable-diffusion-v1-5"
 ENV MODEL_ID=${MODEL_ID}
 
+# "" = model default.
+ARG PRECISION="fp16"
+ENV PRECISION=${PRECISION}
+ADD precision.py .
+
 # ARG PIPELINE="StableDiffusionInpaintPipeline"
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
