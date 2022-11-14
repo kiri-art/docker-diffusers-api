@@ -436,6 +436,7 @@ def main(args, init_pipeline):
         "CompVis/stable-diffusion-v1-4",
         subfolder="scheduler",
         use_auth_token=args.hub_token,  # DDA
+        local_files_only=True,  # DDA
     )
 
     train_dataset = DreamBoothDataset(
