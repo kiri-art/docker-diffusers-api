@@ -118,7 +118,9 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
                 map(
                     lambda item: (
                         item[0],
-                        f"{item[1]/1000:.1f}s"
+                        f"{item[1]/1000/60:.1f}m"
+                        if item[1] > 60000
+                        else f"{item[1]/1000:.1f}s"
                         if item[1] > 1000
                         else str(item[1]) + "ms",
                     ),
