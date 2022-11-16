@@ -7,6 +7,7 @@ import os
 import json
 import sys
 import time
+import datetime
 import argparse
 import distutils
 from uuid import uuid4
@@ -76,8 +77,27 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             "startOnly": False,
         }
         response = requests.post("https://api.banana.dev/start/v4/", json=payload)
-
         result = response.json()
+        callID = result.get("callID")
+
+        if result.get("finished", None) == False:
+            while result.get("message", None) != "success":
+                secondsSinceStart = round((time.time() - start) / 1000)
+                print(str(datetime.datetime.now()) + f": t+{secondsSinceStart}s")
+                print(json.dumps(result, indent=4))
+                print
+                payload = {
+                    "id": str(uuid4()),
+                    "created": int(time.time()),
+                    "longPoll": True,
+                    "apiKey": BANANA_API_KEY,
+                    "callID": callID,
+                }
+                response = requests.post(
+                    "https://api.banana.dev/check/v4/", json=payload
+                )
+                result = response.json()
+
         modelOutputs = result.get("modelOutputs", None)
         if modelOutputs == None:
             finish = time.time() - start
@@ -91,13 +111,22 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
 
     finish = time.time() - start
     timings = result.get("$timings")
+
     if timings:
-        init = timings.get("init") / 1000
-        inference = timings.get("inference") / 1000
-        print(
-            f"Request took {finish:.1f}s ("
-            + f"init: {init:.1f}s, inference: {inference:.1f}s)"
-        )
+        timings_str = json.dumps(
+            dict(
+                map(
+                    lambda item: (
+                        item[0],
+                        f"{item[1]/1000:.1f}s"
+                        if item[1] > 1000
+                        else str(item[1]) + "ms",
+                    ),
+                    timings.items(),
+                )
+            )
+        ).replace('"', "")[1:-1]
+        print(f"Request took {finish:.1f}s ({timings_str})")
     else:
         print(f"Request took {finish:.1f}s")
 

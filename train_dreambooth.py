@@ -35,7 +35,9 @@ from PIL import Image
 from torchvision import transforms
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
+
 from precision import revision, torch_dtype
+from send import send, get_now
 
 
 # Our original code in docker-diffusers-api:
@@ -119,8 +121,8 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
     args = argparse.Namespace(**params)
 
     print(args)
-    main(args, pipeline)
-    return {"done": True}
+    result = main(args, pipeline)
+    return result
 
 
 # What follows is mostly the original train_dreambooth.py
@@ -571,6 +573,10 @@ def main(args, init_pipeline):
     progress_bar.set_description("Steps")
     global_step = 0
 
+    # DDA
+    send("training", "start", {}, True)
+    training_start = get_now()
+
     for epoch in range(args.num_train_epochs):
         unet.train()
         if args.train_text_encoder:
@@ -657,6 +663,12 @@ def main(args, init_pipeline):
 
         accelerator.wait_for_everyone()
 
+    # DDA
+    send("training", "done")
+    training_total = get_now() - training_start
+    upload_start = 0
+    upload_total = 0
+
     # Create the pipeline using using the trained modules and save it.
     if accelerator.is_main_process:
         pipeline = StableDiffusionPipeline.from_pretrained(
@@ -669,6 +681,10 @@ def main(args, init_pipeline):
         pipeline.save_pretrained(args.output_dir)
 
         if args.push_to_hub:
+            # DDA
+            send("uploading", "start", {}, True)
+            upload_start = get_now()
+
             repo.push_to_hub(
                 commit_message="End of training",
                 # DDA need to think about this, quite nice to not block, then could
@@ -678,4 +694,14 @@ def main(args, init_pipeline):
                 auto_lfs_prune=True,
             )
 
+            # DDA
+            send("uploading", "done")
+            upload_total = get_now() - upload_start
+
     accelerator.end_training()
+
+    # DDA
+    return {
+        "done": True,
+        "$timings": {"training": training_total, "upload": upload_total},
+    }

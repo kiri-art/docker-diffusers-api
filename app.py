@@ -276,8 +276,9 @@ def inference(all_inputs: dict) -> dict:
         result = TrainDreamBooth(model_id, pipeline, model_inputs)
         send("inference", "done", {"startRequestId": startRequestId})
         inferenceTime = get_now() - inferenceStart
-        timings = {"init": initTime, "inference": inferenceTime}
-        result.update({"timings": timings})
+        timings = result.get("$timings", {})
+        timings = {"init": initTime, "inference": inferenceTime, **timings}
+        result.update({"$timings": timings})
         return result
 
     with torch.inference_mode():
