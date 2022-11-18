@@ -89,7 +89,7 @@ The container expects an `HTTP POST` request with the following JSON body:
 If you're using banana's SDK, it looks something like this:
 
 ```js
-const out = await banana.run(apiKey, modelKey, { modelInputs, callInputs });
+const out = await banana.run(apiKey, modelKey, { "modelInputs": modelInputs, "callInputs": callInputs });
 ```
 
 NB: if you're coming from another banana starter repo, note that we
