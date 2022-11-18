@@ -36,12 +36,13 @@ from torchvision import transforms
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
+# DDA
 from precision import revision, torch_dtype
 from send import send, get_now
+from utils import Storage
 import subprocess
-import boto3
 import re
-from botocore.client import Config
+import shutil
 
 # Our original code in docker-diffusers-api:
 
@@ -124,24 +125,12 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     print(args)
     result = main(args, pipeline)
 
-    s3_dest_url = call_inputs.get("s3_dest_url")
-    if s3_dest_url:
-        s3_dest = re.match(
-            "^((?P<endpoint>https?://[^/]+))?(/(?P<bucket>[^/]+)/?)?(?P<path>.*)$",
-            s3_dest_url,
-        ).groupdict()
-        print(s3_dest)
-        if not s3_dest["endpoint"]:
-            s3_dest["endpoint"] = os.getenv("AWS_S3_ENDPOINT_URL")
-        if not s3_dest["bucket"]:
-            s3_dest["bucket"] = os.getenv("AWS_S3_DEFAULT_BUCKET")
-        if s3_dest["path"] == "":
-            s3_dest["path"] = args.pretrained_model_name_or_path
-
-        print(s3_dest)
-
-        # TODO only if no dot
-        filename = s3_dest["path"].split("/").pop()
+    dest_url = call_inputs.get("dest_url")
+    if dest_url:
+        storage = Storage(dest_url)
+        filename = storage.path if storage.path != "" else args.output_dir
+        filename = filename.split("/").pop()
+        print(filename)
         if not re.search("\.", filename):
             filename += ".tar.zstd"
         print(filename)
@@ -156,18 +145,12 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         compress_total = get_now() - compress_start
         result.get("$timings").update({"compress": compress_total})
 
-        s3 = boto3.resource(
-            "s3",
-            endpoint_url=s3_dest["endpoint"],
-            config=Config(signature_version="s3v4"),
-        )
-        bucket = s3.Bucket(s3_dest["bucket"])
-
-        upload_start = get_now()
-        upload_result = bucket.upload_file(filename, filename)
+        upload_result = storage.upload_file(filename, filename)
         print(upload_result)
-        upload_total = get_now() - upload_start
-        result.get("$timings").update({"upload": upload_total})
+        os.remove(filename)
+        shutil.rmtree(args.output_dir)
+
+        result.get("$timings").update({"upload": upload_result["$time"]})
 
     return result
 

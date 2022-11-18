@@ -117,6 +117,8 @@ ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 ENV AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
 ENV AWS_S3_ENDPOINT_URL=${AWS_S3_ENDPOINT_URL}
 
+COPY utils utils
+
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
 ARG CHECKPOINT_URL=""
