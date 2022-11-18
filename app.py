@@ -22,8 +22,11 @@ import skimage
 import skimage.measure
 from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
-from train_dreambooth import TrainDreamBooth
 import re
+
+USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
+if USE_DREAMBOOTH:
+    from train_dreambooth import TrainDreamBooth
 
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
@@ -273,6 +276,13 @@ def inference(all_inputs: dict) -> dict:
     # image = pipeline(**model_inputs).images[0]
 
     if call_inputs.get("train", None) == "dreambooth":
+        if not USE_DREAMBOOTH:
+            return {
+                "$error": {
+                    "code": "TRAIN_DREAMBOOTH_NOT_AVAILABLE",
+                    "message": 'Called with callInput { train: "dreambooth" } but built with TRAIN_DREAMBOOTH=0',
+                }
+            }
         result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
         send("inference", "done", {"startRequestId": startRequestId})
         inferenceTime = get_now() - inferenceStart
