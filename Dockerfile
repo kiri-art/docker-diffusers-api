@@ -105,7 +105,7 @@ ADD precision.py .
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
 
-ARG USE_DREAMBOOTH=1
+ARG USE_DREAMBOOTH=0
 ENV USE_DREAMBOOTH=${USE_DREAMBOOTH}
 
 ARG AWS_ACCESS_KEY_ID
@@ -119,10 +119,15 @@ ENV AWS_S3_ENDPOINT_URL=${AWS_S3_ENDPOINT_URL}
 
 COPY utils utils
 
+# Download diffusers model from somewhere else (see Storage docs)
+# Don't use this for checkpoints (.ckpt)!  Use CHECKPOINT_URL for that.
+ARG MODEL_URL=""
+ENV MODEL_URL=${MODEL_URL}
 # If set, it will be downloaded and converted to diffusers format, and
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
 ARG CHECKPOINT_URL=""
 ENV CHECKPOINT_URL=${CHECKPOINT_URL}
+
 ADD download-checkpoint.py .
 RUN python3 download-checkpoint.py
 ADD convert-to-diffusers.py .

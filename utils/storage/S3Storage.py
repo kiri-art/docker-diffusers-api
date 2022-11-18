@@ -76,3 +76,9 @@ class S3Storage:
         upload_total = get_now() - upload_start
 
         return {"$time": upload_total}
+
+    def download_file(self, dest):
+        if not dest:
+            dest = self.path.split("/").pop()
+        print(f"Downloading {self.url} to {dest}...")
+        self.bucket().download_file(self.path, dest)
