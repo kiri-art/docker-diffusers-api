@@ -273,7 +273,7 @@ def inference(all_inputs: dict) -> dict:
     # image = pipeline(**model_inputs).images[0]
 
     if call_inputs.get("train", None) == "dreambooth":
-        result = TrainDreamBooth(model_id, pipeline, model_inputs)
+        result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
         send("inference", "done", {"startRequestId": startRequestId})
         inferenceTime = get_now() - inferenceStart
         timings = result.get("$timings", {})

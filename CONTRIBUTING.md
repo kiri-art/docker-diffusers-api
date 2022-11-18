@@ -2,6 +2,11 @@
 
 *Tips for development*
 
+1. [Using Buildkit](#buildkit)
+1. [Local HTTP(S) Caching Proxy](#caching)
+1. [Local S3 Server](#local-s3-server)
+
+<a name="buildkit"></a>
 ## Using BuildKit
 
 Buildkit is a docker extension that can really improve build speeds through
@@ -13,7 +18,8 @@ vars before `docker build` (the `PROGRESS` var shows much more detailed
 build logs, which can be useful, but are much more verbose).  This is
 already all setup in the the [build](./build) script.
 
-## Cache
+<a name="caching"></a>
+## Local HTTP(S) Caching Proxy
 
 If you're only editing e.g. `app.py`, there's no need to worry about caching
 and the docker layers work amazingly.  But, if you're constantly changing
@@ -46,3 +52,39 @@ refresh_pattern .  52034400 50% 52034400 store-stale override-expire ignore-no-c
 
 but ideally we can as a community create some rules that don't so
 aggressively catch every single request.
+
+<a name="local-s3"></a>
+## Local S3 server
+
+If you're doing development around the S3 handling, it can be very useful to
+have a local S3 server, especially due to the large size of models.  You
+can set one up like this:
+
+```bash
+$ docker run -p 9000:9000 -p 9001:9001 \
+  -v /usr/local/minio:/data quay.io/minio/minio \
+  server /data --console-address ":9001"
+```
+
+Now point a web browser to http://localhost:9001/, login with the default
+root credentials `minioadmin:minioadmin` and create a bucket and credentials
+for testing.  More info at https://hub.docker.com/r/minio/minio/.
+
+Typical policy:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject"
+            ],
+            "Resource": "arn:aws:s3:::BUCKET_NAME/*"
+        }
+    ]
+}
+```

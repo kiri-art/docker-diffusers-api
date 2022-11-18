@@ -38,7 +38,10 @@ from transformers import CLIPTextModel, CLIPTokenizer
 
 from precision import revision, torch_dtype
 from send import send, get_now
-
+import subprocess
+import boto3
+import re
+from botocore.client import Config
 
 # Our original code in docker-diffusers-api:
 
@@ -48,7 +51,7 @@ from send import send, get_now
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
 
-def TrainDreamBooth(model_id: str, pipeline, model_inputs):
+def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     # required inputs: instance_images instance_prompt
 
     # TODO, not save at all... we're just getting it working
@@ -64,8 +67,6 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
 
     # TODO in app.py
     torch.set_grad_enabled(True)
-
-    import subprocess
 
     subprocess.run(["ls", "-l", "instance_data_dir"])
 
@@ -122,6 +123,52 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs):
 
     print(args)
     result = main(args, pipeline)
+
+    s3_dest_url = call_inputs.get("s3_dest_url")
+    if s3_dest_url:
+        s3_dest = re.match(
+            "^((?P<endpoint>https?://[^/]+))?(/(?P<bucket>[^/]+)/?)?(?P<path>.*)$",
+            s3_dest_url,
+        ).groupdict()
+        print(s3_dest)
+        if not s3_dest["endpoint"]:
+            s3_dest["endpoint"] = os.getenv("AWS_S3_ENDPOINT_URL")
+        if not s3_dest["bucket"]:
+            s3_dest["bucket"] = os.getenv("AWS_S3_DEFAULT_BUCKET")
+        if s3_dest["path"] == "":
+            s3_dest["path"] = args.pretrained_model_name_or_path
+
+        print(s3_dest)
+
+        # TODO only if no dot
+        filename = s3_dest["path"].split("/").pop()
+        if not re.search("\.", filename):
+            filename += ".tar.zstd"
+        print(filename)
+
+        # fp16 model timings: zip 1m20s, tar+zstd 4s and a tiny bit smaller!
+        compress_start = get_now()
+
+        # TODO, steaming upload (turns out docker disk write is super slow)
+        subprocess.run(f"tar cf - {args.output_dir} | zstd -o {filename}", shell=True)
+        subprocess.run(["ls", "-l", filename])
+
+        compress_total = get_now() - compress_start
+        result.get("$timings").update({"compress": compress_total})
+
+        s3 = boto3.resource(
+            "s3",
+            endpoint_url=s3_dest["endpoint"],
+            config=Config(signature_version="s3v4"),
+        )
+        bucket = s3.Bucket(s3_dest["bucket"])
+
+        upload_start = get_now()
+        upload_result = bucket.upload_file(filename, filename)
+        print(upload_result)
+        upload_total = get_now() - upload_start
+        result.get("$timings").update({"upload": upload_total})
+
     return result
 
 
