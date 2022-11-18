@@ -139,7 +139,9 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         compress_start = get_now()
 
         # TODO, steaming upload (turns out docker disk write is super slow)
-        subprocess.run(f"tar cf - {args.output_dir} | zstd -o {filename}", shell=True)
+        subprocess.run(
+            f"tar cf - -C {args.output_dir} . | zstd -o {filename}", shell=True
+        )
         subprocess.run(["ls", "-l", filename])
 
         compress_total = get_now() - compress_start
