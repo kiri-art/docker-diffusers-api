@@ -20,6 +20,8 @@ assumptions.  If anything is unclear, please open an issue.
 
 ## [Read the CHANGELOG for Important Updates.](./CHANGELOG.md)
 
+**Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
+
 ## Usage:
 
 Firstly, fork and clone this repo.
