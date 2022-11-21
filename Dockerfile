@@ -127,6 +127,8 @@ ENV MODEL_URL=${MODEL_URL}
 # saved in a directory with same MODEL_ID name to be loaded by diffusers.
 ARG CHECKPOINT_URL=""
 ENV CHECKPOINT_URL=${CHECKPOINT_URL}
+ARG CHECKPOINT_CONFIG_URL=""
+ENV CHECKPOINT_CONFIG_URL=${CHECKPOINT_CONFIG_URL}
 
 ADD download-checkpoint.py .
 RUN python3 download-checkpoint.py
