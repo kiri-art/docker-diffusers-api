@@ -140,7 +140,9 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 
         # TODO, steaming upload (turns out docker disk write is super slow)
         subprocess.run(
-            f"tar cf - -C {args.output_dir} . | zstd -o {filename}", shell=True
+            f"tar cf - -C {args.output_dir} . | zstd -o {filename}",
+            shell=True,
+            check=True,  # TODO, rather don't raise and return an error in JSON
         )
         subprocess.run(["ls", "-l", filename])
 

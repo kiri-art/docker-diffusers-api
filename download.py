@@ -22,7 +22,8 @@ def download_model():
         storage.download_file(filename)
         os.mkdir(MODEL_ID)
         subprocess.run(
-            ["tar", "--use-compress-program=unzstd", "-C", MODEL_ID, "-xvf", filename]
+            ["tar", "--use-compress-program=unzstd", "-C", MODEL_ID, "-xvf", filename],
+            check=True,
         )
         subprocess.run(["ls", "-l"])
         return

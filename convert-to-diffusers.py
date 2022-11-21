@@ -20,8 +20,8 @@ if __name__ == "__main__":
     fname = CHECKPOINT_DIR + "/" + CHECKPOINT_URL.split("/").pop()
     print("Converting " + fname + " to diffusers model " + MODEL_ID + "...", flush=True)
 
-    subprocess.run(["pip", "install", "omegaconf", "pytorch_lightning"])
-    subprocess.run(["apt-get", "install", "-y", "wget"])
+    subprocess.run(["pip", "install", "omegaconf", "pytorch_lightning"], check=True)
+    subprocess.run(["apt-get", "install", "-y", "wget"], check=True)
     subprocess.run(
         [
             "sed",
@@ -41,7 +41,8 @@ if __name__ == "__main__":
             "grep",
             "torch.load",
             "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py",
-        ]
+        ],
+        check=True,
     )
     subprocess.run(
         [
@@ -52,5 +53,6 @@ if __name__ == "__main__":
             fname,
             "--dump_path",
             MODEL_ID,
-        ]
+        ],
+        check=True,
     )
