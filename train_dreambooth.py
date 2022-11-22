@@ -145,7 +145,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 
     # Cleanup
     shutil.rmtree(args.output_dir)
-    shutil.rmtree(args.class_data_dir)
+    shutil.rmtree(args.class_data_dir, ignore_errors=True)
 
     return result
 
