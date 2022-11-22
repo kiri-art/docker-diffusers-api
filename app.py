@@ -225,16 +225,6 @@ def inference(all_inputs: dict) -> dict:
             )
         )
 
-    seed = model_inputs.get("seed", None)
-    if seed == None:
-        generator = torch.Generator(device="cuda")
-        generator.seed()
-    else:
-        generator = torch.Generator(device="cuda").manual_seed(seed)
-        del model_inputs["seed"]
-
-    model_inputs.update({"generator": generator})
-
     inferenceStart = get_now()
     send("inference", "start", {"startRequestId": startRequestId}, True)
 
@@ -283,13 +273,26 @@ def inference(all_inputs: dict) -> dict:
                     "message": 'Called with callInput { train: "dreambooth" } but built with USE_DREAMBOOTH=0',
                 }
             }
+        torch.set_grad_enabled(True)
         result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
+        torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
         inferenceTime = get_now() - inferenceStart
         timings = result.get("$timings", {})
         timings = {"init": initTime, "inference": inferenceTime, **timings}
         result.update({"$timings": timings})
         return result
+
+    # Do this after dreambooth as dreambooth accepts a seed int directly.
+    seed = model_inputs.get("seed", None)
+    if seed == None:
+        generator = torch.Generator(device="cuda")
+        generator.seed()
+    else:
+        generator = torch.Generator(device="cuda").manual_seed(seed)
+        del model_inputs["seed"]
+
+    model_inputs.update({"generator": generator})
 
     with torch.inference_mode():
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1

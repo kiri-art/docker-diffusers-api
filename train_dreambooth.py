@@ -46,30 +46,11 @@ import shutil
 
 # Our original code in docker-diffusers-api:
 
-# TODO, in download.py download the pretrained tokenizers, encoders, etc.
-# we might have them already.
-
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
 
 def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     # required inputs: instance_images instance_prompt
-
-    # TODO, not save at all... we're just getting it working
-    # if its a hassle, in interim, at least save to unique dir
-    if not os.path.exists("instance_data_dir"):
-        os.mkdir("instance_data_dir")
-    for i, image in enumerate(model_inputs["instance_images"]):
-        image.save("instance_data_dir/image" + str(i) + ".png")
-    del model_inputs["instance_images"]
-
-    # TODO allow pass through of seed
-    del model_inputs["generator"]
-
-    # TODO in app.py
-    torch.set_grad_enabled(True)
-
-    subprocess.run(["ls", "-l", "instance_data_dir"])
 
     params = {
         # Defaults
@@ -77,7 +58,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "revision": revision,  # DDA, was: None
         "tokenizer_name": None,
         "instance_data_dir": "instance_data_dir",  # DDA TODO
-        "class_data_dir": None,
+        "class_data_dir": "class_data_dir",  # DDA, was: None,
         # instance_prompt
         "class_prompt": None,
         "with_prior_preservation": False,
@@ -112,17 +93,24 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "local_rank": -1,
     }
 
+    instance_images = model_inputs["instance_images"]
+    del model_inputs["instance_images"]
+
     params.update(model_inputs)
     print(model_inputs)
 
-    # params.update(
-    #    {
-    #        "pipeline": pipeline,
-    #    }
-    # )
     args = argparse.Namespace(**params)
-
     print(args)
+
+    # TODO, not save at all... we're just getting it working
+    # if its a hassle, in interim, at least save to unique dir
+    if not os.path.exists(args.instance_data_dir):
+        os.mkdir(args.instance_data_dir)
+    for i, image in enumerate(instance_images):
+        image.save(args.instance_data_dir + "/image" + str(i) + ".png")
+
+    subprocess.run(["ls", "-l", args.instance_data_dir])
+
     result = main(args, pipeline)
 
     dest_url = call_inputs.get("dest_url")
@@ -152,9 +140,12 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         upload_result = storage.upload_file(filename, filename)
         print(upload_result)
         os.remove(filename)
-        shutil.rmtree(args.output_dir)
 
         result.get("$timings").update({"upload": upload_result["$time"]})
+
+    # Cleanup
+    shutil.rmtree(args.output_dir)
+    shutil.rmtree(args.class_data_dir)
 
     return result
 
