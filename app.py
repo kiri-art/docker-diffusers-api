@@ -280,7 +280,7 @@ def inference(all_inputs: dict) -> dict:
             return {
                 "$error": {
                     "code": "TRAIN_DREAMBOOTH_NOT_AVAILABLE",
-                    "message": 'Called with callInput { train: "dreambooth" } but built with TRAIN_DREAMBOOTH=0',
+                    "message": 'Called with callInput { train: "dreambooth" } but built with USE_DREAMBOOTH=0',
                 }
             }
         result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
