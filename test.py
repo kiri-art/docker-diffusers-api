@@ -263,7 +263,7 @@ if True or os.getenv("USE_DREAMBOOTH"):
             "callInputs": {
                 "MODEL_ID": "runwayml/stable-diffusion-v1-5",
                 "PIPELINE": "StableDiffusionPipeline",
-                "SCHEDULER": "LMSDiscreteScheduler",
+                "SCHEDULER": "DDPMScheduler",
                 "train": "dreambooth",
             },
         },

@@ -36,29 +36,23 @@ def download_model():
     else:
         loadModel(MODEL_ID, False)
 
-    if USE_DREAMBOOTH:
-        # Actually we can re-use these from the above loaded model
-        # Will remove this soon if no more surprises
-        # for subfolder, model in [
-        #     ["tokenizer", CLIPTokenizer],
-        #     ["text_encoder", CLIPTextModel],
-        #     ["vae", AutoencoderKL],
-        #     ["unet", UNet2DConditionModel],
-        # ]:
-        #     print(subfolder, model)
-        #     model.from_pretrained(
-        #         MODEL_ID,
-        #         subfolder=subfolder,
-        #         revision=revision,
-        #         use_auth_token=HF_AUTH_TOKEN,
-        #     )
-
-        # But this is hard-coded
-        DDPMScheduler.from_config(
-            "CompVis/stable-diffusion-v1-4",
-            subfolder="scheduler",
-            use_auth_token=HF_AUTH_TOKEN,
-        )
+    # if USE_DREAMBOOTH:
+    # Actually we can re-use these from the above loaded model
+    # Will remove this soon if no more surprises
+    # for subfolder, model in [
+    #     ["tokenizer", CLIPTokenizer],
+    #     ["text_encoder", CLIPTextModel],
+    #     ["vae", AutoencoderKL],
+    #     ["unet", UNet2DConditionModel],
+    #     ["scheduler", DDPMScheduler]
+    # ]:
+    #     print(subfolder, model)
+    #     model.from_pretrained(
+    #         MODEL_ID,
+    #         subfolder=subfolder,
+    #         revision=revision,
+    #         use_auth_token=HF_AUTH_TOKEN,
+    #     )
 
 
 if __name__ == "__main__":

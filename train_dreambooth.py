@@ -424,8 +424,8 @@ def main(args, init_pipeline):
     #     use_auth_token=args.hub_token,  # DDA
     #     local_files_only=True,  # DDA
     # )
-    print("pipeline.disable_xformers_memory_efficient_attention()")
-    init_pipeline.disable_xformers_memory_efficient_attention()
+    # print("pipeline.disable_xformers_memory_efficient_attention()")
+    # init_pipeline.disable_xformers_memory_efficient_attention()
     text_encoder = init_pipeline.components["text_encoder"]  # DDA
     vae = init_pipeline.components["vae"]  # DDA
     unet = init_pipeline.components["unet"]  # DDA
@@ -473,12 +473,13 @@ def main(args, init_pipeline):
         eps=args.adam_epsilon,
     )
 
-    noise_scheduler = DDPMScheduler.from_config(
-        args.pretrained_model_name_or_path,
-        subfolder="scheduler",
-        use_auth_token=args.hub_token,  # DDA
-        local_files_only=True,  # DDA
-    )
+    # noise_scheduler = DDPMScheduler.from_config(
+    #     args.pretrained_model_name_or_path,
+    #     subfolder="scheduler",
+    #     use_auth_token=args.hub_token,  # DDA
+    #     local_files_only=True,  # DDA
+    # )
+    noise_scheduler = init_pipeline.components["scheduler"]  # DDA
 
     train_dataset = DreamBoothDataset(
         instance_data_root=args.instance_data_dir,
