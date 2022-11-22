@@ -131,7 +131,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         filename = storage.path if storage.path != "" else args.output_dir
         filename = filename.split("/").pop()
         print(filename)
-        if not re.search("\.", filename):
+        if not re.search(r"\.", filename):
             filename += ".tar.zstd"
         print(filename)
 
