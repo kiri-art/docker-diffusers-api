@@ -1,4 +1,4 @@
-# Based on https://github.com/huggingface/diffusers/blob/555203e1faa32cfa07c6128c09a8352031d7a969/examples/dreambooth/train_dreambooth.py
+# Based on https://github.com/huggingface/diffusers/blob/195e437ac511f169d36b033f01e0536ce7ea1267/examples/dreambooth/train_dreambooth.py
 
 # Reasons for not using that file directly:
 #
@@ -474,7 +474,7 @@ def main(args, init_pipeline):
     )
 
     noise_scheduler = DDPMScheduler.from_config(
-        "CompVis/stable-diffusion-v1-4",
+        args.pretrained_model_name_or_path,
         subfolder="scheduler",
         use_auth_token=args.hub_token,  # DDA
         local_files_only=True,  # DDA
