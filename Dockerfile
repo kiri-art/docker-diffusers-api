@@ -132,6 +132,8 @@ ENV CHECKPOINT_CONFIG_URL=${CHECKPOINT_CONFIG_URL}
 
 ADD download-checkpoint.py .
 RUN python3 download-checkpoint.py
+ARG _CONVERT_SPECIAL
+ENV _CONVERT_SPECIAL=${_CONVERT_SPECIAL}
 ADD convert-to-diffusers.py .
 RUN python3 convert-to-diffusers.py
 # RUN rm -rf checkpoints

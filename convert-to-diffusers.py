@@ -6,6 +6,7 @@ from utils import Storage
 CHECKPOINT_CONFIG_URL = os.environ.get("CHECKPOINT_CONFIG_URL", None)
 CHECKPOINT_URL = os.environ.get("CHECKPOINT_URL", None)
 MODEL_ID = os.environ.get("MODEL_ID", None)
+_CONVERT_SPECIAL = os.environ.get("_CONVERT_SPECIAL", None)
 
 if __name__ == "__main__":
     # response = requests.get(
@@ -29,9 +30,24 @@ if __name__ == "__main__":
         print(f"Downloading {CHECKPOINT_CONFIG_URL} to {configPath}...")
         storage.download_file(configPath)
 
+    specialSrc = "https://raw.githubusercontent.com/hafriedlander/diffusers/stable_diffusion_2/scripts/convert_original_stable_diffusion_to_diffusers.py"
+    specialPath = CHECKPOINT_DIR + "/" + "convert_special.py"
+    if _CONVERT_SPECIAL:
+        storage = Storage(specialSrc)
+        print(f"Downloading {specialSrc} to {specialPath}")
+        storage.download_file(specialPath)
+
+    scriptPath = (
+        specialPath
+        if _CONVERT_SPECIAL
+        else "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py"
+    )
+
     print("Converting " + fname + " to diffusers model " + MODEL_ID + "...", flush=True)
 
-    subprocess.run(["pip", "install", "omegaconf", "pytorch_lightning"], check=True)
+    subprocess.run(
+        ["pip", "install", "omegaconf", "pytorch_lightning", "tensorboard"], check=True
+    )
     subprocess.run(["apt-get", "install", "-y", "wget"], check=True)
     subprocess.run(
         [
@@ -39,7 +55,7 @@ if __name__ == "__main__":
             "-i",
             # Force loading into CPU
             "s/torch.load(args.checkpoint_path)/torch.load(args.checkpoint_path, map_location=torch.device('cpu'))/",
-            "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py",
+            scriptPath,
         ]
     )
     # Nice to check but also there seems to be a race condition here which
@@ -51,14 +67,14 @@ if __name__ == "__main__":
         [
             "grep",
             "torch.load",
-            "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py",
+            scriptPath,
         ],
         check=True,
     )
 
     args = [
         "python3",
-        "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py",
+        scriptPath,
         "--extract_ema",
         "--checkpoint_path",
         fname,

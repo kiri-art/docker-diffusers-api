@@ -21,7 +21,9 @@ else
   cd diffusers
   # git checkout v0.7.0
   # 2022-11-21 [Community Pipelines] K-Diffusion Pipeline 
-  git checkout 182eb959e5efc8c77fa31394ca55376331c0ed25
+  #git checkout 182eb959e5efc8c77fa31394ca55376331c0ed25
+  # 2022-11-24 v_prediction (for SD 2.0)
+  git checkout 30f6f4410487b6c1cf5be2da6c7e8fc844fb9a44
   cd ..
   pip install -e diffusers
 
