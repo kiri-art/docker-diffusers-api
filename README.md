@@ -18,7 +18,14 @@ Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
 assumptions.  If anything is unclear, please open an issue.
 
-## [Read the CHANGELOG for Important Updates.](./CHANGELOG.md)
+## Updates and Help
+
+* [Official `docker-diffusers-api` Forum](https://banana-forums.dev/c/open-source/docker-diffusers-api/16):
+  help, updates, discussion.
+* Subscribe ("watch") these forum topics for:
+  * [notable **`main`** branch updates](https://banana-forums.dev/t/official-releases-main-branch/35)
+  * [notable **`dev`** branch updates](https://banana-forums.dev/t/development-releases-dev-branch/53)
+* Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
 ## Usage:
 
