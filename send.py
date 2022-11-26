@@ -16,7 +16,13 @@ def get_now():
 
 
 send_url = os.getenv("SEND_URL")
+if send_url == "":
+    send_url = None
+
 sign_key = os.getenv("SIGN_KEY")
+if sign_key == "":
+    sign_key = None
+
 init_time = get_now()
 session = FuturesSession()
 last_time = init_time
