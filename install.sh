@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This entire file is no longer used but kept around for reference.
+
 if [ "$FLASH_ATTENTION" == "1" ]; then
 
   echo "Building with flash attention"

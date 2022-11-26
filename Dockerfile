@@ -67,15 +67,17 @@ RUN https_proxy="" REQUESTS_CA_BUNDLE="" conda install pip
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# Required to build flash attention
+# Not needed anymore, but, may be needed again in the future :D
 # Turing: 7.5 (RTX 20s, Quadro), Ampere: 8.0 (A100), 8.6 (RTX 30s)
 # https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
-# ENV FLASH_ATTENTION=0
 # ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
-# this is built it into memory efficient attention now ! ^_^
 
-ADD install.sh .
-RUN bash install.sh
+RUN git clone https://github.com/huggingface/diffusers
+WORKDIR /api/diffusers
+# 2022-11-24 v_prediction (for SD 2.0)
+RUN git checkout 30f6f4410487b6c1cf5be2da6c7e8fc844fb9a44
+WORKDIR /api
+RUN pip install -e diffusers
 
 # We add the banana boilerplate here
 ADD server.py .
