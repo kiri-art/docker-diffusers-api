@@ -6,6 +6,7 @@ from diffusers import schedulers as _schedulers
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
 SCHEDULERS = [
+    "DPMSolverMultistepScheduler",
     "LMSDiscreteScheduler",
     "DDIMScheduler",
     "PNDMScheduler",
