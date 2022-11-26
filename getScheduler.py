@@ -18,14 +18,14 @@ DEFAULT_SCHEDULER = os.getenv("DEFAULT_SCHEDULER", SCHEDULERS[0])
 
 """
 # This was a nice idea but until we have default init vars for all schedulers
-# via from_config(), it's a no go.  In any case, loading a scheduler takes time
+# via from_pretrained(), it's a no go.  In any case, loading a scheduler takes time
 # so better to init as needed and cache.
 isScheduler = re.compile(r".+Scheduler$")
 for key, val in _schedulers.__dict__.items():
     if isScheduler.match(key):
         schedulers.update(
             {
-                key: val.from_config(
+                key: val.from_pretrained(
                     MODEL_ID, subfolder="scheduler", use_auth_token=HF_AUTH_TOKEN
                 )
             }
@@ -40,7 +40,7 @@ def initScheduler(MODEL_ID: str, scheduler_id: str, download=False):
     if scheduler == None:
         return None
 
-    inittedScheduler = scheduler.from_config(
+    inittedScheduler = scheduler.from_pretrained(
         MODEL_ID,
         subfolder="scheduler",
         use_auth_token=HF_AUTH_TOKEN,
