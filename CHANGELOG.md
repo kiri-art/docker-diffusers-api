@@ -2,6 +2,27 @@
 
 * **NEXT MAIN**
 
+  * **Diffusers v0.9.0, Stable Diffusion v2.0**.  Models:
+      * `"stabilityai/stable-diffusion-2"` - trained on 768x768
+      * `"stabilityai/stable-diffusion-2-base"` - trained on 512x512
+      * `"stabilityai/stable-diffusion-2-inpainting"` - untested
+      * `""stabilityai/stable-diffusion-x4-upscaler"` - untested
+
+    > https://github.com/huggingface/diffusers/releases
+
+  * **DPMSolverMultistepScheduler**.  Docker-diffusers-api is simply a wrapper
+    around diffusers.  We support all the included schedulers out of the box,
+    as long as they can init themselves with default arguments.  So, the above
+    scheduler was already working, but we didn't mention it before.  I'll just
+    quote diffusers:
+
+    > DPMSolverMultistepScheduler is the firecracker diffusers implementation
+    of DPM-Solver++, a state-of-the-art scheduler that was contributed by one
+    of the authors of the paper. This scheduler is able to achieve great
+    quality in as few as 20 steps. It's a drop-in replacement for the default
+    Stable Diffusion scheduler, so you can use it to essentially half
+    generation times.
+
   * **Storage Class / S3 support**.  We now have a generic storage class, which
     allows for special URLs anywhere anywhere you can usually specify a URL,
     e.g. `CHECKPOINT_URL`, `dest_url` (after dreambooth training), and the new
