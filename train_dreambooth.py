@@ -1,4 +1,4 @@
-# Based on https://github.com/huggingface/diffusers/blob/195e437ac511f169d36b033f01e0536ce7ea1267/examples/dreambooth/train_dreambooth.py
+# Based on https://github.com/huggingface/diffusers/blob/8b84f8519264942fa0e52444881390767cb766c5/examples/dreambooth/train_dreambooth.py
 
 # Reasons for not using that file directly:
 #
@@ -89,7 +89,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "hub_token": HF_AUTH_TOKEN,
         "hub_model_id": None,
         "logging_dir": "logs",
-        "mixed_precision": "no" if revision == "" else revision,  # DDA, was: "no"
+        "mixed_precision": None if revision == "" else revision,  # DDA, was: None
         "local_rank": -1,
     }
 
@@ -548,9 +548,9 @@ def main(args, init_pipeline):
         )
 
     weight_dtype = torch.float32
-    if args.mixed_precision == "fp16":
+    if accelerator.mixed_precision == "fp16":
         weight_dtype = torch.float16
-    elif args.mixed_precision == "bf16":
+    elif accelerator.mixed_precision == "bf16":
         weight_dtype = torch.bfloat16
 
     # Move text_encode and vae to gpu.
