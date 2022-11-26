@@ -74,8 +74,7 @@ RUN pip install -r requirements.txt
 
 RUN git clone https://github.com/huggingface/diffusers
 WORKDIR /api/diffusers
-# 2022-11-24 v_prediction (for SD 2.0)
-RUN git checkout 30f6f4410487b6c1cf5be2da6c7e8fc844fb9a44
+RUN git checkout v0.9.0
 WORKDIR /api
 RUN pip install -e diffusers
 
