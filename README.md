@@ -103,11 +103,14 @@ explicitly name `modelInputs` above, and send a bigger object (with
 
 If provided, `init_image` and `mask_image` should be base64 encoded.
 
-Available schedulers: `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
-`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.  These cover the
-most commonly used / requested schedulers, but we already have code in place to
-support every scheduler provided by diffusers, which will work in a later
-diffusers release when they have better defaults.
+**Schedulers**: docker-diffusers-api is simply a wrapper around diffusers,
+literally any scheduler included in diffusers will work out of the box,
+provided it can loaded with its default config and without requiring
+any other explicit arguments at init time.  In any event, the following
+schedulers are the most common and most well tested:
+`DPMSolverMultistepScheduler` (fast!  only needs 20 steps!),
+`LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
+`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.
 
 <a name="testing"></a>
 ## Examples and testing
