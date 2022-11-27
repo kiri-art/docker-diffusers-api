@@ -27,6 +27,8 @@ assumptions.  If anything is unclear, please open an issue.
   * [notable **`dev`** branch updates](https://banana-forums.dev/t/development-releases-dev-branch/53)
 * Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
+**Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
+
 ## Usage:
 
 Firstly, fork and clone this repo.
@@ -93,7 +95,7 @@ The container expects an `HTTP POST` request with the following JSON body:
 If you're using banana's SDK, it looks something like this:
 
 ```js
-const out = await banana.run(apiKey, modelKey, { modelInputs, callInputs });
+const out = await banana.run(apiKey, modelKey, { "modelInputs": modelInputs, "callInputs": callInputs });
 ```
 
 NB: if you're coming from another banana starter repo, note that we
