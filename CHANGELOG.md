@@ -1,5 +1,70 @@
 # CHANGELOG
 
+* **NEXT MAIN**
+
+  * **Diffusers v0.9.0, Stable Diffusion v2.0**.  Models:
+      * `"stabilityai/stable-diffusion-2"` - trained on 768x768
+      * `"stabilityai/stable-diffusion-2-base"` - trained on 512x512
+      * `"stabilityai/stable-diffusion-2-inpainting"` - untested
+      * `""stabilityai/stable-diffusion-x4-upscaler"` - untested
+
+    > https://github.com/huggingface/diffusers/releases
+
+  * **DPMSolverMultistepScheduler**.  Docker-diffusers-api is simply a wrapper
+    around diffusers.  We support all the included schedulers out of the box,
+    as long as they can init themselves with default arguments.  So, the above
+    scheduler was already working, but we didn't mention it before.  I'll just
+    quote diffusers:
+
+    > DPMSolverMultistepScheduler is the firecracker diffusers implementation
+    of DPM-Solver++, a state-of-the-art scheduler that was contributed by one
+    of the authors of the paper. This scheduler is able to achieve great
+    quality in as few as 20 steps. It's a drop-in replacement for the default
+    Stable Diffusion scheduler, so you can use it to essentially half
+    generation times.
+
+  * **Storage Class / S3 support**.  We now have a generic storage class, which
+    allows for special URLs anywhere anywhere you can usually specify a URL,
+    e.g. `CHECKPOINT_URL`, `dest_url` (after dreambooth training), and the new
+    `MODEL_URL` (see below).  URLs like "s3:///bucket/filename" will work how
+    you expect, but definitely read [docs/storage.md](./docs/storage.md)
+    to understand the format better.  Note in particular the triple forwardslash
+    ("///") in the beginning to use the default S3 endpoint.
+
+  * **Dreambooth training**, working but still in development.  See
+    [this forum post](https://banana-forums.dev/t/dreambooth-training-first-look/36)
+    for more info.
+
+  * **`PRECISION`** build var, defaults to `"fp16"`, set to `""` to use the model
+    defaults (generally fp32).
+
+  * **`CHECKPOINT_URL` conversion**:
+    * Crash / stop build if conversion fails (rather than unclear errors later on)
+    * Force `cpu` loading even for models that would otherwise default to GPU.
+      This fixes certain models that previously crashed in build stage (where GPU
+      is not available).
+    * `--extract-ema` on conversion since these are the more important weights for
+      inference.
+    * `CHECKPOINT_CONFIG_URL` now let's to specify a specific config file for 
+      conversion, to use instead of SD's default `v1-inference.yaml`.
+
+  * **`MODEL_URL`**.  If your model is already in diffusers format, but you don't
+    host it on HuggingFace, you can now have it downloaded at build time.  At
+    this stage, it should be a `.tar.zst` file.  This is an *alternative* to
+    `CHECKPOINT_URL` which downloads a `.ckpt` file and converts to diffusers.
+
+  * **`test.py`**:
+    * New `--banana` arg to run the test on banana.  Set environment variables
+      `BANANA_API_KEY` and `BANANA_MODEL_KEY` first.
+    * You can now add to and override a test's default json payload with:
+      * `--model-arg prompt="hello"`
+      * `--call-arg MODEL_ID="my-model"`
+    * Support for extra timing data (e.g. dreambooth sends `train`
+      and `upload` timings).
+
+  * **Dev: better caching solution**.  No more unruly `root-cache` directory.  See
+    [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
+
 * **2022-11-08**
 
   * **Much faster `init()` times!**  For `runwayml/stable-diffusion-v1-5`:

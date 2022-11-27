@@ -7,12 +7,13 @@ import os
 import json
 import sys
 import time
+import datetime
 import argparse
 import distutils
 from uuid import uuid4
 from io import BytesIO
 from PIL import Image
-from pathlib import Path
+from pathlib import Path, PosixPath
 
 path = os.path.dirname(os.path.realpath(sys.argv[0]))
 TESTS = path + os.sep + "tests"
@@ -22,8 +23,13 @@ Path(OUTPUT).mkdir(parents=True, exist_ok=True)
 
 
 def b64encode_file(filename: str):
-    with open(os.path.join(FIXTURES, filename), "rb") as file:
-        return base64.b64encode(file.read())
+    path = (
+        filename
+        if isinstance(filename, PosixPath)
+        else os.path.join(FIXTURES, filename)
+    )
+    with open(path, "rb") as file:
+        return base64.b64encode(file.read()).decode("ascii")
 
 
 def output_path(filename: str):
@@ -47,9 +53,10 @@ def test(name, inputs):
     all_tests.update({name: inputs})
 
 
-def runTest(name, banana, extraCallInputs):
+def runTest(name, banana, extraCallInputs, extraModelInputs):
     inputs = all_tests.get(name)
     inputs.get("callInputs").update(extraCallInputs)
+    inputs.get("modelInputs").update(extraModelInputs)
 
     print("Running test: " + name)
 
@@ -70,8 +77,27 @@ def runTest(name, banana, extraCallInputs):
             "startOnly": False,
         }
         response = requests.post("https://api.banana.dev/start/v4/", json=payload)
-
         result = response.json()
+        callID = result.get("callID")
+
+        if result.get("finished", None) == False:
+            while result.get("message", None) != "success":
+                secondsSinceStart = round((time.time() - start) / 1000)
+                print(str(datetime.datetime.now()) + f": t+{secondsSinceStart}s")
+                print(json.dumps(result, indent=4))
+                print
+                payload = {
+                    "id": str(uuid4()),
+                    "created": int(time.time()),
+                    "longPoll": True,
+                    "apiKey": BANANA_API_KEY,
+                    "callID": callID,
+                }
+                response = requests.post(
+                    "https://api.banana.dev/check/v4/", json=payload
+                )
+                result = response.json()
+
         modelOutputs = result.get("modelOutputs", None)
         if modelOutputs == None:
             finish = time.time() - start
@@ -85,13 +111,24 @@ def runTest(name, banana, extraCallInputs):
 
     finish = time.time() - start
     timings = result.get("$timings")
+
     if timings:
-        init = timings.get("init") / 1000
-        inference = timings.get("inference") / 1000
-        print(
-            f"Request took {finish:.1f}s ("
-            + f"init: {init:.1f}s, inference: {inference:.1f}s)"
-        )
+        timings_str = json.dumps(
+            dict(
+                map(
+                    lambda item: (
+                        item[0],
+                        f"{item[1]/1000/60:.1f}m"
+                        if item[1] > 60000
+                        else f"{item[1]/1000:.1f}s"
+                        if item[1] > 1000
+                        else str(item[1]) + "ms",
+                    ),
+                    timings.items(),
+                )
+            )
+        ).replace('"', "")[1:-1]
+        print(f"Request took {finish:.1f}s ({timings_str})")
     else:
         print(f"Request took {finish:.1f}s")
 
@@ -209,8 +246,31 @@ if os.getenv("USE_PATCHMATCH"):
         },
     )
 
+# Actually we just want this to be a non-default test?
+if True or os.getenv("USE_DREAMBOOTH"):
+    test(
+        "dreambooth",
+        {
+            "modelInputs": {
+                "instance_prompt": "a photo of sks dog",
+                "instance_images": list(
+                    map(
+                        b64encode_file,
+                        list(Path("tests/fixtures/dreambooth").iterdir()),
+                    )
+                ),
+            },
+            "callInputs": {
+                "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+                "PIPELINE": "StableDiffusionPipeline",
+                "SCHEDULER": "DDPMScheduler",
+                "train": "dreambooth",
+            },
+        },
+    )
 
-def main(tests_to_run, banana, extraCallInputs):
+
+def main(tests_to_run, banana, extraCallInputs, extraModelInputs):
     invalid_tests = []
     for test in tests_to_run:
         if all_tests.get(test, None) == None:
@@ -221,7 +281,7 @@ def main(tests_to_run, banana, extraCallInputs):
         exit(1)
 
     for test in tests_to_run:
-        runTest(test, banana, extraCallInputs)
+        runTest(test, banana, extraCallInputs, extraModelInputs)
 
 
 if __name__ == "__main__":
@@ -234,14 +294,44 @@ if __name__ == "__main__":
         type=lambda x: bool(distutils.util.strtobool(x)),
     )
     parser.add_argument("--scheduler", required=False, type=str)
+    parser.add_argument("--call-arg", action="append", type=str)
+    parser.add_argument("--model-arg", action="append", type=str)
 
     args, tests_to_run = parser.parse_known_args()
 
-    extraCallInputs = {}
+    call_inputs = {}
+    model_inputs = {}
+
+    if args.call_arg:
+        for arg in args.call_arg:
+            name, value = arg.split("=", 1)
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            elif value.isdigit():
+                value = int(value)
+            elif value.replace(".", "", 1).isdigit():
+                value = float(value)
+            call_inputs.update({name: value})
+
+    if args.model_arg:
+        for arg in args.model_arg:
+            name, value = arg.split("=", 1)
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            elif value.isdigit():
+                value = int(value)
+            elif value.replace(".", "", 1).isdigit():
+                value = float(value)
+            model_inputs.update({name: value})
+
     if args.xmfe != None:
-        extraCallInputs.update({"xformers_memory_efficient_attention": args.xmfe})
+        call_inputs.update({"xformers_memory_efficient_attention": args.xmfe})
     if args.scheduler:
-        extraCallInputs.update({"SCHEDULER": args.scheduler})
+        call_inputs.update({"SCHEDULER": args.scheduler})
 
     if len(tests_to_run) < 1:
         print(
@@ -253,4 +343,9 @@ if __name__ == "__main__":
     ):
         tests_to_run = list(all_tests.keys())
 
-    main(tests_to_run, banana=args.banana, extraCallInputs=extraCallInputs)
+    main(
+        tests_to_run,
+        banana=args.banana,
+        extraCallInputs=call_inputs,
+        extraModelInputs=model_inputs,
+    )

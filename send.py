@@ -1,5 +1,6 @@
 import json
 import os
+import datetime
 import time
 import requests
 import hashlib
@@ -62,7 +63,7 @@ def send(type: str, status: str, payload: dict = {}, init=False):
         sig = hashlib.md5(input.encode("utf-8")).hexdigest()
         data["sig"] = sig
 
-    print(data)
+    print(datetime.datetime.now(), data)
 
     if send_url:
         session.post(send_url, json=data)

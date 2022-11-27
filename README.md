@@ -18,7 +18,14 @@ Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
 assumptions.  If anything is unclear, please open an issue.
 
-## [Read the CHANGELOG for Important Updates.](./CHANGELOG.md)
+## Updates and Help
+
+* [Official `docker-diffusers-api` Forum](https://banana-forums.dev/c/open-source/docker-diffusers-api/16):
+  help, updates, discussion.
+* Subscribe ("watch") these forum topics for:
+  * [notable **`main`** branch updates](https://banana-forums.dev/t/official-releases-main-branch/35)
+  * [notable **`dev`** branch updates](https://banana-forums.dev/t/development-releases-dev-branch/53)
+* Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
 **Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
 
@@ -48,11 +55,8 @@ serverless).
 
 **Building**
 
-1. Set `HF_AUTH_TOKEN` environment var if you haven't set it elsewhere.
 1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
-1. Optionally add `DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain` to
-    start of the line, depending on your preferences.  (Recommended if
-    you're using the `root-cache` feature.)
+1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
 1. Note: your first build can take a really long time, depending on
     your PC & network speed, and *especially when using the `CHECKPOINT_URL`
     feature*.  Great time to grab a coffee or take a walk.
@@ -101,11 +105,14 @@ explicitly name `modelInputs` above, and send a bigger object (with
 
 If provided, `init_image` and `mask_image` should be base64 encoded.
 
-Available schedulers: `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
-`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.  These cover the
-most commonly used / requested schedulers, but we already have code in place to
-support every scheduler provided by diffusers, which will work in a later
-diffusers release when they have better defaults.
+**Schedulers**: docker-diffusers-api is simply a wrapper around diffusers,
+literally any scheduler included in diffusers will work out of the box,
+provided it can loaded with its default config and without requiring
+any other explicit arguments at init time.  In any event, the following
+schedulers are the most common and most well tested:
+`DPMSolverMultistepScheduler` (fast!  only needs 20 steps!),
+`LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
+`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.
 
 <a name="testing"></a>
 ## Examples and testing

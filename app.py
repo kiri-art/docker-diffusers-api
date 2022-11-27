@@ -24,6 +24,10 @@ from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
 import re
 
+USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
+if USE_DREAMBOOTH:
+    from train_dreambooth import TrainDreamBooth
+
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
@@ -116,6 +120,10 @@ def truncateInputs(inputs: dict):
         for item in ["init_image", "mask_image", "image"]:
             if item in modelInputs:
                 modelInputs[item] = modelInputs[item][0:6] + "..."
+        if "instance_images" in modelInputs:
+            modelInputs["instance_images"] = list(
+                map(lambda str: str[0:6] + "...", modelInputs["instance_images"])
+            )
     return clone
 
 
@@ -209,15 +217,13 @@ def inference(all_inputs: dict) -> dict:
             model_inputs.get("mask_image"), "mask_image"
         )
 
-    seed = model_inputs.get("seed", None)
-    if seed == None:
-        generator = torch.Generator(device="cuda")
-        generator.seed()
-    else:
-        generator = torch.Generator(device="cuda").manual_seed(seed)
-        del model_inputs["seed"]
-
-    model_inputs.update({"generator": generator})
+    if "instance_images" in model_inputs:
+        model_inputs["instance_images"] = list(
+            map(
+                lambda str: decodeBase64Image(str, "instance_image"),
+                model_inputs["instance_images"],
+            )
+        )
 
     inferenceStart = get_now()
     send("inference", "start", {"startRequestId": startRequestId}, True)
@@ -258,6 +264,35 @@ def inference(all_inputs: dict) -> dict:
     # Run the model
     # with autocast("cuda"):
     # image = pipeline(**model_inputs).images[0]
+
+    if call_inputs.get("train", None) == "dreambooth":
+        if not USE_DREAMBOOTH:
+            return {
+                "$error": {
+                    "code": "TRAIN_DREAMBOOTH_NOT_AVAILABLE",
+                    "message": 'Called with callInput { train: "dreambooth" } but built with USE_DREAMBOOTH=0',
+                }
+            }
+        torch.set_grad_enabled(True)
+        result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
+        torch.set_grad_enabled(False)
+        send("inference", "done", {"startRequestId": startRequestId})
+        inferenceTime = get_now() - inferenceStart
+        timings = result.get("$timings", {})
+        timings = {"init": initTime, "inference": inferenceTime, **timings}
+        result.update({"$timings": timings})
+        return result
+
+    # Do this after dreambooth as dreambooth accepts a seed int directly.
+    seed = model_inputs.get("seed", None)
+    if seed == None:
+        generator = torch.Generator(device="cuda")
+        generator.seed()
+    else:
+        generator = torch.Generator(device="cuda").manual_seed(seed)
+        del model_inputs["seed"]
+
+    model_inputs.update({"generator": generator})
 
     with torch.inference_mode():
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
