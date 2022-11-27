@@ -13,6 +13,7 @@ Please give credit and link back to this repo if you use it in a public project.
 * *Permute* base config to multiple forks based on yaml config with vars
 * Optionally send signed event logs / performance data to a REST endpoint
 * Can automatically download a checkpoint file and convert to diffusers.
+* S3 support, dreambooth training.
 
 Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
@@ -28,6 +29,9 @@ assumptions.  If anything is unclear, please open an issue.
 * Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
 **Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
+
+*[See the `dev` branch for the latest features.](https://github.com/kiri-art/docker-diffusers-api/tree/dev)
+**Pull Requests must be submitted against the dev branch.***
 
 ## Usage:
 
