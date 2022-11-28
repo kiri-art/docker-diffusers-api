@@ -102,6 +102,12 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     args = argparse.Namespace(**params)
     print(args)
 
+    if not args.push_to_hub and call_inputs.get("dest_url", None) == None:
+        print()
+        print("WARNING: Neither modelInputs.push_to_hub nor callInputs.dest_url")
+        print("was given.  After training, your model won't be uploaded anywhere.")
+        print()
+
     # TODO, not save at all... we're just getting it working
     # if its a hassle, in interim, at least save to unique dir
     if not os.path.exists(args.instance_data_dir):
