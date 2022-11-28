@@ -252,6 +252,9 @@ if os.getenv("USE_PATCHMATCH"):
 if True or os.getenv("USE_DREAMBOOTH"):
     test(
         "dreambooth",
+        # If you're calling from the command line, don't forget to a
+        # specify a destination if you want your fine-tuned model to
+        # be uploaded somewhere at the end.
         {
             "modelInputs": {
                 "instance_prompt": "a photo of sks dog",
@@ -261,12 +264,18 @@ if True or os.getenv("USE_DREAMBOOTH"):
                         list(Path("tests/fixtures/dreambooth").iterdir()),
                     )
                 ),
+                # Option 1: upload to HuggingFace (see notes below)
+                # Make sure your HF API token has read/write access.
+                # "hub_model_id": "huggingFaceUsername/targetModelName",
+                # "push_to_hub": True,
             },
             "callInputs": {
                 "MODEL_ID": "runwayml/stable-diffusion-v1-5",
                 "PIPELINE": "StableDiffusionPipeline",
                 "SCHEDULER": "DDPMScheduler",
                 "train": "dreambooth",
+                # Option 2: store on S3.  Note the **s3:///* (x3).  See notes below.
+                # "dest_url": "s3:///bucket/filename.tar.zst".
             },
         },
     )
