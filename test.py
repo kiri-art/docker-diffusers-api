@@ -81,7 +81,9 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
         callID = result.get("callID")
 
         if result.get("finished", None) == False:
-            while result.get("message", None) != "success":
+            while result.get(
+                "message", None
+            ) != "success" and not "error" in result.get("message", None):
                 secondsSinceStart = round((time.time() - start) / 1000)
                 print(str(datetime.datetime.now()) + f": t+{secondsSinceStart}s")
                 print(json.dumps(result, indent=4))
