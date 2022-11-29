@@ -2,6 +2,8 @@
 
 * **NEXT MAIN**
 
+* **2022-11-29**
+
   * **Diffusers v0.9.0, Stable Diffusion v2.0**.  Models:
       * `"stabilityai/stable-diffusion-2"` - trained on 768x768
       * `"stabilityai/stable-diffusion-2-base"` - trained on 512x512
@@ -61,6 +63,7 @@
       * `--call-arg MODEL_ID="my-model"`
     * Support for extra timing data (e.g. dreambooth sends `train`
       and `upload` timings).
+    * Quit after inference errors, don't keep looping.
 
   * **Dev: better caching solution**.  No more unruly `root-cache` directory.  See
     [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
