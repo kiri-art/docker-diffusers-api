@@ -12,6 +12,18 @@
 
     > https://github.com/huggingface/diffusers/releases
 
+    **NB**: SDv2 does not include a safety_checker.  The model itself is
+    "safe" (it's much harder to create NSFW content).  Trying to "turn off"
+    the (non-existent) safety checker will throw an error, we'll handle this
+    more gracefully in a future release.  This also means you can safely
+    ignore this warning on loading:
+
+    ```
+    You have disabled the safety checker for
+    <class diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline'>
+    by passing safety_checker=None. Ensure that...
+    ```
+
   * **DPMSolverMultistepScheduler**.  Docker-diffusers-api is simply a wrapper
     around diffusers.  We support all the included schedulers out of the box,
     as long as they can init themselves with default arguments.  So, the above
