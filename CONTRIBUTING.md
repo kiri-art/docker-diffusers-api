@@ -88,3 +88,6 @@ Typical policy:
     ]
 }
 ```
+
+Then set the **build-arg** `AWS_S3_ENDPOINT_URL="http://172.17.0.1:9000"`
+or as appropriate if you've changed the default docker network.
