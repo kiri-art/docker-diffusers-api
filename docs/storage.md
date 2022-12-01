@@ -18,9 +18,9 @@ by modifying the appropriate lines in the `Dockerfile`, or by specifying, e.g.
 `--build-arg AWS_ACCESS_KEY="XXX"` etc.)
 
 ```Dockerfile
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_DEFAULT_REGION
+ARG AWS_ACCESS_KEY_ID="XXX"
+ARG AWS_SECRET_ACCESS_KEY="XXX"
+ARG AWS_DEFAULT_REGION="us-west-1" # best for banana
 # Optional.  ONLY SET THIS IF YOU KNOW YOU NEED TO.
 # Usually only if you're using non-Amazon S3-compatible storage.
 # If you need this, your provider will tell you exactly what
