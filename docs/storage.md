@@ -13,11 +13,19 @@ careful look in the CHANGELOG when upgrading**.
 
 ### Build Args
 
+Set the following **build-args**, as appropriate (through the Banana dashboard,
+by modifying the appropriate lines in the `Dockerfile`, or by specifying, e.g.
+`--build-arg AWS_ACCESS_KEY="XXX"` etc.)
+
 ```Dockerfile
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_DEFAULT_REGION
-# Optional
+# Optional.  ONLY SET THIS IF YOU KNOW YOU NEED TO.
+# Usually only if you're using non-Amazon S3-compatible storage.
+# If you need this, your provider will tell you exactly what
+# to put here.  Otherwise leave it blank to automatically use
+# the correct Amazon S3 endpoint.
 ARG AWS_S3_ENDPOINT_URL
 ```
 
