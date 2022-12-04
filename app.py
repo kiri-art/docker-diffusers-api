@@ -198,7 +198,7 @@ def inference(all_inputs: dict) -> dict:
     pipeline.safety_checker = (
         model.safety_checker if safety_checker else dummy_safety_checker
     )
-    is_url = call_inputs.get("is_url", false)
+    is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
 
     # Parse out your arguments
