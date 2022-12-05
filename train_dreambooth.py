@@ -89,7 +89,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "hub_token": HF_AUTH_TOKEN,
         "hub_model_id": None,
         "logging_dir": "logs",
-        "mixed_precision": None if revision == "" else revision,  # DDA, was: None
+        "mixed_precision": "fp16",  # DDA, was: None
         "local_rank": -1,
     }
 
@@ -562,10 +562,9 @@ def main(args, init_pipeline):
     # Move text_encode and vae to gpu.
     # For mixed precision training we cast the text_encoder and vae weights to half-precision
     # as these models are only used for inference, keeping weights in full precision is not required.
-    # DDA already loaded
-    # vae.to(accelerator.device, dtype=weight_dtype)
-    # if not args.train_text_encoder:
-    #    text_encoder.to(accelerator.device, dtype=weight_dtype)
+    vae.to(accelerator.device, dtype=weight_dtype)
+    if not args.train_text_encoder:
+        text_encoder.to(accelerator.device, dtype=weight_dtype)
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(
