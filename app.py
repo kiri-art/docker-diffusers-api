@@ -23,6 +23,7 @@ import skimage.measure
 from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
 import re
+import requests
 
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
 if USE_DREAMBOOTH:
@@ -112,6 +113,12 @@ def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
     print(f'Decoded image "{name}": {image.format} {image.width}x{image.height}')
     return image
 
+def getFromUrl(url: str, name: str) -> PIL.Image:
+    response = requests.get(url)
+    image = PIL.Image.open(BytesIO(response.content))
+    print(f'Decoded image "{name}": {image.format} {image.width}x{image.height}')
+    return image
+
 
 def truncateInputs(inputs: dict):
     clone = inputs.copy()
@@ -191,6 +198,8 @@ def inference(all_inputs: dict) -> dict:
     pipeline.safety_checker = (
         model.safety_checker if safety_checker else dummy_safety_checker
     )
+    is_url = call_inputs.get("is_url", False)
+    image_decoder = getFromUrl if is_url else decodeBase64Image
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
@@ -205,22 +214,22 @@ def inference(all_inputs: dict) -> dict:
     #   strength = model_inputs.get("strength", 0.75)
 
     if "init_image" in model_inputs:
-        model_inputs["init_image"] = decodeBase64Image(
+        model_inputs["init_image"] = image_decoder(
             model_inputs.get("init_image"), "init_image"
         )
 
     if "image" in model_inputs:
-        model_inputs["image"] = decodeBase64Image(model_inputs.get("image"), "image")
+        model_inputs["image"] = image_decoder(model_inputs.get("image"), "image")
 
     if "mask_image" in model_inputs:
-        model_inputs["mask_image"] = decodeBase64Image(
+        model_inputs["mask_image"] = image_decoder(
             model_inputs.get("mask_image"), "mask_image"
         )
 
     if "instance_images" in model_inputs:
         model_inputs["instance_images"] = list(
             map(
-                lambda str: decodeBase64Image(str, "instance_image"),
+                lambda str: image_decoder(str, "instance_image"),
                 model_inputs["instance_images"],
             )
         )
