@@ -156,11 +156,14 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
 test(
     "txt2img",
     {
-        "modelInputs": {"prompt": "realistic field of grass"},
+        "modelInputs": {
+            "prompt": "realistic field of grass",
+            "num_inference_steps": 20,
+        },
         "callInputs": {
             "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "LMSDiscreteScheduler",
+            "SCHEDULER": "DPMSolverMultistepScheduler",
             # "xformers_memory_efficient_attention": False,
         },
     },
@@ -177,7 +180,7 @@ test(
         "callInputs": {
             "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "LMSDiscreteScheduler",
+            "SCHEDULER": "DPMSolverMultistepScheduler",
         },
     },
 )
@@ -193,7 +196,7 @@ test(
         "callInputs": {
             "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
-            "SCHEDULER": "LMSDiscreteScheduler",
+            "SCHEDULER": "DPMSolverMultistepScheduler",
         },
     },
 )
