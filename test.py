@@ -20,6 +20,7 @@ TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
+DEFAULT_MODEL_ID = "stabilityai/stable-diffusion-2"
 
 
 def b64encode_file(filename: str):
@@ -157,7 +158,7 @@ test(
     {
         "modelInputs": {"prompt": "realistic field of grass"},
         "callInputs": {
-            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+            "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMSDiscreteScheduler",
             # "xformers_memory_efficient_attention": False,
@@ -174,7 +175,7 @@ test(
             "num_images_per_prompt": 2,
         },
         "callInputs": {
-            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+            "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionPipeline",
             "SCHEDULER": "LMSDiscreteScheduler",
         },
@@ -190,7 +191,7 @@ test(
             "init_image": b64encode_file("sketch-mountains-input.jpg"),
         },
         "callInputs": {
-            "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+            "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
             "SCHEDULER": "LMSDiscreteScheduler",
         },
@@ -270,7 +271,7 @@ if True or os.getenv("USE_DREAMBOOTH"):
                 # "push_to_hub": True,
             },
             "callInputs": {
-                "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+                "MODEL_ID": DEFAULT_MODEL_ID,
                 "PIPELINE": "StableDiffusionPipeline",
                 "SCHEDULER": "DDPMScheduler",
                 "train": "dreambooth",
