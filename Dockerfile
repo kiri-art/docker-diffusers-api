@@ -76,9 +76,12 @@ RUN pip install -r requirements.txt
 # https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
 # ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 
+# Make sure our cache is up-to-date
+ADD https://api.github.com/repos/huggingface/diffusers/git/refs/heads/main version.json
+
 RUN git clone https://github.com/huggingface/diffusers
 WORKDIR /api/diffusers
-RUN git checkout v0.9.0
+RUN git checkout eb1abee693104dd45376dbddd614320f2a0beb24
 WORKDIR /api
 RUN pip install -e diffusers
 
