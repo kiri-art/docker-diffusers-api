@@ -29,7 +29,9 @@ ENV REQUESTS_CA_BUNDLE=${http_proxy:+/usr/local/share/ca-certificates/squid-self
 ENV DEBIAN_FRONTEND=noninteractive
 #RUN apt-get install gnupg2
 #RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
-RUN apt-get update && apt-get install -yqq git
+RUN apt-get update
+RUN apt-get install -yqq git
+RUN apt-get install -yqq zstd
 
 # This would have been great but Python is via conda,
 # and conda doesn't support python >= 3.7 for base.
