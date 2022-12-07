@@ -24,7 +24,9 @@ from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
 import re
 import requests
+from download import download_model
 
+RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
 if USE_DREAMBOOTH:
     from train_dreambooth import TrainDreamBooth
@@ -99,10 +101,11 @@ def init():
         last_model_id = None
         return
 
-    model = loadModel(MODEL_ID)
+    if not RUNTIME_DOWNLOADS:
+        model = loadModel(MODEL_ID)
 
-    if PIPELINE == "ALL":
-        pipelines = createPipelinesFromModel(model)
+        if PIPELINE == "ALL":
+            pipelines = createPipelinesFromModel(model)
 
     send("init", "done")
     initTime = get_now() - initStart
@@ -112,6 +115,7 @@ def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
     image = PIL.Image.open(BytesIO(base64.decodebytes(bytes(imageStr, "utf-8"))))
     print(f'Decoded image "{name}": {image.format} {image.width}x{image.height}')
     return image
+
 
 def getFromUrl(url: str, name: str) -> PIL.Image:
     response = requests.get(url)
@@ -135,6 +139,7 @@ def truncateInputs(inputs: dict):
 
 
 last_xformers_memory_efficient_attention = {}
+downloaded_models = {}
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -162,13 +167,31 @@ def inference(all_inputs: dict) -> dict:
     startRequestId = call_inputs.get("startRequestId", None)
 
     model_id = call_inputs.get("MODEL_ID")
+
+    if RUNTIME_DOWNLOADS:
+        global downloaded_models
+        if not downloaded_models.get(model_id, None):
+            model_url = call_inputs.get("MODEL_URL", None)
+            if not model_url:
+                return {
+                    "$error": {
+                        "code": "NO_MODEL_URL",
+                        "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
+                    }
+                }
+            download_model(model_id=model_id, model_url=model_url)
+            downloaded_models.update({model_id: True})
+        model = loadModel(model_id)
+        if PIPELINE == "ALL":
+            pipelines = createPipelinesFromModel(model)
+
     if MODEL_ID == "ALL":
         if last_model_id != model_id:
             model = loadModel(model_id)
             pipelines = createPipelinesFromModel(model)
             last_model_id = model_id
     else:
-        if model_id != MODEL_ID:
+        if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
             return {
                 "$error": {
                     "code": "MODEL_MISMATCH",
@@ -183,7 +206,7 @@ def inference(all_inputs: dict) -> dict:
     else:
         pipeline = model
 
-    pipeline.scheduler = getScheduler(MODEL_ID, call_inputs.get("SCHEDULER", None))
+    pipeline.scheduler = getScheduler(model_id, call_inputs.get("SCHEDULER", None))
     if pipeline.scheduler == None:
         return {
             "$error": {
@@ -263,7 +286,7 @@ def inference(all_inputs: dict) -> dict:
             return {
                 "$error": {
                     "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
-                    "message": f'Model "{model_id}" not available on this container which hosts "{MODEL_ID}"',
+                    "message": f"x_m_e_a expects True or False, not: {x_m_e_a}",
                     "requested": x_m_e_a,
                     "available": [True, False],
                 }
