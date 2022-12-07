@@ -96,10 +96,9 @@ def init():
 
     dummy_safety_checker = DummySafetyChecker()
 
-    if MODEL_ID == "ALL":
+    if MODEL_ID == "ALL" or RUNTIME_DOWNLOADS:
         global last_model_id
         last_model_id = None
-        return
 
     if not RUNTIME_DOWNLOADS:
         model = loadModel(MODEL_ID)
@@ -170,20 +169,22 @@ def inference(all_inputs: dict) -> dict:
 
     if RUNTIME_DOWNLOADS:
         global downloaded_models
-        if not downloaded_models.get(model_id, None):
-            model_url = call_inputs.get("MODEL_URL", None)
-            if not model_url:
-                return {
-                    "$error": {
-                        "code": "NO_MODEL_URL",
-                        "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
+        if last_model_id != model_id:
+            if not downloaded_models.get(model_id, None):
+                model_url = call_inputs.get("MODEL_URL", None)
+                if not model_url:
+                    return {
+                        "$error": {
+                            "code": "NO_MODEL_URL",
+                            "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
+                        }
                     }
-                }
-            download_model(model_id=model_id, model_url=model_url)
-            downloaded_models.update({model_id: True})
-        model = loadModel(model_id)
-        if PIPELINE == "ALL":
-            pipelines = createPipelinesFromModel(model)
+                download_model(model_id=model_id, model_url=model_url)
+                downloaded_models.update({model_id: True})
+            model = loadModel(model_id)
+            if PIPELINE == "ALL":
+                pipelines = createPipelinesFromModel(model)
+            last_model_id = model_id
 
     if MODEL_ID == "ALL":
         if last_model_id != model_id:
