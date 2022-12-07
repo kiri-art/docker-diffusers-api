@@ -25,7 +25,7 @@ from getScheduler import getScheduler, SCHEDULERS
 import re
 import requests
 from download import download_model
-from precision import revision
+from precision import revision, torch_dtype
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -74,6 +74,7 @@ def createPipelinesFromModel(model, model_id):
         pipelines[pipeline] = DiffusionPipeline.from_pretrained(
             model_id,
             revision=revision,
+            torch_dtype=torch_dtype,
             custom_pipeline="./diffusers/examples/community/" + pipeline + ".py",
             local_files_only=True,
             **model.components,
