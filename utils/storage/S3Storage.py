@@ -2,6 +2,7 @@ import boto3
 import re
 import os
 import time
+from tqdm import tqdm
 from botocore.client import Config
 
 
@@ -71,7 +72,13 @@ class S3Storage:
             dest = self.path
 
         upload_start = get_now()
-        result = self.bucket().upload_file(source, dest)
+        file_size = os.stat(source)
+        with tqdm(total=file_size, unit="B", unit_scale=True, desc="Uploading") as bar:
+            result = self.bucket().upload_file(
+                Filename=source,
+                Key=dest,
+                Callback=lambda bytes_transferred: bar.update(bytes_transferred),
+            )
         print(result)
         upload_total = get_now() - upload_start
 
@@ -81,4 +88,13 @@ class S3Storage:
         if not dest:
             dest = self.path.split("/").pop()
         print(f"Downloading {self.url} to {dest}...")
-        self.bucket().download_file(self.path, dest)
+        object = self.s3().Object(self.bucket_name, self.path)
+        object.load()
+
+        with tqdm(
+            total=object.content_length, unit="B", unit_scale=True, desc="Downloading"
+        ) as bar:
+            object.download_file(
+                Filename=dest,
+                Callback=lambda bytes_transffered: bar.update(bytes_transffered),
+            )
