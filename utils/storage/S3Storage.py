@@ -72,7 +72,7 @@ class S3Storage:
             dest = self.path
 
         upload_start = get_now()
-        file_size = os.stat(source)
+        file_size = os.stat(source).st_size
         with tqdm(total=file_size, unit="B", unit_scale=True, desc="Uploading") as bar:
             result = self.bucket().upload_file(
                 Filename=source,
