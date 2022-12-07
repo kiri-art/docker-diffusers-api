@@ -1,12 +1,14 @@
 # Banana requires Cuda version 11+.  Below is banana default:
-# FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel as base
+# ARG FROM_IMAGE="pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime"
 # xformers available precompiled for:
 #   Python 3.9 or 3.10, CUDA 11.3 or 11.6, and PyTorch 1.12.1
 #   https://github.com/facebookresearch/xformers/#getting-started
 # Below: pytorch base images only have Python 3.7 :(
-FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime as base
+ARG FROM_IMAGE="pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime"
 # Below: our ideal image, but Optimization fails with it.
-#FROM continuumio/miniconda3:4.12.0 as base
+# ARG FROM_IMAGE="continuumio/miniconda3:4.12.0"
+FROM ${FROM_IMAGE} as base
+ENV FROM_IMAGE=${FROM_IMAGE}
 
 # Note, docker uses HTTP_PROXY and HTTPS_PROXY (uppercase)
 # We purposefully want those managed independently, as we want docker
@@ -132,6 +134,9 @@ ARG CHECKPOINT_URL=""
 ENV CHECKPOINT_URL=${CHECKPOINT_URL}
 ARG CHECKPOINT_CONFIG_URL=""
 ENV CHECKPOINT_CONFIG_URL=${CHECKPOINT_CONFIG_URL}
+# Set to true to NOT download model at build time, rather at init / usage.
+ARG RUNTIME_MODEL_DOWNLOADS=0
+ENV RUNTIME_MODEL_DOWNLOADS=${RUNTIME_MODEL_DOWNLOADS}}
 
 ADD download-checkpoint.py .
 RUN python3 download-checkpoint.py
