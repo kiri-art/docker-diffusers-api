@@ -2,6 +2,9 @@
 
 * **NEXT MAIN**
 
+  * **Changed `sd-base` to `diffusers-api` as the default tag / name used
+    in the README examples and optional [./build][build script].
+
 * **2022-11-29**
 
   * **Diffusers v0.9.0, Stable Diffusion v2.0**.  Models:

@@ -4,7 +4,7 @@
 # Note if you using a proxy, you need to have it running first.
 
 DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain \
-  docker build -t banana-sd \
+  docker build -t diffusers-api \
   --build-arg proxy=1 \
   --build-arg HF_AUTH_TOKEN="$HF_AUTH_TOKEN" \
   --build-arg AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \

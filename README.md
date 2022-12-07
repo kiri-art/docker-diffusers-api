@@ -59,7 +59,7 @@ serverless).
 
 **Building**
 
-1. `docker build -t banana-sd --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
+1. `docker build -t diffusers-api --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
 1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
 1. Note: your first build can take a really long time, depending on
     your PC & network speed, and *especially when using the `CHECKPOINT_URL`
@@ -67,7 +67,7 @@ serverless).
 
 **Running**
 
-1. `docker run -it --gpus all -p 8000:8000 banana-sd python3 server.py`
+1. `docker run -it --gpus all -p 8000:8000 diffusers-api python3 server.py`
 1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
     container using `Ctrl-C`.
 1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
