@@ -25,6 +25,7 @@ from getScheduler import getScheduler, SCHEDULERS
 import re
 import requests
 from download import download_model
+from precision import revision
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -42,11 +43,16 @@ PIPELINES = [
     "StableDiffusionInpaintPipelineLegacy",
 ]
 
+COMMUNITY_PIPELINES = [
+    "lpw_stable_diffusion",
+]
+
 torch.set_grad_enabled(False)
 
 
-def createPipelinesFromModel(model):
+def createPipelinesFromModel(model, model_id):
     pipelines = dict()
+
     for pipeline in PIPELINES:
         if hasattr(_pipelines, pipeline):
             if hasattr(model, "components"):
@@ -63,6 +69,16 @@ def createPipelinesFromModel(model):
                 )
         else:
             print(f'Skipping non-existent pipeline "{PIPELINE}"')
+
+    for pipeline in COMMUNITY_PIPELINES:
+        pipelines[pipeline] = DiffusionPipeline.from_pretrained(
+            model_id,
+            revision=revision,
+            custom_pipeline="./diffusers/examples/community/" + pipeline + ".py",
+            local_files_only=True,
+            **model.components,
+        )
+
     return pipelines
 
 
@@ -104,7 +120,7 @@ def init():
         model = loadModel(MODEL_ID)
 
         if PIPELINE == "ALL":
-            pipelines = createPipelinesFromModel(model)
+            pipelines = createPipelinesFromModel(model, MODEL_ID)
 
     send("init", "done")
     initTime = get_now() - initStart
@@ -183,13 +199,13 @@ def inference(all_inputs: dict) -> dict:
                 downloaded_models.update({model_id: True})
             model = loadModel(model_id)
             if PIPELINE == "ALL":
-                pipelines = createPipelinesFromModel(model)
+                pipelines = createPipelinesFromModel(model, model_id)
             last_model_id = model_id
 
     if MODEL_ID == "ALL":
         if last_model_id != model_id:
             model = loadModel(model_id)
-            pipelines = createPipelinesFromModel(model)
+            pipelines = createPipelinesFromModel(model, model_id)
             last_model_id = model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
@@ -328,9 +344,12 @@ def inference(all_inputs: dict) -> dict:
     model_inputs.update({"generator": generator})
 
     with torch.inference_mode():
+        custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
+        if custom_pipeline_method:
+            images = getattr(pipeline, custom_pipeline_method)(**model_inputs).images
         # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
         # still broken in 0.5.1
-        if call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
+        elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
             with autocast("cuda"):
                 images = pipeline(**model_inputs).images
         else:
