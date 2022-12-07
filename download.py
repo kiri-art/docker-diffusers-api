@@ -15,14 +15,17 @@ USE_DREAMBOOTH = os.environ.get("USE_DREAMBOOTH")
 HF_AUTH_TOKEN = os.environ.get("HF_AUTH_TOKEN")
 
 
-def download_model():
-    if MODEL_URL != "":
-        filename = MODEL_URL.split("/").pop()
-        storage = Storage(MODEL_URL)
+def download_model(model_url, model_id):
+    id = model_id or MODEL_ID
+    url = model_url or MODEL_URL
+
+    if url != "":
+        filename = url.split("/").pop()
+        storage = Storage(url)
         storage.download_file(filename)
-        os.mkdir(MODEL_ID)
+        os.mkdir(id)
         subprocess.run(
-            ["tar", "--use-compress-program=unzstd", "-C", MODEL_ID, "-xvf", filename],
+            ["tar", "--use-compress-program=unzstd", "-C", id, "-xvf", filename],
             check=True,
         )
         subprocess.run(["ls", "-l"])
