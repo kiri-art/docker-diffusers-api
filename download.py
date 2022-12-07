@@ -15,7 +15,7 @@ USE_DREAMBOOTH = os.environ.get("USE_DREAMBOOTH")
 HF_AUTH_TOKEN = os.environ.get("HF_AUTH_TOKEN")
 
 
-def download_model(model_url, model_id):
+def download_model(model_url=None, model_id=None):
     id = model_id or MODEL_ID
     url = model_url or MODEL_URL
 
