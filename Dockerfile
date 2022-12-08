@@ -77,11 +77,11 @@ RUN pip install -r requirements.txt
 # ENV TORCH_CUDA_ARCH_LIST="7.5 8.0 8.6"
 
 # Make sure our cache is up-to-date
-ADD https://api.github.com/repos/huggingface/diffusers/git/refs/heads/main version.json
+# ADD https://api.github.com/repos/huggingface/diffusers/git/refs/heads/main version.json
 
-RUN git clone https://github.com/huggingface/diffusers
-WORKDIR /api/diffusers
-RUN git checkout eb1abee693104dd45376dbddd614320f2a0beb24
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout eb1abee693104dd45376dbddd614320f2a0beb24
+# WORKDIR /api/diffusers
+# RUN git checkout eb1abee693104dd45376dbddd614320f2a0beb24
 WORKDIR /api
 RUN pip install -e diffusers
 
@@ -173,6 +173,7 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 # Add your custom app code, init() and inference()
 ADD train_dreambooth.py .
 ADD send.py .
+ADD getPipeline.py .
 ADD app.py .
 
 ARG SEND_URL
