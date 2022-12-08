@@ -6,6 +6,12 @@
     all pipelines.  Using `init_image` now shoes a deprecation warning and
     will be removed in future.
 
+  * **ALL THE PIPELINES**.  We no longer load a list of hard-coded pipelines
+    in `init()`.  Instead, we init and cache each on first use (for faster
+    first calls on cold boots), and, *all* pipelines, both official diffusers
+    and community pipelines, are available.
+    [Full details](https://banana-forums.dev/t/all-your-pipelines-are-belong-to-us/83)
+
   * **Changed `sd-base` to `diffusers-api` as the default tag / name used
     in the README examples and optional [./build][build script].
 

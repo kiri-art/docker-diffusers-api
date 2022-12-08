@@ -2,14 +2,7 @@ from sched import scheduler
 import torch
 
 from torch import autocast
-from diffusers import (
-    pipelines as _pipelines,
-    LMSDiscreteScheduler,
-    DDIMScheduler,
-    PNDMScheduler,
-    DiffusionPipeline,
-    __version__,
-)
+from diffusers import __version__
 import base64
 from io import BytesIO
 import PIL
@@ -22,10 +15,10 @@ import skimage
 import skimage.measure
 from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
+from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipelines
 import re
 import requests
 from download import download_model
-from precision import revision, torch_dtype
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -36,51 +29,7 @@ MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
-PIPELINES = [
-    "StableDiffusionPipeline",
-    "StableDiffusionImg2ImgPipeline",
-    "StableDiffusionInpaintPipeline",
-    "StableDiffusionInpaintPipelineLegacy",
-]
-
-COMMUNITY_PIPELINES = [
-    "lpw_stable_diffusion",
-]
-
 torch.set_grad_enabled(False)
-
-
-def createPipelinesFromModel(model, model_id):
-    pipelines = dict()
-
-    for pipeline in PIPELINES:
-        if hasattr(_pipelines, pipeline):
-            if hasattr(model, "components"):
-                pipelines[pipeline] = getattr(_pipelines, pipeline)(**model.components)
-            else:
-                pipelines[pipeline] = getattr(_pipelines, pipeline)(
-                    vae=model.vae,
-                    text_encoder=model.text_encoder,
-                    tokenizer=model.tokenizer,
-                    unet=model.unet,
-                    scheduler=model.scheduler,
-                    safety_checker=model.safety_checker,
-                    feature_extractor=model.feature_extractor,
-                )
-        else:
-            print(f'Skipping non-existent pipeline "{PIPELINE}"')
-
-    for pipeline in COMMUNITY_PIPELINES:
-        pipelines[pipeline] = DiffusionPipeline.from_pretrained(
-            model_id,
-            revision=revision,
-            torch_dtype=torch_dtype,
-            custom_pipeline="./diffusers/examples/community/" + pipeline + ".py",
-            local_files_only=True,
-            **model.components,
-        )
-
-    return pipelines
 
 
 class DummySafetyChecker:
@@ -93,8 +42,6 @@ class DummySafetyChecker:
 # Load your model to GPU as a global variable here using the variable name "model"
 def init():
     global model  # needed for bananna optimizations
-    global pipelines
-    global schedulers
     global dummy_safety_checker
     global initTime
 
@@ -119,9 +66,6 @@ def init():
 
     if not RUNTIME_DOWNLOADS:
         model = loadModel(MODEL_ID)
-
-        if PIPELINE == "ALL":
-            pipelines = createPipelinesFromModel(model, MODEL_ID)
 
     send("init", "done")
     initTime = get_now() - initStart
@@ -200,13 +144,13 @@ def inference(all_inputs: dict) -> dict:
                 downloaded_models.update({model_id: True})
             model = loadModel(model_id)
             if PIPELINE == "ALL":
-                pipelines = createPipelinesFromModel(model, model_id)
+                clearPipelines()
             last_model_id = model_id
 
     if MODEL_ID == "ALL":
         if last_model_id != model_id:
             model = loadModel(model_id)
-            pipelines = createPipelinesFromModel(model, model_id)
+            clearPipelines()
             last_model_id = model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
@@ -220,7 +164,17 @@ def inference(all_inputs: dict) -> dict:
             }
 
     if PIPELINE == "ALL":
-        pipeline = pipelines.get(call_inputs.get("PIPELINE"))
+        pipeline_name = call_inputs.get("PIPELINE")
+        pipeline = getPipelineForModel(pipeline_name, model, model_id)
+        if not pipeline:
+            return {
+                "$error": {
+                    "code": "NO_SUCH_PIPELINE",
+                    "message": f'"{pipeline_name}" is not an official nor community Diffusers pipelines',
+                    "requested": pipeline_name,
+                    "available": listAvailablePipelines(),
+                }
+            }
     else:
         pipeline = model
 

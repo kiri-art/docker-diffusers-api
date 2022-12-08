@@ -7,8 +7,11 @@ Please give credit and link back to this repo if you use it in a public project.
 
 ## Features
 
-* Pipelines: txt2img, img2img and inpainting in a single container
 * Models: stable-diffusion, waifu-diffusion, and easy to add others (e.g. jp-sd)
+* Pipelines: txt2img, img2img and inpainting in a single container
+
+  (
+  [all diffusers official and community pipelines](https://banana-forums.dev/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
 * All model inputs supported, including setting nsfw filter per request
 * *Permute* base config to multiple forks based on yaml config with vars
 * Optionally send signed event logs / performance data to a REST endpoint
