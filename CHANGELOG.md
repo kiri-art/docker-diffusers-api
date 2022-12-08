@@ -2,6 +2,10 @@
 
 * **NEXT MAIN**
 
+  * Stable Diffusion has standardized **`image` instead of `init_image` for 
+    all pipelines.  Using `init_image` now shoes a deprecation warning and
+    will be removed in future.
+
   * **Changed `sd-base` to `diffusers-api` as the default tag / name used
     in the README examples and optional [./build][build script].
 
