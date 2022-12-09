@@ -67,7 +67,7 @@ serverless).
 
 **Running**
 
-1. `docker run -it --gpus all -p 8000:8000 banana-sd python3 server.py`
+1. `docker run -it --gpus all -p 8000:8000 banana-sd`
 1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
     container using `Ctrl-C`.
 1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
