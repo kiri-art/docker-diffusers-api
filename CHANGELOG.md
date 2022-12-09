@@ -15,6 +15,13 @@
   * **Changed `sd-base` to `diffusers-api` as the default tag / name used
     in the README examples and optional [./build][build script].
 
+  * **Much better error handling**.  We now `try...except` both the pipeline
+    run and entire `inference()` call, which will save you a trip to banana's
+    logs which don't always even show these errors and sometimes just leave
+    you with an unexplained stuck instance.  These kinds of errors are almost
+    always a result of problematic callInputs and modelInputs used for the
+    pipeline call, so finding them will be a lot easier now.
+
 * **2022-11-29**
 
   * **Diffusers v0.9.0, Stable Diffusion v2.0**.  Models:

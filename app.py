@@ -19,6 +19,7 @@ from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipeli
 import re
 import requests
 from download import download_model
+import traceback
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -299,16 +300,28 @@ def inference(all_inputs: dict) -> dict:
     model_inputs.update({"generator": generator})
 
     with torch.inference_mode():
-        custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
-        if custom_pipeline_method:
-            images = getattr(pipeline, custom_pipeline_method)(**model_inputs).images
-        # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
-        # still broken in 0.5.1
-        elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
-            with autocast("cuda"):
+        try:
+            custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
+            if custom_pipeline_method:
+                images = getattr(pipeline, custom_pipeline_method)(
+                    **model_inputs
+                ).images
+            # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
+            # still broken in 0.5.1
+            elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
+                with autocast("cuda"):
+                    images = pipeline(**model_inputs).images
+            else:
                 images = pipeline(**model_inputs).images
-        else:
-            images = pipeline(**model_inputs).images
+        except Exception as err:
+            return {
+                "$error": {
+                    "code": "PIPELINE_ERROR",
+                    "name": type(err).__name__,
+                    "message": str(err),
+                    "stack": traceback.format_exc(),
+                }
+            }
 
     images_base64 = []
     for image in images:
