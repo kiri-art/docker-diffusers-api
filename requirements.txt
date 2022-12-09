@@ -5,11 +5,19 @@ sanic==22.6.2
 transformers==4.22.2
 scipy==1.9.3
 requests_futures==1.0.0
-numpy==1.23.4
+# numpy==1.23.4
+numpy==1.23.5
 scikit-image==0.19.3
-accelerate==0.13.2
-triton==2.0.0.dev20221105
+# accelerate==0.13.2
+accelerate==0.15.0
+# triton==2.0.0.dev20221105
+triton==2.0.0.dev20221202
 ftfy==6.1.1
 spacy==3.4.3
 boto3==1.26.12
 k-diffusion==0.0.12
+safetensors==0.2.5
+# must match conda installed version in Dockerfile
+torch==1.12.1
+# xformers 0.0.15.dev344+git.8910bb5 requires pyre-extensions==0.0.23
+pyre-extensions==0.0.23

@@ -115,9 +115,6 @@ ADD precision.py .
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
 
-ARG USE_DREAMBOOTH=0
-ENV USE_DREAMBOOTH=${USE_DREAMBOOTH}
-
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_DEFAULT_REGION
@@ -162,6 +159,9 @@ RUN if [ "$RUNTIME_DOWNLOADS" = "0" ] ; then python3 download.py ; fi
 ARG USE_PATCHMATCH=0
 RUN if [ "$USE_PATCHMATCH" = "1" ] ; then apt-get install -yqq python3-opencv ; fi
 COPY --from=patchmatch /tmp/PyPatchMatch PyPatchMatch
+
+ARG USE_DREAMBOOTH=0
+ENV USE_DREAMBOOTH=${USE_DREAMBOOTH}
 
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # By specifying the same torch version as conda, it won't download again.
