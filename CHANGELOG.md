@@ -2,6 +2,12 @@
 
 * **NEXT MAIN**
 
+  * **Latest diffusers, SDv2.1**.  All the latest goodness, and upgraded some
+    dependencies too.  Models are:
+
+    * `stabilityai/stable-diffusion-2-1-base` (512x512)
+    * `stabilityai/stable-diffusion-2-1` (768x768)
+
   * **ALL THE PIPELINES**.  We no longer load a list of hard-coded pipelines
     in `init()`.  Instead, we init and cache each on first use (for faster
     first calls on cold boots), and, *all* pipelines, both official diffusers
