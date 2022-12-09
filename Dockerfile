@@ -59,7 +59,7 @@ WORKDIR /api
 RUN conda update -n base -c defaults conda
 # We need python 3.9 or 3.10 for xformers
 # Yes, we install pytorch twice... will switch base image in future
-RUN conda create -n xformers python=3.10
+RUN conda create -n xformers python=3.9
 SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
 RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
