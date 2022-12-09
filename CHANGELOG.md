@@ -2,15 +2,21 @@
 
 * **NEXT MAIN**
 
-  * Stable Diffusion has standardized **`image` instead of `init_image` for 
-    all pipelines.  Using `init_image` now shoes a deprecation warning and
-    will be removed in future.
-
   * **ALL THE PIPELINES**.  We no longer load a list of hard-coded pipelines
     in `init()`.  Instead, we init and cache each on first use (for faster
     first calls on cold boots), and, *all* pipelines, both official diffusers
     and community pipelines, are available.
     [Full details](https://banana-forums.dev/t/all-your-pipelines-are-belong-to-us/83)
+
+  * Dreambooth: Enable `mixed_precision` training, default to fp16.
+
+  * [Experimental] [Runtime downloads](https://banana-forums.dev/t/runtime-downloads-dont-download-during-build/81/3).
+
+  * S3: Add upload/download progress indicators.
+
+  * Stable Diffusion has standardized **`image` instead of `init_image` for 
+    all pipelines.  Using `init_image` now shoes a deprecation warning and
+    will be removed in future.
 
   * **Changed `sd-base` to `diffusers-api` as the default tag / name used
     in the README examples and optional [./build][build script].
