@@ -22,7 +22,7 @@
   * **S3**: Add upload/download progress indicators.
 
   * Stable Diffusion has standardized **`image` instead of `init_image`** for
-    all pipelines.  Using `init_image` now shoes a deprecation warning and
+    all pipelines.  Using `init_image` now shows a deprecation warning and
     will be removed in future.
 
   * **Changed `sd-base` to `diffusers-api`** as the default tag / name used
