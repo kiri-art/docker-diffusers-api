@@ -15,6 +15,7 @@ triton==2.0.0.dev20221202
 ftfy==6.1.1
 spacy==3.4.3
 boto3==1.26.12
+botocore==1.29.27
 k-diffusion==0.0.12
 safetensors==0.2.5
 # must match conda installed version in Dockerfile
