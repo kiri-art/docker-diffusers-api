@@ -8,7 +8,7 @@ from io import BytesIO
 import PIL
 import json
 from loadModel import loadModel
-from send import send, get_now
+from send import send, getTimings, clearSession
 import os
 import numpy as np
 import skimage
@@ -44,9 +44,7 @@ class DummySafetyChecker:
 def init():
     global model  # needed for bananna optimizations
     global dummy_safety_checker
-    global initTime
 
-    initStart = get_now()
     send(
         "init",
         "start",
@@ -56,7 +54,6 @@ def init():
             "model_id": MODEL_ID,
             "diffusers": __version__,
         },
-        True,
     )
 
     dummy_safety_checker = DummySafetyChecker()
@@ -69,7 +66,6 @@ def init():
         model = loadModel(MODEL_ID)
 
     send("init", "done")
-    initTime = get_now() - initStart
 
 
 def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
@@ -243,8 +239,7 @@ def inference(all_inputs: dict) -> dict:
             )
         )
 
-    inferenceStart = get_now()
-    send("inference", "start", {"startRequestId": startRequestId}, True)
+    send("inference", "start", {"startRequestId": startRequestId})
 
     # Run patchmatch for inpainting
     if call_inputs.get("FILL_MODE", None) == "patchmatch":
@@ -295,10 +290,8 @@ def inference(all_inputs: dict) -> dict:
         result = result | TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
         torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
-        inferenceTime = get_now() - inferenceStart
-        timings = result.get("$timings", {})
-        timings = {"init": initTime, "inference": inferenceTime, **timings}
-        result.update({"$timings": timings})
+        result.update({"$timings": getTimings()})
+        clearSession()
         return result
 
     # Do this after dreambooth as dreambooth accepts a seed int directly.
@@ -343,14 +336,14 @@ def inference(all_inputs: dict) -> dict:
         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
     send("inference", "done", {"startRequestId": startRequestId})
-    inferenceTime = get_now() - inferenceStart
-
-    result = result | {"$timings": {"init": initTime, "inference": inferenceTime}}
 
     # Return the results as a dictionary
     if len(images_base64) > 1:
         result = result | {"images_base64": images_base64}
     else:
         result = result | {"image_base64": images_base64[0]}
+
+    result = result | {"$timings": getTimings()}
+    clearSession()
 
     return result

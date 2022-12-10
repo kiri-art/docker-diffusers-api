@@ -102,11 +102,14 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     args = argparse.Namespace(**params)
     print(args)
 
+    result = {}
+
     if not args.push_to_hub and call_inputs.get("dest_url", None) == None:
         print()
         print("WARNING: Neither modelInputs.push_to_hub nor callInputs.dest_url")
         print("was given.  After training, your model won't be uploaded anywhere.")
         print()
+        result.update({"no_upload": True})
 
     # TODO, not save at all... we're just getting it working
     # if its a hassle, in interim, at least save to unique dir
@@ -117,7 +120,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 
     subprocess.run(["ls", "-l", args.instance_data_dir])
 
-    result = main(args, pipeline)
+    result = result | main(args, pipeline)
 
     dest_url = call_inputs.get("dest_url")
     if dest_url:
@@ -130,7 +133,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         print(filename)
 
         # fp16 model timings: zip 1m20s, tar+zstd 4s and a tiny bit smaller!
-        compress_start = get_now()
+        send("compress", "start", {})
 
         # TODO, steaming upload (turns out docker disk write is super slow)
         subprocess.run(
@@ -138,16 +141,15 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
             shell=True,
             check=True,  # TODO, rather don't raise and return an error in JSON
         )
+
+        send("compress", "done")
         subprocess.run(["ls", "-l", filename])
 
-        compress_total = get_now() - compress_start
-        result.get("$timings").update({"compress": compress_total})
-
+        send("upload", "start", {})
         upload_result = storage.upload_file(filename, filename)
+        send("upload", "done")
         print(upload_result)
         os.remove(filename)
-
-        result.get("$timings").update({"upload": upload_result["$time"]})
 
     # Cleanup
     shutil.rmtree(args.output_dir)
@@ -605,8 +607,7 @@ def main(args, init_pipeline):
     global_step = 0
 
     # DDA
-    send("training", "start", {}, True)
-    training_start = get_now()
+    send("training", "start", {})
 
     for epoch in range(args.num_train_epochs):
         unet.train()
@@ -696,9 +697,6 @@ def main(args, init_pipeline):
 
     # DDA
     send("training", "done")
-    training_total = get_now() - training_start
-    upload_start = 0
-    upload_total = 0
 
     # Create the pipeline using using the trained modules and save it.
     if accelerator.is_main_process:
@@ -713,8 +711,7 @@ def main(args, init_pipeline):
 
         if args.push_to_hub:
             # DDA
-            send("uploading", "start", {}, True)
-            upload_start = get_now()
+            send("upload", "start", {})
 
             repo.push_to_hub(
                 commit_message="End of training",
@@ -726,13 +723,9 @@ def main(args, init_pipeline):
             )
 
             # DDA
-            send("uploading", "done")
-            upload_total = get_now() - upload_start
+            send("upload", "done")
 
     accelerator.end_training()
 
     # DDA
-    return {
-        "done": True,
-        "$timings": {"training": training_total, "upload": upload_total},
-    }
+    return {"done": True}
