@@ -134,7 +134,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 
         # TODO, steaming upload (turns out docker disk write is super slow)
         subprocess.run(
-            f"tar cf - -C {args.output_dir} . | zstd -o {filename}",
+            f"tar cvf - -C {args.output_dir} . | zstd -o {filename}",
             shell=True,
             check=True,  # TODO, rather don't raise and return an error in JSON
         )
@@ -709,7 +709,7 @@ def main(args, init_pipeline):
             revision=args.revision,
             local_files_only=True,  # DDA
         )
-        pipeline.save_pretrained(args.output_dir)
+        pipeline.save_pretrained(args.output_dir, safe_serialization=True)
 
         if args.push_to_hub:
             # DDA
