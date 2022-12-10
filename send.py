@@ -7,7 +7,11 @@ import hashlib
 from requests_futures.sessions import FuturesSession
 
 print()
-print(os.environ)
+environ = os.environ.copy()
+for key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "HF_AUTH_TOKEN"]:
+    if environ.get(key, None):
+        environ[key] = "XXX"
+print(environ)
 print()
 
 
