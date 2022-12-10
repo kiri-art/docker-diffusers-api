@@ -75,7 +75,22 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     inputs.get("modelInputs").update(extraModelInputs)
 
     print("Running test: " + name)
-    print(json.dumps(inputs, indent=4))
+
+    inputs_to_log = {
+        "modelInputs": inputs["modelInputs"].copy(),
+        "callInputs": inputs["callInputs"].copy(),
+    }
+    model_inputs_to_log = inputs_to_log["modelInputs"]
+
+    for key in ["init_image", "image"]:
+        if key in model_inputs_to_log:
+            model_inputs_to_log[key] = "[image]"
+
+    instance_images = model_inputs_to_log.get("instance_images", None)
+    if instance_images:
+        model_inputs_to_log["instance_images"] = f"[Array({len(instance_images)})]"
+
+    print(json.dumps(inputs_to_log, indent=4))
     print()
 
     start = time.time()
