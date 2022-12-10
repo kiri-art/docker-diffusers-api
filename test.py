@@ -20,7 +20,6 @@ TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
-DEFAULT_MODEL_ID = "stabilityai/stable-diffusion-2"
 
 
 def b64encode_file(filename: str):
@@ -37,6 +36,15 @@ def output_path(filename: str):
     return os.path.join(OUTPUT, filename)
 
 
+# https://stackoverflow.com/a/1094933/1839099
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+        if abs(num) < 1024.0:
+            return f"{num:3.1f}{unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f}Yi{suffix}"
+
+
 def decode_and_save(image_byte_string: str, name: str):
     image_encoded = image_byte_string.encode("utf-8")
     image_bytes = BytesIO(base64.b64decode(image_encoded))
@@ -44,6 +52,11 @@ def decode_and_save(image_byte_string: str, name: str):
     fp = output_path(name + ".png")
     image.save(fp)
     print("Saved " + fp)
+    size_formatted = sizeof_fmt(os.path.getsize(fp))
+
+    return (
+        f"[{image.width}x{image.height} {image.format} image, {size_formatted} bytes]"
+    )
 
 
 all_tests = {}
@@ -56,10 +69,14 @@ def test(name, inputs):
 
 def runTest(name, banana, extraCallInputs, extraModelInputs):
     inputs = all_tests.get(name)
+    if not inputs.get("callInputs", None):
+        inputs.update({"callInputs": {}})
     inputs.get("callInputs").update(extraCallInputs)
     inputs.get("modelInputs").update(extraModelInputs)
 
     print("Running test: " + name)
+    print(json.dumps(inputs, indent=4))
+    print()
 
     start = time.time()
     if banana:
@@ -139,6 +156,21 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
         result.get("images_base64", None) == None
         and result.get("image_base64", None) == None
     ):
+        error = result.get("$error", None)
+        if error:
+            code = error.get("code", None)
+            name = error.get("name", None)
+            message = error.get("message", None)
+            stack = error.get("stack", None)
+            if code and name and message and stack:
+                print()
+                title = f"Exception {code} on container:"
+                print(title)
+                print("-" * len(title))
+                # print(f'{name}("{message}")') - stack includes it.
+                print(stack)
+                return
+
         print(json.dumps(result, indent=4))
         print()
         return
@@ -146,10 +178,12 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     images_base64 = result.get("images_base64", None)
     if images_base64:
         for idx, image_byte_string in enumerate(images_base64):
-            decode_and_save(image_byte_string, f"{name}_{idx}")
+            images_base64[idx] = decode_and_save(image_byte_string, f"{name}_{idx}")
     else:
-        decode_and_save(result["image_base64"], name)
+        result["image_base64"] = decode_and_save(result["image_base64"], name)
 
+    print()
+    print(json.dumps(result, indent=4))
     print()
 
 
@@ -161,10 +195,10 @@ test(
             "num_inference_steps": 20,
         },
         "callInputs": {
-            "MODEL_ID": DEFAULT_MODEL_ID,
-            "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "DPMSolverMultistepScheduler",
-            # "xformers_memory_efficient_attention": False,
+            # "MODEL_ID": "<override_default>",  # (default)
+            # "PIPELINE": "StableDiffusionPipeline",  # (default)
+            # "SCHEDULER": "DPMSolverMultistepScheduler",  # (default)
+            # "xformers_memory_efficient_attention": False,  # (default)
         },
     },
 )
@@ -176,12 +210,7 @@ test(
         "modelInputs": {
             "prompt": "realistic field of grass",
             "num_images_per_prompt": 2,
-        },
-        "callInputs": {
-            "MODEL_ID": DEFAULT_MODEL_ID,
-            "PIPELINE": "StableDiffusionPipeline",
-            "SCHEDULER": "DPMSolverMultistepScheduler",
-        },
+        }
     },
 )
 
@@ -194,9 +223,7 @@ test(
             "init_image": b64encode_file("sketch-mountains-input.jpg"),
         },
         "callInputs": {
-            "MODEL_ID": DEFAULT_MODEL_ID,
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
-            "SCHEDULER": "DPMSolverMultistepScheduler",
         },
     },
 )
@@ -274,9 +301,6 @@ if True or os.getenv("USE_DREAMBOOTH"):
                 # "push_to_hub": True,
             },
             "callInputs": {
-                "MODEL_ID": DEFAULT_MODEL_ID,
-                "PIPELINE": "StableDiffusionPipeline",
-                "SCHEDULER": "DDPMScheduler",
                 "train": "dreambooth",
                 # Option 2: store on S3.  Note the **s3:///* (x3).  See notes below.
                 # "dest_url": "s3:///bucket/filename.tar.zst".

@@ -6,6 +6,11 @@
     If not specified, the default will be used, and returned in a `$meta`
     key in the result.
 
+  * Tests: 1) Don't specify above defaults where possible, 2) Log exact
+    inputs sent to container, 3) Log the full result sent back,
+    substituting base64 image strings with their info, 4) format stack
+    traces on caught errors from container.
+
 * **NEXT MAIN (and already posted to forum)**
 
   * **Latest diffusers, SDv2.1**.  All the latest goodness, and upgraded some
