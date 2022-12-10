@@ -2,6 +2,12 @@
 
 * **NEXT MAIN**
 
+  * Callinputs `MODEL_ID`, `PIPELINE` and `SCHEDULER` are **now optional**.
+    If not specified, the default will be used, and returned in a `$meta`
+    key in the result.
+
+* **NEXT MAIN (and already posted to forum)**
+
   * **Latest diffusers, SDv2.1**.  All the latest goodness, and upgraded some
     dependencies too.  Models are:
 

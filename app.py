@@ -115,6 +115,7 @@ def inference(all_inputs: dict) -> dict:
     print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
+    result = {"$meta": {}}
 
     if model_inputs == None or call_inputs == None:
         return {
@@ -127,7 +128,10 @@ def inference(all_inputs: dict) -> dict:
 
     startRequestId = call_inputs.get("startRequestId", None)
 
-    model_id = call_inputs.get("MODEL_ID")
+    model_id = call_inputs.get("MODEL_ID", None)
+    if not model_id:
+        model_id = MODEL_ID
+        result["$meta"].update({"MODEL_ID": MODEL_ID})
 
     if RUNTIME_DOWNLOADS:
         global downloaded_models
@@ -165,7 +169,11 @@ def inference(all_inputs: dict) -> dict:
             }
 
     if PIPELINE == "ALL":
-        pipeline_name = call_inputs.get("PIPELINE")
+        pipeline_name = call_inputs.get("PIPELINE", None)
+        if not pipeline_name:
+            pipeline_name = "StableDiffusionPipeline"
+            result["$meta"].update({"PIPELINE": pipeline_name})
+
         pipeline = getPipelineForModel(pipeline_name, model, model_id)
         if not pipeline:
             return {
@@ -179,7 +187,12 @@ def inference(all_inputs: dict) -> dict:
     else:
         pipeline = model
 
-    pipeline.scheduler = getScheduler(model_id, call_inputs.get("SCHEDULER", None))
+    scheduler_name = call_inputs.get("SCHEDULER", None)
+    if not scheduler_name:
+        scheduler_name = "DPMSolverMultistepScheduler"
+        result["$meta"].update({"SCHEDULER": scheduler_name})
+
+    pipeline.scheduler = getScheduler(model_id, scheduler_name)
     if pipeline.scheduler == None:
         return {
             "$error": {
@@ -279,7 +292,7 @@ def inference(all_inputs: dict) -> dict:
                 }
             }
         torch.set_grad_enabled(True)
-        result = TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
+        result = result | TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
         torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
         inferenceTime = get_now() - inferenceStart
@@ -331,10 +344,13 @@ def inference(all_inputs: dict) -> dict:
 
     send("inference", "done", {"startRequestId": startRequestId})
     inferenceTime = get_now() - inferenceStart
-    timings = {"init": initTime, "inference": inferenceTime}
+
+    result = result | {"$timings": {"init": initTime, "inference": inferenceTime}}
 
     # Return the results as a dictionary
     if len(images_base64) > 1:
-        return {"images_base64": images_base64, "$timings": timings}
+        result = result | {"images_base64": images_base64}
+    else:
+        result = result | {"image_base64": images_base64[0]}
 
-    return {"image_base64": images_base64[0], "$timings": timings}
+    return result
