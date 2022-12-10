@@ -108,6 +108,8 @@ def inference(all_inputs: dict) -> dict:
     global dummy_safety_checker
     global last_xformers_memory_efficient_attention
 
+    clearSession()
+
     print(json.dumps(truncateInputs(all_inputs), indent=2))
     model_inputs = all_inputs.get("modelInputs", None)
     call_inputs = all_inputs.get("callInputs", None)
@@ -291,7 +293,6 @@ def inference(all_inputs: dict) -> dict:
         torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
         result.update({"$timings": getTimings()})
-        clearSession()
         return result
 
     # Do this after dreambooth as dreambooth accepts a seed int directly.
@@ -344,6 +345,5 @@ def inference(all_inputs: dict) -> dict:
         result = result | {"image_base64": images_base64[0]}
 
     result = result | {"$timings": getTimings()}
-    clearSession()
 
     return result

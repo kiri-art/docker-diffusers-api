@@ -37,9 +37,17 @@ with open("/proc/self/mountinfo") as file:
         line = file.readline().strip()
 
 
-def clearSession():
+init_used = False
+
+
+def clearSession(force=False):
     global session
-    session = {"_ctime": get_now()}
+    global init_used
+
+    if init_used or force:
+        session = {"_ctime": get_now()}
+    else:
+        init_used = True
 
 
 def getTimings():
@@ -94,4 +102,4 @@ def send(type: str, status: str, payload: dict = {}):
     #    pass
 
 
-clearSession()
+clearSession(True)
