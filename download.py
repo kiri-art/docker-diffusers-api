@@ -45,7 +45,7 @@ def download_model(model_url=None, model_id=None):
             print("Does not exist, let's try find it on huggingface")
             download_model(model_id=model_id)
             model = loadModel(model_id, True)
-            dir = model_id + "_save"
+            dir = "models--" + model_id.replace("/", "--") + "--dda"
             model.save_pretrained(dir, safe_serialization=True)
 
             # This is all duped from train_dreambooth, need to refactor TODO XXX
