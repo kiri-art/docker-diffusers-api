@@ -18,7 +18,7 @@ from getScheduler import getScheduler, SCHEDULERS
 from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipelines
 import re
 import requests
-from download import download_model
+from download import download_model, normalize_model_id
 import traceback
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
@@ -130,11 +130,14 @@ def inference(all_inputs: dict) -> dict:
     if not model_id:
         model_id = MODEL_ID
         result["$meta"].update({"MODEL_ID": MODEL_ID})
+    normalized_model_id = model_id
 
     if RUNTIME_DOWNLOADS:
         global downloaded_models
-        if last_model_id != model_id:
-            if not downloaded_models.get(model_id, None):
+        model_precision = call_inputs.get("MODEL_PRECISION", None)
+        normalized_model_id = normalize_model_id(model_id, model_precision)
+        if last_model_id != normalized_model_id:
+            if not downloaded_models.get(normalized_model_id, None):
                 model_url = call_inputs.get("MODEL_URL", None)
                 if not model_url:
                     return {
@@ -143,18 +146,22 @@ def inference(all_inputs: dict) -> dict:
                             "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
                         }
                     }
-                download_model(model_id=model_id, model_url=model_url)
-                downloaded_models.update({model_id: True})
-            model = loadModel(model_id)
+                download_model(
+                    model_id=model_id,
+                    model_url=model_url,
+                    model_revision=model_precision,
+                )
+                downloaded_models.update({normalized_model_id: True})
+            model = loadModel(normalized_model_id)
             if PIPELINE == "ALL":
                 clearPipelines()
-            last_model_id = model_id
+            last_model_id = normalized_model_id
 
     if MODEL_ID == "ALL":
-        if last_model_id != model_id:
-            model = loadModel(model_id)
+        if last_model_id != normalized_model_id:
+            model = loadModel(normalized_model_id)
             clearPipelines()
-            last_model_id = model_id
+            last_model_id = normalized_model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
             return {
@@ -172,7 +179,7 @@ def inference(all_inputs: dict) -> dict:
             pipeline_name = "StableDiffusionPipeline"
             result["$meta"].update({"PIPELINE": pipeline_name})
 
-        pipeline = getPipelineForModel(pipeline_name, model, model_id)
+        pipeline = getPipelineForModel(pipeline_name, model, normalized_model_id)
         if not pipeline:
             return {
                 "$error": {
@@ -190,7 +197,7 @@ def inference(all_inputs: dict) -> dict:
         scheduler_name = "DPMSolverMultistepScheduler"
         result["$meta"].update({"SCHEDULER": scheduler_name})
 
-    pipeline.scheduler = getScheduler(model_id, scheduler_name)
+    pipeline.scheduler = getScheduler(normalized_model_id, scheduler_name)
     if pipeline.scheduler == None:
         return {
             "$error": {
@@ -289,7 +296,9 @@ def inference(all_inputs: dict) -> dict:
                 }
             }
         torch.set_grad_enabled(True)
-        result = result | TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
+        result = result | TrainDreamBooth(
+            normalized_model_id, pipeline, model_inputs, call_inputs
+        )
         torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
         result.update({"$timings": getTimings()})

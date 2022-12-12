@@ -5,7 +5,7 @@ import os
 from loadModel import loadModel, MODEL_IDS
 from diffusers import AutoencoderKL, UNet2DConditionModel, DDPMScheduler
 from transformers import CLIPTextModel, CLIPTokenizer
-from precision import revision
+from precision import PRECISION, revision_from_precision, torch_dtype_from_precision
 from utils import Storage
 import subprocess
 from pathlib import Path
@@ -24,12 +24,30 @@ def send(type: str, status: str, payload: dict = {}):
         _send(type, status, payload)
 
 
-def download_model(model_url=None, model_id=None):
+def normalize_model_id(model_id: str, model_revision):
+    normalized_model_id = "models--" + model_id.replace("/", "--")
+    if model_revision:
+        normalized_model_id += "--" + model_revision
+    return normalized_model_id
+
+
+def download_model(model_url=None, model_id=None, model_revision=None):
+    print(
+        "download_model",
+        {
+            "model_url": model_url,
+            "model_id": model_id,
+            "model_revision": model_revision,
+        },
+    )
     id = model_id or MODEL_ID
     url = model_url or MODEL_URL
+    revision = model_revision or revision_from_precision()
+    normalized_model_id = id
 
     if url != "":
-        normalized_model_id = "models--" + model_id.replace("/", "--")
+        normalized_model_id = normalize_model_id(model_id, model_revision)
+        print({"normalized_model_id": normalized_model_id})
         filename = url.split("/").pop()
         if not filename:
             filename = normalized_model_id + ".tar.zst"
@@ -38,17 +56,31 @@ def download_model(model_url=None, model_id=None):
         if exists:
             storage.download_file(filename)
             # os.mkdir(id)
-            Path(id).mkdir(parents=True, exist_ok=False)
+            # Path(id).mkdir(parents=True, exist_ok=False)
+            os.mkdir(normalized_model_id)
             subprocess.run(
-                ["tar", "--use-compress-program=unzstd", "-C", id, "-xvf", filename],
+                [
+                    "tar",
+                    "--use-compress-program=unzstd",
+                    "-C",
+                    normalized_model_id,
+                    "-xvf",
+                    filename,
+                ],
                 check=True,
             )
             subprocess.run(["ls", "-l"])
         else:
             print("Does not exist, let's try find it on huggingface")
-            download_model(model_id=model_id)
-            model = loadModel(model_id, True)
-            dir = "models--" + model_id.replace("/", "--") + "--dda"
+            print("precision = ", {"model_revision": model_revision})
+            # This would be quicker to just model.to("cuda") afterwards, but
+            # this conveniently logs all the timings (and doesn't happen often)
+            print("download")
+            model = loadModel(model_id, False, precision=model_revision)  # download
+            print("load")
+            model = loadModel(model_id, True, precision=model_revision)  # load
+            # dir = "models--" + model_id.replace("/", "--") + "--dda"
+            dir = normalized_model_id
             model.save_pretrained(dir, safe_serialization=True)
 
             # This is all duped from train_dreambooth, need to refactor TODO XXX
@@ -67,7 +99,10 @@ def download_model(model_url=None, model_id=None):
             send("upload", "done")
             print(upload_result)
             os.remove(filename)
-            shutil.rmtree(dir)
+
+            # leave model dir for future loads... make configurable?
+            # shutil.rmtree(dir)
+
             # TODO, swap directories, inside HF's cache structure.
 
         return
@@ -76,9 +111,9 @@ def download_model(model_url=None, model_id=None):
     # For local dev & preview deploys, download all the models (terrible for serverless deploys)
     if MODEL_ID == "ALL":
         for MODEL_I in MODEL_IDS:
-            loadModel(MODEL_I, False)
+            loadModel(MODEL_I, False, precision=model_revision)
     else:
-        loadModel(MODEL_ID, False)
+        loadModel(normalized_model_id, False, precision=model_revision)
 
     # if USE_DREAMBOOTH:
     # Actually we can re-use these from the above loaded model

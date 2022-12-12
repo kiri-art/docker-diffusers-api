@@ -2,7 +2,7 @@ import torch
 import os
 from diffusers import pipelines as _pipelines, StableDiffusionPipeline
 from getScheduler import getScheduler, DEFAULT_SCHEDULER
-from precision import revision, torch_dtype
+from precision import revision_from_precision, torch_dtype_from_precision
 import time
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
@@ -21,8 +21,16 @@ MODEL_IDS = [
 ]
 
 
-def loadModel(model_id: str, load=True):
-    print(("Loading" if load else "Downloading") + " model: " + model_id)
+def loadModel(model_id: str, load=True, precision=None):
+    print("loadModel", {"model_id": model_id, "load": load, "precision": precision})
+    revision = revision_from_precision(precision)
+    torch_dtype = torch_dtype_from_precision(precision)
+    print(
+        ("Loading" if load else "Downloading")
+        + " model: "
+        + model_id
+        + (f" ({revision})" if revision else "")
+    )
 
     pipeline = (
         StableDiffusionPipeline if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
@@ -51,4 +59,4 @@ def loadModel(model_id: str, load=True):
     else:
         print(f"Downloaded in {from_pretrained} ms")
 
-    return model.to("cuda") if load else None
+    return model if load else None
