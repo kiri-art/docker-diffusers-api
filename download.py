@@ -29,8 +29,11 @@ def download_model(model_url=None, model_id=None):
     url = model_url or MODEL_URL
 
     if url != "":
+        normalized_model_id = "models--" + model_id.replace("/", "--")
         filename = url.split("/").pop()
-        storage = Storage(url)
+        if not filename:
+            filename = normalized_model_id + ".tar.zst"
+        storage = Storage(url, default_path=normalized_model_id + ".tar.zst")
         exists = storage.file_exists()
         if exists:
             storage.download_file(filename)
