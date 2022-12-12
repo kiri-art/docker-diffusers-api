@@ -4,11 +4,11 @@ from .S3Storage import S3Storage
 from .HTTPStorage import HTTPStorage
 
 
-def Storage(url):
+def Storage(url, **kwargs):
     if re.search("^(https?\+)?s3://", url):
-        return S3Storage(url)
+        return S3Storage(url, **kwargs)
 
     if re.search("^https?://", url):
-        return HTTPStorage(url)
+        return HTTPStorage(url, **kwargs)
 
     raise RuntimeError("No storage handler for: " + url)

@@ -20,7 +20,7 @@ def get_now():
 
 
 class S3Storage:
-    def __init__(self, url, path=""):
+    def __init__(self, url, **kwargs):
         self.url = url
 
         if url.startswith("s3://"):
@@ -40,7 +40,7 @@ class S3Storage:
         if not s3_dest["bucket"]:
             s3_dest["bucket"] = AWS_S3_DEFAULT_BUCKET
         if not s3_dest["path"] or s3_dest["path"] == "":
-            s3_dest["path"] = path
+            s3_dest["path"] = kwargs.get("default_path", "")
 
         self.endpoint_url = s3_dest["endpoint"]
         self.bucket_name = s3_dest["bucket"]
