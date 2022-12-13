@@ -20,6 +20,7 @@ import re
 import requests
 from download import download_model, normalize_model_id
 import traceback
+from precision import PRECISION
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -44,6 +45,7 @@ class DummySafetyChecker:
 def init():
     global model  # needed for bananna optimizations
     global dummy_safety_checker
+    global always_normalize_model_id
 
     send(
         "init",
@@ -62,8 +64,14 @@ def init():
         global last_model_id
         last_model_id = None
 
+    normalized_model_id = normalize_model_id(MODEL_ID, PRECISION)
+    if os.path.isdir(normalized_model_id):
+        always_normalize_model_id = normalized_model_id
+    else:
+        normalized_model_id = MODEL_ID
+
     if not RUNTIME_DOWNLOADS:
-        model = loadModel(MODEL_ID)
+        model = loadModel(normalized_model_id, True, PRECISION)
 
     send("init", "done")
 
@@ -107,6 +115,7 @@ def inference(all_inputs: dict) -> dict:
     global schedulers
     global dummy_safety_checker
     global last_xformers_memory_efficient_attention
+    global always_normalize_model_id
 
     clearSession()
 
@@ -156,6 +165,15 @@ def inference(all_inputs: dict) -> dict:
             if PIPELINE == "ALL":
                 clearPipelines()
             last_model_id = normalized_model_id
+    else:
+        if always_normalize_model_id:
+            normalized_model_id = always_normalize_model_id
+        print(
+            {
+                "always_normalize_model_id": always_normalize_model_id,
+                "normalized_model_id": normalized_model_id,
+            }
+        )
 
     if MODEL_ID == "ALL":
         if last_model_id != normalized_model_id:

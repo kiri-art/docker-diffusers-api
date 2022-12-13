@@ -9,7 +9,6 @@ from precision import PRECISION, revision_from_precision, torch_dtype_from_preci
 from utils import Storage
 import subprocess
 from pathlib import Path
-from send import send as _send
 import shutil
 
 MODEL_ID = os.environ.get("MODEL_ID")
@@ -21,6 +20,8 @@ RUNTIME_DOWNLOADS = os.environ.get("RUNTIME_DOWNLOADS")
 # i.e. don't run during build
 def send(type: str, status: str, payload: dict = {}):
     if RUNTIME_DOWNLOADS:
+        from send import send as _send
+
         _send(type, status, payload)
 
 
@@ -135,4 +136,4 @@ def download_model(model_url=None, model_id=None, model_revision=None):
 
 
 if __name__ == "__main__":
-    download_model()
+    download_model("", MODEL_ID, PRECISION)
