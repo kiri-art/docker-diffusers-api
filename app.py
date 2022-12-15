@@ -64,13 +64,13 @@ def init():
         global last_model_id
         last_model_id = None
 
-    normalized_model_id = normalize_model_id(MODEL_ID, PRECISION)
-    if os.path.isdir(normalized_model_id):
-        always_normalize_model_id = normalized_model_id
-    else:
-        normalized_model_id = MODEL_ID
-
     if not RUNTIME_DOWNLOADS:
+        normalized_model_id = normalize_model_id(MODEL_ID, PRECISION)
+        if os.path.isdir(normalized_model_id):
+            always_normalize_model_id = normalized_model_id
+        else:
+            normalized_model_id = MODEL_ID
+
         model = loadModel(normalized_model_id, True, PRECISION)
 
     send("init", "done")
