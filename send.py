@@ -29,14 +29,18 @@ if sign_key == "":
 
 futureSession = FuturesSession()
 
-with open("/proc/self/mountinfo") as file:
-    line = file.readline().strip()
-    while line:
-        if "/containers/" in line:
-            container_id = line.split("/containers/")[-1]  # Take only text to the right
-            container_id = container_id.split("/")[0]  # Take only text to the left
-            break
+container_id = os.getenv("CONTAINER_ID")
+if not container_id:
+    with open("/proc/self/mountinfo") as file:
         line = file.readline().strip()
+        while line:
+            if "/containers/" in line:
+                container_id = line.split("/containers/")[
+                    -1
+                ]  # Take only text to the right
+                container_id = container_id.split("/")[0]  # Take only text to the left
+                break
+            line = file.readline().strip()
 
 
 init_used = False
