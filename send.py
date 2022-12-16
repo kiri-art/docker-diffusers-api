@@ -32,10 +32,8 @@ futureSession = FuturesSession()
 with open("/proc/self/mountinfo") as file:
     line = file.readline().strip()
     while line:
-        if "/docker/containers/" in line:
-            container_id = line.split("/docker/containers/")[
-                -1
-            ]  # Take only text to the right
+        if "/containers/" in line:
+            container_id = line.split("/containers/")[-1]  # Take only text to the right
             container_id = container_id.split("/")[0]  # Take only text to the left
             break
         line = file.readline().strip()
