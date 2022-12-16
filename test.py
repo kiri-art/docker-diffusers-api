@@ -19,6 +19,7 @@ path = os.path.dirname(os.path.realpath(sys.argv[0]))
 TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
+TEST_URL = os.environ.get("TEST_URL", "http://localhost:8000/")
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
 
 
@@ -141,7 +142,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             return
         result = modelOutputs[0]
     else:
-        response = requests.post("http://localhost:8000/", json=inputs)
+        response = requests.post(TEST_URL, json=inputs)
         result = response.json()
 
     finish = time.time() - start
