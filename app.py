@@ -161,9 +161,8 @@ def inference(all_inputs: dict) -> dict:
                     model_revision=model_precision,
                 )
                 downloaded_models.update({normalized_model_id: True})
-            model = loadModel(normalized_model_id)
-            if PIPELINE == "ALL":
-                clearPipelines()
+            model = loadModel(normalized_model_id, True, model_precision)
+            clearPipelines()
             last_model_id = normalized_model_id
     else:
         if always_normalize_model_id:

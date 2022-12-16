@@ -42,7 +42,8 @@ def clearPipelines():
     therefore prevent memory being reclaimed after unloading the previous
     model.
     """
-    pipelines = {}
+    global _pipelines
+    _pipelines = {}
 
 
 def getPipelineForModel(pipeline_name: str, model, model_id):
