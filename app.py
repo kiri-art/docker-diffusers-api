@@ -146,8 +146,7 @@ def inference(all_inputs: dict) -> dict:
                 download_model(model_id=model_id, model_url=model_url)
                 downloaded_models.update({model_id: True})
             model = loadModel(model_id)
-            if PIPELINE == "ALL":
-                clearPipelines()
+            clearPipelines()
             last_model_id = model_id
 
     if MODEL_ID == "ALL":
