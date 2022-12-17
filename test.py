@@ -20,6 +20,7 @@ TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
 TEST_URL = os.environ.get("TEST_URL", "http://localhost:8000/")
+BANANA_API_URL = os.environ.get("BANANA_API_URL", "https://api.banana.dev")
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
 
 
@@ -110,7 +111,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             "modelInputs": inputs,
             "startOnly": False,
         }
-        response = requests.post("https://api.banana.dev/start/v4/", json=payload)
+        response = requests.post(f"{BANANA_API_URL}/start/v4/", json=payload)
         result = response.json()
         callID = result.get("callID")
 
@@ -129,9 +130,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
                     "apiKey": BANANA_API_KEY,
                     "callID": callID,
                 }
-                response = requests.post(
-                    "https://api.banana.dev/check/v4/", json=payload
-                )
+                response = requests.post(f"{BANANA_API_URL}/check/v4/", json=payload)
                 result = response.json()
 
         modelOutputs = result.get("modelOutputs", None)
