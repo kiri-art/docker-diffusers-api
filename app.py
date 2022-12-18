@@ -161,8 +161,8 @@ def inference(all_inputs: dict) -> dict:
                     model_revision=model_precision,
                 )
                 downloaded_models.update({normalized_model_id: True})
-            model = loadModel(normalized_model_id, True, model_precision)
             clearPipelines()
+            model = loadModel(normalized_model_id, True, model_precision)
             last_model_id = normalized_model_id
     else:
         if always_normalize_model_id:
@@ -176,8 +176,8 @@ def inference(all_inputs: dict) -> dict:
 
     if MODEL_ID == "ALL":
         if last_model_id != normalized_model_id:
-            model = loadModel(normalized_model_id)
             clearPipelines()
+            model = loadModel(normalized_model_id)
             last_model_id = normalized_model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
