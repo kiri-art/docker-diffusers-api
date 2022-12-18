@@ -188,7 +188,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
 
         print(json.dumps(result, indent=4))
         print()
-        return
+        return result
 
     images_base64 = result.get("images_base64", None)
     if images_base64:
@@ -200,6 +200,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     print()
     print(json.dumps(result, indent=4))
     print()
+    return result
 
 
 test(
