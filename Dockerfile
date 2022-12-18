@@ -41,14 +41,6 @@ RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git ch
 WORKDIR /api
 RUN pip install -e diffusers
 
-# We add the banana boilerplate here
-ADD server.py .
-EXPOSE 8000
-
-ADD precision.py .
-
-COPY utils utils
-
 # Set to true to NOT download model at build time, rather at init / usage.
 ARG RUNTIME_DOWNLOADS=1
 ENV RUNTIME_DOWNLOADS=${RUNTIME_DOWNLOADS}
@@ -57,12 +49,6 @@ ENV RUNTIME_DOWNLOADS=${RUNTIME_DOWNLOADS}
 # ARG PIPELINE="StableDiffusionInpaintPipeline"
 ARG PIPELINE="ALL"
 ENV PIPELINE=${PIPELINE}
-
-# Add your model weight files 
-# (in this case we have a python script)
-ADD getScheduler.py .
-ADD loadModel.py .
-ADD download.py .
 
 # Deps for RUNNING (not building) earlier options
 ARG USE_PATCHMATCH=0
@@ -80,11 +66,19 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
   fi
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 
-# Add your custom app code, init() and inference()
 ADD train_dreambooth.py .
+
 ADD send.py .
 ADD getPipeline.py .
+ADD getScheduler.py .
+ADD loadModel.py .
+ADD download.py .
 ADD app.py .
+ADD precision.py .
+COPY utils utils
+
+ADD server.py .
+EXPOSE 8000
 
 ARG SAFETENSORS_FAST_GPU=1
 ENV SAFETENSORS_FAST_GPU=${SAFETENSORS_FAST_GPU}
