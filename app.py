@@ -72,6 +72,8 @@ def init():
             normalized_model_id = MODEL_ID
 
         model = loadModel(normalized_model_id, True, PRECISION)
+    else:
+        model = None
 
     send("init", "done")
 
@@ -161,6 +163,8 @@ def inference(all_inputs: dict) -> dict:
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
+            if model:
+                model.to("cpu")  # Necessary to avoid a memory leak
             model = loadModel(normalized_model_id, True, model_precision)
             last_model_id = normalized_model_id
     else:
@@ -369,6 +373,10 @@ def inference(all_inputs: dict) -> dict:
     else:
         result = result | {"image_base64": images_base64[0]}
 
-    result = result | {"$timings": getTimings()}
+    mem_usage = 0
+    if torch.cuda.is_available():
+        mem_usage = torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated()
+
+    result = result | {"$timings": getTimings(), "$mem_usage": mem_usage}
 
     return result
