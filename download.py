@@ -71,6 +71,7 @@ def download_model(model_url=None, model_id=None, model_revision=None):
                 check=True,
             )
             subprocess.run(["ls", "-l"])
+            os.remove(filename)
         else:
             print("Does not exist, let's try find it on huggingface")
             print("precision = ", {"model_revision": model_revision})
