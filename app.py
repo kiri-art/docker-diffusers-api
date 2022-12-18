@@ -144,6 +144,8 @@ def inference(all_inputs: dict) -> dict:
 
     if RUNTIME_DOWNLOADS:
         model_precision = call_inputs.get("MODEL_PRECISION", None)
+        checkpoint_url = call_inputs.get("CHECKPOINT_URL", None)
+        checkpoint_config_url = call_inputs.get("CHECKPOINT_CONFIG_URL", None)
         normalized_model_id = normalize_model_id(model_id, model_precision)
         if last_model_id != normalized_model_id:
             # if not downloaded_models.get(normalized_model_id, None):
@@ -160,6 +162,8 @@ def inference(all_inputs: dict) -> dict:
                     model_id=model_id,
                     model_url=model_url,
                     model_revision=model_precision,
+                    checkpoint_url=checkpoint_url,
+                    checkpoint_config_url=checkpoint_config_url,
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()

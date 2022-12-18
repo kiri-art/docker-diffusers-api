@@ -75,6 +75,8 @@ ADD loadModel.py .
 ADD download.py .
 ADD app.py .
 ADD precision.py .
+ADD convert_to_diffusers.py .
+ADD download_checkpoint.py .
 COPY utils utils
 
 ADD server.py .

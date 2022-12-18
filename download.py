@@ -10,6 +10,8 @@ from utils import Storage
 import subprocess
 from pathlib import Path
 import shutil
+from convert_to_diffusers import main as convert_to_diffusers
+from download_checkpoint import main as download_checkpoint
 
 MODEL_ID = os.environ.get("MODEL_ID")
 MODEL_URL = os.environ.get("MODEL_URL")
@@ -32,7 +34,13 @@ def normalize_model_id(model_id: str, model_revision):
     return normalized_model_id
 
 
-def download_model(model_url=None, model_id=None, model_revision=None):
+def download_model(
+    model_url=None,
+    model_id=None,
+    model_revision=None,
+    checkpoint_url=None,
+    checkpoint_config_url=None,
+):
     print(
         "download_model",
         {
@@ -73,12 +81,21 @@ def download_model(model_url=None, model_id=None, model_revision=None):
             subprocess.run(["ls", "-l"])
             os.remove(filename)
         else:
-            print("Does not exist, let's try find it on huggingface")
-            print("precision = ", {"model_revision": model_revision})
-            # This would be quicker to just model.to("cuda") afterwards, but
-            # this conveniently logs all the timings (and doesn't happen often)
-            print("download")
-            model = loadModel(model_id, False, precision=model_revision)  # download
+            if checkpoint_url:
+                download_checkpoint(checkpoint_url)
+                convert_to_diffusers(
+                    model_id=model_id,
+                    checkpoint_url=checkpoint_url,
+                    checkpoint_config_url=checkpoint_config_url,
+                )
+            else:
+                print("Does not exist, let's try find it on huggingface")
+                print("precision = ", {"model_revision": model_revision})
+                # This would be quicker to just model.to("cuda") afterwards, but
+                # this conveniently logs all the timings (and doesn't happen often)
+                print("download")
+                model = loadModel(model_id, False, precision=model_revision)  # download
+
             print("load")
             model = loadModel(model_id, True, precision=model_revision)  # load
             # dir = "models--" + model_id.replace("/", "--") + "--dda"

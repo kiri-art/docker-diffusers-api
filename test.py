@@ -276,6 +276,20 @@ test(
     },
 )
 
+test(
+    "checkpoint",
+    {
+        "modelInputs": {
+            "prompt": "1girl",
+        },
+        "callInputs": {
+            "MODEL_ID": "hakurei/waifu-diffusion-v1-3",
+            "MODEL_URL": "s3://",
+            "CHECKPOINT_URL": "http://huggingface.co/hakurei/waifu-diffusion-v1-3/resolve/main/wd-v1-3-float16.ckpt",
+        },
+    },
+)
+
 if os.getenv("USE_PATCHMATCH"):
     test(
         "outpaint",
