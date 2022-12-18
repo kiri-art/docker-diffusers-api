@@ -104,7 +104,6 @@ def truncateInputs(inputs: dict):
 
 
 last_xformers_memory_efficient_attention = {}
-downloaded_models = {}
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -142,11 +141,11 @@ def inference(all_inputs: dict) -> dict:
     normalized_model_id = model_id
 
     if RUNTIME_DOWNLOADS:
-        global downloaded_models
         model_precision = call_inputs.get("MODEL_PRECISION", None)
         normalized_model_id = normalize_model_id(model_id, model_precision)
         if last_model_id != normalized_model_id:
-            if not downloaded_models.get(normalized_model_id, None):
+            # if not downloaded_models.get(normalized_model_id, None):
+            if not os.path.isdir(normalized_model_id):
                 model_url = call_inputs.get("MODEL_URL", None)
                 if not model_url:
                     return {
@@ -160,7 +159,7 @@ def inference(all_inputs: dict) -> dict:
                     model_url=model_url,
                     model_revision=model_precision,
                 )
-                downloaded_models.update({normalized_model_id: True})
+                # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
             model = loadModel(normalized_model_id, True, model_precision)
             last_model_id = normalized_model_id
