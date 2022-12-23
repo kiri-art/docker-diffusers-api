@@ -12,3 +12,4 @@ triton==2.0.0.dev20221105
 ftfy==6.1.1
 spacy==3.4.3
 boto3==1.26.12
+einops==0.6.0
