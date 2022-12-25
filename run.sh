@@ -12,4 +12,5 @@ docker run -it --rm \
   -e AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" \
   -e AWS_S3_ENDPOINT_URL="$AWS_S3_ENDPOINT_URL" \
   -e AWS_S3_DEFAULT_BUCKET="$AWS_S3_DEFAULT_BUCKET" \
+  -v ~/root-cache:/root/.cache \
   "$@" gadicc/diffusers-api

@@ -18,6 +18,9 @@ MODEL_URL = os.environ.get("MODEL_URL")
 USE_DREAMBOOTH = os.environ.get("USE_DREAMBOOTH")
 HF_AUTH_TOKEN = os.environ.get("HF_AUTH_TOKEN")
 RUNTIME_DOWNLOADS = os.environ.get("RUNTIME_DOWNLOADS")
+HOME = os.path.expanduser("~")
+MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
+Path(MODELS_DIR).mkdir(parents=True, exist_ok=True)
 
 # i.e. don't run during build
 def send(type: str, status: str, payload: dict = {}):
@@ -60,26 +63,28 @@ def download_model(
         filename = url.split("/").pop()
         if not filename:
             filename = normalized_model_id + ".tar.zst"
+        model_file = os.path.join(MODELS_DIR, filename)
         storage = Storage(url, default_path=normalized_model_id + ".tar.zst")
         exists = storage.file_exists()
         if exists:
-            storage.download_file(filename)
+            storage.download_file(model_file)
             # os.mkdir(id)
             # Path(id).mkdir(parents=True, exist_ok=False)
-            os.mkdir(normalized_model_id)
+            model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+            os.mkdir(model_dir)
             subprocess.run(
                 [
                     "tar",
                     "--use-compress-program=unzstd",
                     "-C",
-                    normalized_model_id,
+                    model_dir,
                     "-xvf",
-                    filename,
+                    model_file,
                 ],
                 check=True,
             )
             subprocess.run(["ls", "-l"])
-            os.remove(filename)
+            os.remove(model_file)
         else:
             if checkpoint_url:
                 download_checkpoint(checkpoint_url)
@@ -99,25 +104,25 @@ def download_model(
             print("load")
             model = loadModel(model_id, True, precision=model_revision)  # load
             # dir = "models--" + model_id.replace("/", "--") + "--dda"
-            dir = normalized_model_id
+            dir = os.path.join(MODELS_DIR, normalized_model_id)
             model.save_pretrained(dir, safe_serialization=True)
 
             # This is all duped from train_dreambooth, need to refactor TODO XXX
             send("compress", "start", {})
             subprocess.run(
-                f"tar cvf - -C {dir} . | zstd -o {filename}",
+                f"tar cvf - -C {dir} . | zstd -o {model_file}",
                 shell=True,
                 check=True,  # TODO, rather don't raise and return an error in JSON
             )
 
             send("compress", "done")
-            subprocess.run(["ls", "-l", filename])
+            subprocess.run(["ls", "-l", model_file])
 
             send("upload", "start", {})
-            upload_result = storage.upload_file(filename, filename)
+            upload_result = storage.upload_file(model_file, filename)
             send("upload", "done")
             print(upload_result)
-            os.remove(filename)
+            os.remove(model_file)
 
             # leave model dir for future loads... make configurable?
             # shutil.rmtree(dir)

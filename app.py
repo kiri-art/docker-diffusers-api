@@ -30,6 +30,9 @@ if USE_DREAMBOOTH:
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
+HOME = os.path.expanduser("~")
+MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
+
 
 torch.set_grad_enabled(False)
 
@@ -65,13 +68,15 @@ def init():
         last_model_id = None
 
     if not RUNTIME_DOWNLOADS:
+        # Uh doesn't this break non-cached images?  TODO... IMAGE_CACHE
         normalized_model_id = normalize_model_id(MODEL_ID, PRECISION)
-        if os.path.isdir(normalized_model_id):
-            always_normalize_model_id = normalized_model_id
+        model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+        if os.path.isdir(model_dir):
+            always_normalize_model_id = model_dir
         else:
             normalized_model_id = MODEL_ID
 
-        model = loadModel(normalized_model_id, True, PRECISION)
+        model = loadModel(model_dir, True, PRECISION)
     else:
         model = None
 
@@ -147,9 +152,10 @@ def inference(all_inputs: dict) -> dict:
         checkpoint_url = call_inputs.get("CHECKPOINT_URL", None)
         checkpoint_config_url = call_inputs.get("CHECKPOINT_CONFIG_URL", None)
         normalized_model_id = normalize_model_id(model_id, model_precision)
+        model_dir = os.path.join(MODELS_DIR, normalized_model_id)
         if last_model_id != normalized_model_id:
             # if not downloaded_models.get(normalized_model_id, None):
-            if not os.path.isdir(normalized_model_id):
+            if not os.path.isdir(model_dir):
                 model_url = call_inputs.get("MODEL_URL", None)
                 if not model_url:
                     return {

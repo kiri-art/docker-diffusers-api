@@ -8,6 +8,9 @@ import time
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 PIPELINE = os.getenv("PIPELINE")
 USE_DREAMBOOTH = True if os.getenv("USE_DREAMBOOTH") == "1" else False
+HOME = os.path.expanduser("~")
+MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
+
 
 MODEL_IDS = [
     "CompVis/stable-diffusion-v1-4",
@@ -38,9 +41,13 @@ def loadModel(model_id: str, load=True, precision=None):
 
     scheduler = getScheduler(model_id, DEFAULT_SCHEDULER, not load)
 
+    model_dir = os.path.join(MODELS_DIR, model_id)
+    if not os.path.isdir(model_dir):
+        model_dir = None
+
     from_pretrained = time.time()
     model = pipeline.from_pretrained(
-        model_id,
+        model_dir or model_id,
         revision=revision,
         torch_dtype=torch_dtype,
         use_auth_token=HF_AUTH_TOKEN,
