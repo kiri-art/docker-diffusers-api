@@ -69,7 +69,7 @@ def test(name, inputs):
     all_tests.update({name: inputs})
 
 
-def runTest(name, banana, extraCallInputs, extraModelInputs):
+def runTest(name, args, extraCallInputs, extraModelInputs):
     inputs = all_tests.get(name)
     if not inputs.get("callInputs", None):
         inputs.update({"callInputs": {}})
@@ -96,7 +96,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     print()
 
     start = time.time()
-    if banana:
+    if args.banana:
         BANANA_API_KEY = os.getenv("BANANA_API_KEY")
         BANANA_MODEL_KEY = os.getenv("BANANA_MODEL_KEY")
         if BANANA_MODEL_KEY == None or BANANA_API_KEY == None:
@@ -140,6 +140,46 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             print(result)
             return
         result = modelOutputs[0]
+    elif args.runpod:
+        RUNPOD_API_URL = "https://api.runpod.ai/v1/"
+        RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY")
+        RUNPOD_MODEL_KEY = os.getenv("RUNPOD_MODEL_KEY")
+        if not (RUNPOD_API_KEY and RUNPOD_MODEL_KEY):
+            print("Error: RUNPOD_API_KEY or RUNPOD_MODEL_KEY not set, aborting...")
+            sys.exit(1)
+
+        url_base = RUNPOD_API_URL + RUNPOD_MODEL_KEY
+
+        payload = {
+            "input": inputs,
+        }
+        print(url_base + "/run")
+        response = requests.post(
+            url_base + "/run",
+            json=payload,
+            headers={"Authorization": "Bearer " + RUNPOD_API_KEY},
+        )
+
+        if response.status_code != 200:
+            print("Unexpected HTTP response code: " + str(response.status_code))
+            sys.exit(1)
+
+        print(response)
+        result = response.json()
+        print(result)
+
+        id = result["id"]
+
+        while result["status"] != "COMPLETED":
+            time.sleep(1)
+            response = requests.get(
+                f"{url_base}/status/{id}",
+                headers={"Authorization": "Bearer " + RUNPOD_API_KEY},
+            )
+            result = response.json()
+
+        result = result["output"]
+
     else:
         response = requests.post(TEST_URL, json=inputs)
         result = response.json()
@@ -339,7 +379,7 @@ if True or os.getenv("USE_DREAMBOOTH"):
     )
 
 
-def main(tests_to_run, banana, extraCallInputs, extraModelInputs):
+def main(tests_to_run, args, extraCallInputs, extraModelInputs):
     invalid_tests = []
     for test in tests_to_run:
         if all_tests.get(test, None) == None:
@@ -350,12 +390,13 @@ def main(tests_to_run, banana, extraCallInputs, extraModelInputs):
         exit(1)
 
     for test in tests_to_run:
-        runTest(test, banana, extraCallInputs, extraModelInputs)
+        runTest(test, args, extraCallInputs, extraModelInputs)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--banana", required=False, action="store_true")
+    parser.add_argument("--runpod", required=False, action="store_true")
     parser.add_argument(
         "--xmfe",
         required=False,
@@ -414,7 +455,7 @@ if __name__ == "__main__":
 
     main(
         tests_to_run,
-        banana=args.banana,
+        args,
         extraCallInputs=call_inputs,
         extraModelInputs=model_inputs,
     )
