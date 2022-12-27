@@ -15,7 +15,8 @@ from io import BytesIO
 from PIL import Image
 from pathlib import Path, PosixPath
 
-path = os.path.dirname(os.path.realpath(sys.argv[0]))
+# path = os.path.dirname(os.path.realpath(sys.argv[0]))
+path = "."
 TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
@@ -96,7 +97,7 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
     print()
 
     start = time.time()
-    if args.banana:
+    if args.get("banana", None):
         BANANA_API_KEY = os.getenv("BANANA_API_KEY")
         BANANA_MODEL_KEY = os.getenv("BANANA_MODEL_KEY")
         if BANANA_MODEL_KEY == None or BANANA_API_KEY == None:
@@ -140,7 +141,7 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
             print(result)
             return
         result = modelOutputs[0]
-    elif args.runpod:
+    elif args.get("runpod", None):
         RUNPOD_API_URL = "https://api.runpod.ai/v1/"
         RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY")
         RUNPOD_MODEL_KEY = os.getenv("RUNPOD_MODEL_KEY")
@@ -455,7 +456,7 @@ if __name__ == "__main__":
 
     main(
         tests_to_run,
-        args,
+        vars(args),
         extraCallInputs=call_inputs,
         extraModelInputs=model_inputs,
     )
