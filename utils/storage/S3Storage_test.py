@@ -1,6 +1,6 @@
 import unittest
 import os
-from S3Storage import S3Storage, AWS_S3_ENDPOINT_URL
+from .S3Storage import S3Storage, AWS_S3_ENDPOINT_URL
 
 
 class S3StorageTest(unittest.TestCase):
