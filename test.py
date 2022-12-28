@@ -183,7 +183,12 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
 
     else:
         response = requests.post(TEST_URL, json=inputs)
-        result = response.json()
+        try:
+            result = response.json()
+        except requests.exceptions.JSONDecodeError as error:
+            print(error)
+            print(response.text)
+            sys.exit(1)
 
     finish = time.time() - start
     timings = result.get("$timings")
