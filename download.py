@@ -99,7 +99,9 @@ def download_model(
                 # This would be quicker to just model.to("cuda") afterwards, but
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
+                send("download", "start", {})
                 model = loadModel(model_id, False, precision=model_revision)  # download
+                send("download", "done", {})
 
             print("load")
             model = loadModel(model_id, True, precision=model_revision)  # load
