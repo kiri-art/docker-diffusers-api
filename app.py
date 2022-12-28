@@ -13,7 +13,6 @@ import os
 import numpy as np
 import skimage
 import skimage.measure
-from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
 from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipelines
 import re
@@ -32,6 +31,10 @@ PIPELINE = os.environ.get("PIPELINE")
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 HOME = os.path.expanduser("~")
 MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
+
+print(os.environ.get("USE_PATCHMATCH"))
+if os.environ.get("USE_PATCHMATCH") == "1":
+    from PyPatchMatch import patch_match
 
 
 torch.set_grad_enabled(False)
