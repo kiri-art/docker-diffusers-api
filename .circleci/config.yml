@@ -1,0 +1,23 @@
+version: 2.1
+
+jobs:
+  build:
+    machine:
+      image: ubuntu-2004-cuda-11.4:202110-01
+    resource_class: gpu.nvidia.small
+    steps:
+      - run: nvidia-smi
+
+      - checkout
+      - run: docker build -t test .
+
+      # unit tests
+      # - run: docker run test pytest
+
+      # integration tests
+      - run: docker run --gpus all -p 8000:8000 test
+      - run: pip install pytest pytest-order
+      - run: pytest tests_create_cache.py
+
+      # deploy the image
+      # - run: docker push company/app:$CIRCLE_BRANCH
