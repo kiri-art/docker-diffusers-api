@@ -32,7 +32,7 @@ def test_cloud_cache_create_and_upload():
         {
             "MODEL_ID": "stabilityai/stable-diffusion-2-1-base",
             # "MODEL_ID": "hf-internal-testing/tiny-stable-diffusion-pipe",
-            "MODEL_PRECISION": "",
+            "MODEL_PRECISION": "fp16",
             "MODEL_URL": "s3://",
         },
         {"num_inference_steps": 1},
