@@ -15,7 +15,9 @@ jobs:
       - checkout
 
       # unit tests
-      # - run: docker run test pytest
+      - run: pip install -r requirements.txt
+      - run: pip install pytest pytest-cov
+      - run: python -m pytest --cov=. --cov-report=xml --ignore=test.py
 
       # integration tests
       - run: sudo apt-get update
