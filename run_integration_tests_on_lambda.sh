@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 PAYLOAD_FILE="/tmp/request.json"
 

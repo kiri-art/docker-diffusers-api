@@ -2,22 +2,23 @@ version: 2.1
 
 jobs:
   build:
-    machine:
-      image: ubuntu-2004-cuda-11.4:202110-01
-    resource_class: gpu.nvidia.small
-    steps:
-      - run: nvidia-smi
+    docker:
+     - image: cimg/base:2022.05
+    resource_class: medium
 
+    # would have been nice, but not for $2,000/month!
+    # machine:
+    #   image: ubuntu-2004-cuda-11.4:202110-01
+    # resource_class: gpu.nvidia.small
+
+    steps:
       - checkout
-      - run: docker build -t test .
 
       # unit tests
       # - run: docker run test pytest
 
       # integration tests
-      - run: docker run --gpus all -p 8000:8000 test
-      - run: pip install pytest pytest-order
-      - run: pytest tests_create_cache.py
+      - run: ./run_integration_tests_on_lambda.sh
 
       # deploy the image
       # - run: docker push company/app:$CIRCLE_BRANCH
