@@ -50,6 +50,7 @@ lambda_run() {
 }
 
 instance_create() {
+  echo -n "Creating instance..."
   local RESULT=""
   cat > $PAYLOAD_FILE << __END__
   {
@@ -64,8 +65,9 @@ instance_create() {
 __END__
 
   lambda_run "instance-operations/launch" $PAYLOAD_FILE
-  echo $RESULT
+  # echo $RESULT
   INSTANCE_ID=$(echo $RESULT | jq -re '.data.instance_ids[0]')
+  echo "$INSTANCE_ID"
   if [ $? -eq 1 ]; then
     echo "jq failed"
     exit 1
@@ -86,14 +88,15 @@ __END__
   echo $RESULT
 }
 
+declare -A IPS
 instance_wait() {
-  # $1 = INSTANCE_ID
-  echo -n "Waiting for $1"
+  INSTANCE_ID="$1"
+  echo -n "Waiting for $INSTANCE_ID"
   STATUS=""
   LAST_STATUS=""
   while [ "$STATUS" != "active" ] ; do
     echo -n "."
-    lambda_run "instances/$1"
+    lambda_run "instances/$INSTANCE_ID"
     STATUS=$(echo $RESULT | jq -r '.data.status')
     if [ "$STATUS" != "$LAST_STATUS" ]; then
       # echo $RESULT
@@ -107,9 +110,60 @@ instance_wait() {
   IP=$(echo $RESULT | jq -r '.data.ip')
   echo STATUS $STATUS
   echo IP $IP
+  IPS["$INSTANCE_ID"]=$IP
+}
+
+instance_run_script() {
+  INSTANCE_ID="$1"
+  SCRIPT="$2"
+  DIRECTORY="${3:-'.'}"
+  IP=${IPS["$INSTANCE_ID"]}
+
+  echo "instance_run_script $1 $2 $3"
+  ssh ubuntu@$IP "cd $DIRECTORY && bash -s" < $SCRIPT
+  return $?
+}
+
+instance_run_command() {
+  INSTANCE_ID="$1"
+  CMD="$2"
+  IP=${IPS["$INSTANCE_ID"]}
+
+  echo "instance_run_command $1 $2"
+  ssh -o StrictHostKeyChecking=accept-new ubuntu@$IP $CMD
+  return $?
+}
+
+instance_rsync() {
+  INSTANCE_ID="$1"
+  SOURCE="$2"
+  DEST="$3"
+  IP=${IPS["$INSTANCE_ID"]}
+
+  echo "instance_rsync $1 $2 $3"
+  rsync -avzPe ssh $SOURCE ubuntu@$IP:$DEST
+  return $?
 }
 
 instance_create
-echo INSTANCE_ID $INSTANCE_ID 
+# INSTANCE_ID="913e06f669bf4e799c6223801eb82f40"
+
 instance_wait $INSTANCE_ID
+
+commands() {
+  instance_run_command $INSTANCE_ID "sudo apt install -yqq python-pytest"
+  if [ $? -eq 1 ]; then return 1 ; fi
+  instance_run_command $INSTANCE_ID "pip install boto3"
+  if [ $? -eq 1 ]; then return 1 ; fi
+  instance_run_command $INSTANCE_ID "sudo usermod -aG docker ubuntu"
+  if [ $? -eq 1 ]; then return 1 ; fi
+  instance_rsync $INSTANCE_ID . docker-diffusers-api
+  if [ $? -eq 1 ]; then return 1 ; fi
+  instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+}
+commands
+RETURN_VALUE=$?
+
 instance_terminate $INSTANCE_ID
+
+exit $RETURN_VALUE

@@ -72,7 +72,11 @@ shutdown() {
 
 init
 
-TEST_URL=$TEST_URL pytest -s ./tests_create_cache.py
+export TEST_URL HF_AUTH_TOKEN
+export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+export AWS_DEFAULT_REGION AWS_S3_ENDPOINT_URL AWS_S3_DEFAULT_BUCKET
+
+python -m pytest -s ./tests_create_cache.py
 RETURN_VALUE=$?
 if [ $RETURN_VALUE = 0 ]; then
   echo "TESTS PASSED"
