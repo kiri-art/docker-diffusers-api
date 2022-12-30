@@ -18,6 +18,8 @@ jobs:
       # - run: docker run test pytest
 
       # integration tests
+      - run: sudo apt-get update
+      - run: sudo apt install -yqq rsync
       - run: ./run_integration_tests_on_lambda.sh
 
       # deploy the image

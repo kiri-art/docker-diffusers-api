@@ -7,10 +7,10 @@ if [ -z "$LAMBDA_API_KEY" ]; then
   exit 1
 fi 
 
-SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
+SSH_KEY_FILE="$HOME/.ssh/diffusers-api-test.pem"
 if [ ! -f "$SSH_KEY_FILE" ]; then
-  echo "No ssh key"
-  exit 1
+  curl -L $DDA_TEST_PEM > $SSH_KEY_FILE
+  chmod 600 $SSH_KEY_FILE
 fi
 
 #curl -u $LAMBDA_API_KEY: https://cloud.lambdalabs.com/api/v1/instances
@@ -57,7 +57,7 @@ instance_create() {
     "region_name": "us-west-2",
     "instance_type_name": "gpu_1x_a100_sxm4",
     "ssh_key_names": [
-      "Gadi Default"
+      "diffusers-api-test"
     ],
     "file_system_names": [],
     "quantity": 1
@@ -120,7 +120,7 @@ instance_run_script() {
   IP=${IPS["$INSTANCE_ID"]}
 
   echo "instance_run_script $1 $2 $3"
-  ssh ubuntu@$IP "cd $DIRECTORY && bash -s" < $SCRIPT
+  ssh -i $SSH_KEY_FILE ubuntu@$IP "cd $DIRECTORY && bash -s" < $SCRIPT
   return $?
 }
 
@@ -130,7 +130,7 @@ instance_run_command() {
   IP=${IPS["$INSTANCE_ID"]}
 
   echo "instance_run_command $1 $2"
-  ssh -o StrictHostKeyChecking=accept-new ubuntu@$IP $CMD
+  ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=accept-new ubuntu@$IP $CMD
   return $?
 }
 
@@ -141,7 +141,7 @@ instance_rsync() {
   IP=${IPS["$INSTANCE_ID"]}
 
   echo "instance_rsync $1 $2 $3"
-  rsync -avzPe ssh $SOURCE ubuntu@$IP:$DEST
+  rsync -avzPe "ssh -i $SSH_KEY_FILE" $SOURCE ubuntu@$IP:$DEST
   return $?
 }
 
