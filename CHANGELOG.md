@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.0...v1.0.1) (2022-12-31)
+
+
+### Bug Fixes
+
+* **ci:** different token, https auth ([ecd0b5d](https://github.com/kiri-art/docker-diffusers-api/commit/ecd0b5d8efe734693ff9647cfc2d0bc0b8f90e42))
+
 # 1.0.0 (2022-12-31)
 
 
