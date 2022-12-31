@@ -15,14 +15,26 @@ jobs:
       - checkout
 
       # unit tests
-      - run: pip install -r requirements.txt
-      - run: pip install pytest pytest-cov
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install pytest pytest-cov
       - run: python -m pytest --cov=. --cov-report=xml --ignore=test.py
 
+      # disable temporary until semantic-release is all set up
+      # also, should only run on main channel for releases (with sem-rel too)
       # integration tests
-      - run: sudo apt-get update
-      - run: sudo apt install -yqq rsync
-      - run: ./run_integration_tests_on_lambda.sh
+      # - run: sudo apt-get update
+      # - run: sudo apt install -yqq rsync
+      # - run: ./run_integration_tests_on_lambda.sh
 
       # deploy the image
       # - run: docker push company/app:$CIRCLE_BRANCH
+      # https://github.com/semantic-release-plus/semantic-release-plus/tree/master/packages/plugins/docker
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+        name: release
+        command: |
+          sudo apt-get install yarn
+          docker build -t gadicc/diffusers-api
+          yarn install
+          yarn run semantic-release-plus
