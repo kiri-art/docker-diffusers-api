@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-     - image: cimg/base:2022.05
+     - image: cimg/python:3.9-node
     resource_class: medium
 
     # would have been nice, but not for $2,000/month!
@@ -19,10 +19,16 @@ jobs:
       - run: python -m pip install pytest pytest-cov
       - run: python -m pytest --cov=. --cov-report=xml --ignore=test.py
 
+      # needed for later "apt install" steps
+      - run: sudo apt-get update
+
+      ## TODO.  The below was a great first step, but in future, let's build
+      # the container on the host, run docker remotely on lambda, and
+      # publish the same built image if tests pass.
+
       # disable temporary until semantic-release is all set up
       # also, should only run on main channel for releases (with sem-rel too)
       # integration tests
-      # - run: sudo apt-get update
       # - run: sudo apt install -yqq rsync
       # - run: ./run_integration_tests_on_lambda.sh
 
@@ -35,6 +41,6 @@ jobs:
           name: release
           command: |
             sudo apt-get install yarn
-            docker build -t gadicc/diffusers-api
+            docker build -t gadicc/diffusers-api .
             yarn install
             yarn run semantic-release-plus
