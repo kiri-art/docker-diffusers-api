@@ -32,9 +32,9 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-        name: release
-        command: |
-          sudo apt-get install yarn
-          docker build -t gadicc/diffusers-api
-          yarn install
-          yarn run semantic-release-plus
+          name: release
+          command: |
+            sudo apt-get install yarn
+            docker build -t gadicc/diffusers-api
+            yarn install
+            yarn run semantic-release-plus
