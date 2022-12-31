@@ -2,7 +2,7 @@
   "name": "docker-diffusers-api",
   "version": "0.0.1",
   "main": "index.js",
-  "repository": "git@github.com:kiri-art/docker-diffusers-api.git",
+  "repository": "https://github.com/kiri-art/docker-diffusers-api.git",
   "author": "Gadi Cohen <dragon@wastelands.net>",
   "license": "MIT",
   "private": true,
