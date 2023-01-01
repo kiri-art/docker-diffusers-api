@@ -157,9 +157,19 @@ commands() {
   if [ $? -eq 1 ]; then return 1 ; fi
   instance_run_command $INSTANCE_ID "sudo usermod -aG docker ubuntu"
   if [ $? -eq 1 ]; then return 1 ; fi
-  instance_rsync $INSTANCE_ID . docker-diffusers-api
+
+  # instance_rsync $INSTANCE_ID . docker-diffusers-api
+  # if [ $? -eq 1 ]; then return 1 ; fi
+  # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+
+  echo "Saving and transferring docker image to Lambda..."
+  IP=${IPS["$INSTANCE_ID"]}
+
+  docker save gadicc/diffusers-api:latest \
+    | xz \
+    | pv \
+    | ssh -i $SSH_KEY_FILE ubuntu@$IP docker load
   if [ $? -eq 1 ]; then return 1 ; fi
-  instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
 }
 commands
 RETURN_VALUE=$?

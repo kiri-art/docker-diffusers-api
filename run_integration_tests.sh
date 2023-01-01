@@ -34,7 +34,9 @@ init() {
   mc admin info minio-test
   mc mb minio-test/$AWS_S3_DEFAULT_BUCKET
 
-  docker build -t diffusers-api-test .
+  # Historically we used to build as part of the tests.
+  # docker build -t diffusers-api-test .
+  # docker build -t gadicc/diffusers-api .
 
   docker run -d --rm \
     --gpus all  \
@@ -46,7 +48,7 @@ init() {
     -e AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" \
     -e AWS_S3_ENDPOINT_URL="$AWS_S3_ENDPOINT_URL" \
     -e AWS_S3_DEFAULT_BUCKET="test" \
-    "$@" diffusers-api-test
+    "$@" gadicc/diffusers-api
 
 #    -e http_proxy="http://172.17.0.1:3128" \
 #    -e https_proxy="http://172.17.0.1:3128" \
@@ -62,9 +64,9 @@ init() {
 
 shutdown() {
   # Containers were all started with --rm
-  echo "Shuttdown down MINIO container $MINIO_CONTAINER_ID"
+  echo "Shutting down MINIO container $MINIO_CONTAINER_ID"
   docker stop $MINIO_CONTAINER_ID
-  echo "Shuttdown down DIFFUSERS container $DIFFUSERS_CONTAINER_ID"
+  echo "Shutting down DIFFUSERS container $DIFFUSERS_CONTAINER_ID"
   docker stop $DIFFUSERS_CONTAINER_ID
 }
 

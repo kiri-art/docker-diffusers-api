@@ -29,11 +29,10 @@ jobs:
       # the container on the host, run docker remotely on lambda, and
       # publish the same built image if tests pass.
 
-      # disable temporary until semantic-release is all set up
-      # also, should only run on main channel for releases (with sem-rel too)
+      # TODO, only run on main channel for releases (with sem-rel too)
       # integration tests
-      # - run: sudo apt install -yqq rsync
-      # - run: ./run_integration_tests_on_lambda.sh
+      - run: sudo apt install -yqq rsync pv
+      - run: ./run_integration_tests_on_lambda.sh
 
       # deploy the image
       # - run: docker push company/app:$CIRCLE_BRANCH
