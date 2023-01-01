@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.1...v1.0.2) (2023-01-01)
+
+
+### Bug Fixes
+
+* **diffusers:** bump to 2022-12-30 commit 62608a9 ([2f29165](https://github.com/kiri-art/docker-diffusers-api/commit/2f291655967a253b81da9f44c99d4ac68e1c8353))
+
 ## [1.0.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.0...v1.0.1) (2022-12-31)
 
 
