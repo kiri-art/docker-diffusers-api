@@ -4,7 +4,7 @@
 # Note if you using a proxy, you need to have it running first.
 
 DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain \
-  docker build -t diffusers-api \
+  docker build -t gadicc/diffusers-api \
   --build-arg http_proxy="http://172.17.0.1:3128" \
   --build-arg https_proxy="http://172.17.0.1:3128" \
   "$@" .

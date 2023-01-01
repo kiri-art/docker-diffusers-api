@@ -22,3 +22,5 @@ safetensors==0.2.5
 torch==1.12.1
 # xformers 0.0.15.dev344+git.8910bb5 requires pyre-extensions==0.0.23
 pyre-extensions==0.0.23
+pytest==7.2.0
+pytest-cov==4.0.0

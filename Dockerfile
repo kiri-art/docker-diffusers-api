@@ -66,20 +66,7 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
   fi
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 
-ADD train_dreambooth.py .
-
-ADD send.py .
-ADD getPipeline.py .
-ADD getScheduler.py .
-ADD loadModel.py .
-ADD download.py .
-ADD app.py .
-ADD precision.py .
-ADD convert_to_diffusers.py .
-ADD download_checkpoint.py .
-COPY utils utils
-
-ADD server.py .
+COPY api/ .
 EXPOSE 8000
 
 ARG SAFETENSORS_FAST_GPU=1
