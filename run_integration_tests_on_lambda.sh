@@ -127,10 +127,11 @@ instance_run_script() {
 instance_run_command() {
   INSTANCE_ID="$1"
   CMD="$2"
+  DIRECTORY="${3:-'.'}"
   IP=${IPS["$INSTANCE_ID"]}
 
   echo "instance_run_command $1 $2"
-  ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=accept-new ubuntu@$IP $CMD
+  ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=accept-new ubuntu@$IP "cd $DIRECTORY && $CMD"
   return $?
 }
 
@@ -158,18 +159,21 @@ commands() {
   instance_run_command $INSTANCE_ID "sudo usermod -aG docker ubuntu"
   if [ $? -eq 1 ]; then return 1 ; fi
 
-  # instance_rsync $INSTANCE_ID . docker-diffusers-api
+  # This turned out to be way too slow, quicker to rebuild on lambda
+  # Longer term, I guess we need our own container registry.
+  # echo "Saving and transferring docker image to Lambda..."
+  # IP=${IPS["$INSTANCE_ID"]}
+  # docker save gadicc/diffusers-api:latest \
+  #   | xz \
+  #   | pv \
+  #   | ssh -i $SSH_KEY_FILE ubuntu@$IP docker load
   # if [ $? -eq 1 ]; then return 1 ; fi
-  # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
 
-  echo "Saving and transferring docker image to Lambda..."
-  IP=${IPS["$INSTANCE_ID"]}
-
-  docker save gadicc/diffusers-api:latest \
-    | xz \
-    | pv \
-    | ssh -i $SSH_KEY_FILE ubuntu@$IP docker load
+  instance_rsync $INSTANCE_ID . docker-diffusers-api
   if [ $? -eq 1 ]; then return 1 ; fi
+  instance_run_command $INSTANCE_ID "docker build -t gadicc/diffusers-api ." docker-diffusers-api
+  instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+
 }
 commands
 RETURN_VALUE=$?
