@@ -24,10 +24,10 @@ MODEL_IDS = [
 ]
 
 
-def loadModel(model_id: str, load=True, precision=None):
-    print("loadModel", {"model_id": model_id, "load": load, "precision": precision})
-    revision = revision_from_precision(precision)
+def loadModel(model_id: str, load=True, precision=None, revision=None):
+    revision = revision or revision_from_precision(precision)
     torch_dtype = torch_dtype_from_precision(precision)
+    print("loadModel", {"model_id": model_id, "load": load, "precision": precision, "revision": revision})
     print(
         ("Loading" if load else "Downloading")
         + " model: "

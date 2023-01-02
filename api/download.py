@@ -44,6 +44,7 @@ def download_model(
     checkpoint_url=None,
     checkpoint_config_url=None,
     hf_model_id=None,
+    model_precision=None,
 ):
     print(
         "download_model",
@@ -56,11 +57,11 @@ def download_model(
     )
     url = model_url or MODEL_URL
     hf_model_id = hf_model_id or model_id
-    revision = model_revision or revision_from_precision()
+    model_revision = model_revision or revision_from_precision()
     normalized_model_id = id
 
     if url != "":
-        normalized_model_id = normalize_model_id(model_id, model_revision)
+        normalized_model_id = normalize_model_id(model_id, model_precision)
         print({"normalized_model_id": normalized_model_id})
         filename = url.split("/").pop()
         if not filename:
@@ -97,16 +98,16 @@ def download_model(
                 )
             else:
                 print("Does not exist, let's try find it on huggingface")
-                print("precision = ", {"model_revision": model_revision})
+                print({"model_precision": model_precision, "model_revision": model_revision})
                 # This would be quicker to just model.to("cuda") afterwards, but
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
                 send("download", "start", {})
-                model = loadModel(hf_model_id, False, precision=model_revision)  # download
+                model = loadModel(hf_model_id, False, precision=model_precision, revision=model_revision)  # download
                 send("download", "done", {})
 
             print("load")
-            model = loadModel(hf_model_id, True, precision=model_revision)  # load
+            model = loadModel(hf_model_id, True, precision=model_precision, revision=model_revision)  # load
             # dir = "models--" + model_id.replace("/", "--") + "--dda"
             dir = os.path.join(MODELS_DIR, normalized_model_id)
             model.save_pretrained(dir, safe_serialization=True)
