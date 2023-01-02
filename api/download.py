@@ -43,6 +43,7 @@ def download_model(
     model_revision=None,
     checkpoint_url=None,
     checkpoint_config_url=None,
+    hf_model_id=None,
 ):
     print(
         "download_model",
@@ -50,10 +51,11 @@ def download_model(
             "model_url": model_url,
             "model_id": model_id,
             "model_revision": model_revision,
+            "hf_model_id": hf_model_id,
         },
     )
-    id = model_id or MODEL_ID
     url = model_url or MODEL_URL
+    hf_model_id = hf_model_id or model_id
     revision = model_revision or revision_from_precision()
     normalized_model_id = id
 
@@ -100,11 +102,11 @@ def download_model(
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
                 send("download", "start", {})
-                model = loadModel(model_id, False, precision=model_revision)  # download
+                model = loadModel(hf_model_id, False, precision=model_revision)  # download
                 send("download", "done", {})
 
             print("load")
-            model = loadModel(model_id, True, precision=model_revision)  # load
+            model = loadModel(hf_model_id, True, precision=model_revision)  # load
             # dir = "models--" + model_id.replace("/", "--") + "--dda"
             dir = os.path.join(MODELS_DIR, normalized_model_id)
             model.save_pretrained(dir, safe_serialization=True)
