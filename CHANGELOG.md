@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.1.0...v1.2.0) (2023-01-04)
+
+
+### Features
+
+* **build:** separate MODEL_REVISION, MODEL_PRECISION, HF_MODEL_ID ([fa9dd16](https://github.com/kiri-art/docker-diffusers-api/commit/fa9dd16b7369d37f3997ef46581df471bca8e7c1))
+
 # [1.1.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.2...v1.1.0) (2023-01-04)
 
 
