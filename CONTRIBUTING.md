@@ -2,11 +2,19 @@
 
 *Tips for development*
 
+1. [General Hints](#general)
 1. [Development / Editor Setup](#editors)
   1. [Visual Studio Code (vscode)](#vscode)
 1. [Using Buildkit](#buildkit)
 1. [Local HTTP(S) Caching Proxy](#caching)
 1. [Local S3 Server](#local-s3-server)
+
+<a name="general"></a>
+## General
+
+1. Run docker with `-it` to make it easier to stop container with `Ctrl-C`.
+1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
+    just stop the container, `rmmod nvidia_uvm`, and restart.
 
 <a name="editors"></a>
 ## Editors
