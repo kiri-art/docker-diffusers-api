@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.2...v1.1.0) (2023-01-04)
+
+
+### Features
+
+* **downloads:** allow HF_MODEL_ID call-arg (defauls to MODEL_ID) ([adaa7f6](https://github.com/kiri-art/docker-diffusers-api/commit/adaa7f67aba49058b2e52117e6eb0fed6417b773))
+* **downloads:** allow separate MODEL_REVISION and MODEL_PRECISION ([6edc821](https://github.com/kiri-art/docker-diffusers-api/commit/6edc821da1593f34e4502352dba8f2f4cd808e95))
+
 ## [1.0.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.1...v1.0.2) (2023-01-01)
 
 
