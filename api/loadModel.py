@@ -2,7 +2,7 @@ import torch
 import os
 from diffusers import pipelines as _pipelines, StableDiffusionPipeline
 from getScheduler import getScheduler, DEFAULT_SCHEDULER
-from precision import revision_from_precision, torch_dtype_from_precision
+from precision import torch_dtype_from_precision
 import time
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
@@ -25,9 +25,16 @@ MODEL_IDS = [
 
 
 def loadModel(model_id: str, load=True, precision=None, revision=None):
-    revision = revision or revision_from_precision(precision)
     torch_dtype = torch_dtype_from_precision(precision)
-    print("loadModel", {"model_id": model_id, "load": load, "precision": precision, "revision": revision})
+    print(
+        "loadModel",
+        {
+            "model_id": model_id,
+            "load": load,
+            "precision": precision,
+            "revision": revision,
+        },
+    )
     print(
         ("Loading" if load else "Downloading")
         + " model: "

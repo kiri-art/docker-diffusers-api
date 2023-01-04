@@ -19,7 +19,7 @@ import re
 import requests
 from download import download_model, normalize_model_id
 import traceback
-from precision import PRECISION
+from precision import MODEL_REVISION, MODEL_PRECISION
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -72,14 +72,19 @@ def init():
 
     if not RUNTIME_DOWNLOADS:
         # Uh doesn't this break non-cached images?  TODO... IMAGE_CACHE
-        normalized_model_id = normalize_model_id(MODEL_ID, PRECISION)
+        normalized_model_id = normalize_model_id(MODEL_ID, MODEL_REVISION)
         model_dir = os.path.join(MODELS_DIR, normalized_model_id)
         if os.path.isdir(model_dir):
             always_normalize_model_id = model_dir
         else:
             normalized_model_id = MODEL_ID
 
-        model = loadModel(model_dir, True, PRECISION)
+        model = loadModel(
+            model_id = model_dir,
+            load=True,
+            precision=MODEL_PRECISION,
+            revision=MODEL_REVISION,
+        )
     else:
         model = None
 
@@ -156,7 +161,7 @@ def inference(all_inputs: dict) -> dict:
         model_precision = call_inputs.get("MODEL_PRECISION", None)
         checkpoint_url = call_inputs.get("CHECKPOINT_URL", None)
         checkpoint_config_url = call_inputs.get("CHECKPOINT_CONFIG_URL", None)
-        normalized_model_id = normalize_model_id(model_id, model_precision)
+        normalized_model_id = normalize_model_id(model_id, model_revision)
         model_dir = os.path.join(MODELS_DIR, normalized_model_id)
         if last_model_id != normalized_model_id:
             # if not downloaded_models.get(normalized_model_id, None):
@@ -172,7 +177,7 @@ def inference(all_inputs: dict) -> dict:
                 download_model(
                     model_id=model_id,
                     model_url=model_url,
-                    model_revision=model_revision or model_precision,
+                    model_revision=model_revision,
                     checkpoint_url=checkpoint_url,
                     checkpoint_config_url=checkpoint_config_url,
                     hf_model_id=hf_model_id,
@@ -182,7 +187,7 @@ def inference(all_inputs: dict) -> dict:
             clearPipelines()
             if model:
                 model.to("cpu")  # Necessary to avoid a memory leak
-            model = loadModel(normalized_model_id, True, model_precision)
+            model = loadModel(model_id=normalized_model_id, load=True, precision=model_precision)
             last_model_id = normalized_model_id
     else:
         if always_normalize_model_id:

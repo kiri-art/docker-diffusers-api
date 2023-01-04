@@ -4,7 +4,6 @@ from diffusers import (
     DiffusionPipeline,
     pipelines as diffusers_pipelines,
 )
-from precision import revision, torch_dtype
 
 HOME = os.path.expanduser("~")
 MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
@@ -83,8 +82,8 @@ def getPipelineForModel(pipeline_name: str, model, model_id):
 
         pipeline = DiffusionPipeline.from_pretrained(
             model_dir or model_id,
-            revision=revision,
-            torch_dtype=torch_dtype,
+            # revision=revision,
+            # torch_dtype=torch_dtype,
             custom_pipeline="./diffusers/examples/community/" + pipeline_name + ".py",
             local_files_only=True,
             **model.components,
