@@ -13,7 +13,7 @@ Please give credit and link back to this repo if you use it in a public project.
 * Pipelines: txt2img, img2img and inpainting in a single container
 
   (
-  [all diffusers official and community pipelines](https://banana-forums.dev/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
+  [all diffusers official and community pipelines](https://forums.kiri.art/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
 * All model inputs supported, including setting nsfw filter per request
 * *Permute* base config to multiple forks based on yaml config with vars
 * Optionally send signed event logs / performance data to a REST endpoint
@@ -26,14 +26,14 @@ assumptions.  If anything is unclear, please open an issue.
 
 ## Updates and Help
 
-* [Official `docker-diffusers-api` Forum](https://banana-forums.dev/c/open-source/docker-diffusers-api/16):
+* [Official `docker-diffusers-api` Forum](https://forums.kiri.art/c/docker-diffusers-api/16):
   help, updates, discussion.
 * Subscribe ("watch") these forum topics for:
-  * [notable **`main`** branch updates](https://banana-forums.dev/t/official-releases-main-branch/35)
-  * [notable **`dev`** branch updates](https://banana-forums.dev/t/development-releases-dev-branch/53)
+  * [notable **`main`** branch updates](https://forums.kiri.art/t/official-releases-main-branch/35)
+  * [notable **`dev`** branch updates](https://forums.kiri.art/t/development-releases-dev-branch/53)
 * Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
-**Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
+**Official help in our dedicated forum https://forums.kiri.art/c/docker-diffusers-api/16.**
 
 *[See the `dev` branch for the latest features.](https://github.com/kiri-art/docker-diffusers-api/tree/dev)
 **Pull Requests must be submitted against the dev branch.***
