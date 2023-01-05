@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.0...v1.2.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* **build-download:** support regular HF download not just cloud cache ([52edf6b](https://github.com/kiri-art/docker-diffusers-api/commit/52edf6b8e52cba4a03c8ea0f72b8fd1e69fa87ad))
+
 # [1.2.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.1.0...v1.2.0) (2023-01-04)
 
 
