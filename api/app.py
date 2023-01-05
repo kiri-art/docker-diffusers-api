@@ -38,6 +38,7 @@ if os.environ.get("USE_PATCHMATCH") == "1":
 
 
 torch.set_grad_enabled(False)
+always_normalize_model_id = None
 
 
 class DummySafetyChecker:
@@ -71,7 +72,6 @@ def init():
         last_model_id = None
 
     if not RUNTIME_DOWNLOADS:
-        # Uh doesn't this break non-cached images?  TODO... IMAGE_CACHE
         normalized_model_id = normalize_model_id(MODEL_ID, MODEL_REVISION)
         model_dir = os.path.join(MODELS_DIR, normalized_model_id)
         if os.path.isdir(model_dir):
@@ -80,7 +80,7 @@ def init():
             normalized_model_id = MODEL_ID
 
         model = loadModel(
-            model_id = model_dir,
+            model_id=always_normalize_model_id or MODEL_ID,
             load=True,
             precision=MODEL_PRECISION,
             revision=MODEL_REVISION,
@@ -187,7 +187,9 @@ def inference(all_inputs: dict) -> dict:
             clearPipelines()
             if model:
                 model.to("cpu")  # Necessary to avoid a memory leak
-            model = loadModel(model_id=normalized_model_id, load=True, precision=model_precision)
+            model = loadModel(
+                model_id=normalized_model_id, load=True, precision=model_precision
+            )
             last_model_id = normalized_model_id
     else:
         if always_normalize_model_id:
