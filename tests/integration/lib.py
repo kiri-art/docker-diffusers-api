@@ -24,7 +24,7 @@ def startContainer(image, command = None, **kwargs):
     command,
     auto_remove=True,
     detach=True,
-    **kwargs,
+    **kwargs
   )
   myContainers.append(container)
 
