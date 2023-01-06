@@ -5,7 +5,7 @@ Diffusers / Stable Diffusion in docker with a REST API, supporting various model
 Copyright (c) Gadi Cohen, 2022.  MIT Licensed.
 Please give credit and link back to this repo if you use it in a public project.
 
-[![Docker](https://img.shields.io/docker/v/gadicc/diffusers-api)](https://hub.docker.com/r/gadicc/diffusers-api/tags) [![CircleCI](https://circleci.com/gh/kiri-art/docker-diffusers-api/tree/split.svg?style=svg)](https://circleci.com/gh/kiri-art/docker-diffusers-api?branch=split) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Docker](https://img.shields.io/docker/v/gadicc/diffusers-api?sort=semver)](https://hub.docker.com/r/gadicc/diffusers-api/tags) [![CircleCI](https://img.shields.io/circleci/build/github/kiri-art/docker-diffusers-api/split)](https://circleci.com/gh/kiri-art/docker-diffusers-api?branch=split) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ## Features
 
