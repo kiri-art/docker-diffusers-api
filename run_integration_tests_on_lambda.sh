@@ -142,9 +142,13 @@ instance_rsync() {
   IP=${IPS["$INSTANCE_ID"]}
 
   echo "instance_rsync $1 $2 $3"
-  rsync -avzPe "ssh -i $SSH_KEY_FILE" $SOURCE ubuntu@$IP:$DEST
+  rsync -avzPe "ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=accept-new" --filter=':- .gitignore' --exclude=".git" $SOURCE ubuntu@$IP:$DEST
   return $?
 }
+
+# Image Method 3, preparation (TODO, arg to specify which method)
+docker build -t gadicc/diffusers-api:test .
+docker push gadicc/diffusers-api:test
 
 instance_create
 # INSTANCE_ID="913e06f669bf4e799c6223801eb82f40"
@@ -152,13 +156,19 @@ instance_create
 instance_wait $INSTANCE_ID
 
 commands() {
-  instance_run_command $INSTANCE_ID "sudo apt install -yqq python-pytest"
+  # Whether to build or just for test scripts, lets transfer this checkout.
+  instance_rsync $INSTANCE_ID . docker-diffusers-api
+
+  instance_run_command $INSTANCE_ID "sudo apt-get update"
   if [ $? -eq 1 ]; then return 1 ; fi
-  instance_run_command $INSTANCE_ID "pip install boto3"
+  instance_run_command $INSTANCE_ID "sudo apt install -yqq python3.9"
+  if [ $? -eq 1 ]; then return 1 ; fi
+  instance_run_command $INSTANCE_ID "python3.9 -m pip install -r docker-diffusers-api/tests/integration/requirements.txt"
   if [ $? -eq 1 ]; then return 1 ; fi
   instance_run_command $INSTANCE_ID "sudo usermod -aG docker ubuntu"
   if [ $? -eq 1 ]; then return 1 ; fi
 
+  # Image Method 1: Transfer entire image
   # This turned out to be way too slow, quicker to rebuild on lambda
   # Longer term, I guess we need our own container registry.
   # echo "Saving and transferring docker image to Lambda..."
@@ -169,13 +179,18 @@ commands() {
   #   | ssh -i $SSH_KEY_FILE ubuntu@$IP docker load
   # if [ $? -eq 1 ]; then return 1 ; fi
 
-  instance_rsync $INSTANCE_ID . docker-diffusers-api
-  if [ $? -eq 1 ]; then return 1 ; fi
-  instance_run_command $INSTANCE_ID "docker build -t gadicc/diffusers-api ." docker-diffusers-api
-  # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
-  instance_run_command $INSTANCE_ID "pytest -s tests/integration" docker-diffusers-api
+  # Image Method 2: Build on LambdaLabs
+  #if [ $? -eq 1 ]; then return 1 ; fi
+  #instance_run_command $INSTANCE_ID "docker build -t gadicc/diffusers-api ." docker-diffusers-api
 
+  # Image Method 3: Just upload new layers; Lambda has fast downloads from registry
+  # At start of script we have docker build/push.  Now let's pull:
+  instance_run_command $INSTANCE_ID "docker pull gadicc/diffusers-api:test"
+
+  # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+  instance_run_command $INSTANCE_ID "python3.9 -m pytest -s tests/integration" docker-diffusers-api
 }
+
 commands
 RETURN_VALUE=$?
 

@@ -105,7 +105,7 @@ def getDDA(minio = None):
     })
 
   container = startContainer(
-    "gadicc/diffusers-api",
+    "gadicc/diffusers-api:test",
     ports={8000:PORT},
     device_requests=[
         docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
