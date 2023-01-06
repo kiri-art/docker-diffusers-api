@@ -22,6 +22,8 @@ jobs:
       # unit tests
       - run: docker run gadicc/diffusers-api conda run --no-capture -n xformers pytest --cov=. --cov-report=xml --ignore=diffusers
 
+      - run: echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+
       # push for non-semver branches (e.g. dev, feature branches)
       - run:
           name: Push to hub on branches not handled by semantic-release
