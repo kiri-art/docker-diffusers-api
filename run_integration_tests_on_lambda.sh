@@ -172,7 +172,8 @@ commands() {
   instance_rsync $INSTANCE_ID . docker-diffusers-api
   if [ $? -eq 1 ]; then return 1 ; fi
   instance_run_command $INSTANCE_ID "docker build -t gadicc/diffusers-api ." docker-diffusers-api
-  instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+  # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
+  instance_run_command $INSTANCE_ID "pytest -s tests/integration" docker-diffusers-api
 
 }
 commands

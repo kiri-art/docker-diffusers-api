@@ -182,7 +182,8 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
         result = result["output"]
 
     else:
-        response = requests.post(TEST_URL, json=inputs)
+        test_url = args.get("test_url", None) or TEST_URL
+        response = requests.post(test_url, json=inputs)
         try:
             result = response.json()
         except requests.exceptions.JSONDecodeError as error:
