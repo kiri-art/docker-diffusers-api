@@ -5,6 +5,12 @@ import time
 import boto3
 import os
 import requests
+import socket
+import asyncio
+import sys
+import subprocess
+import selectors
+from threading import Thread
 
 AWS_S3_DEFAULT_BUCKET="test"
 DOCKER_GW_IP="172.17.0.1" # will override below if found
@@ -18,21 +24,124 @@ for network in dockerClient.networks.list():
 
 i = 0
 
-def startContainer(image, command = None, **kwargs):
+# # https://stackoverflow.com/a/53255955/1839099
+# def fire_and_forget(f):
+#     def wrapped(*args, **kwargs):
+#         return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
+#     return wrapped
+#
+# @fire_and_forget
+# def log_streamer(container):
+#   for line in container.logs(stream=True):
+#     print(line.decode(), end="")
+
+def log_streamer(container, name=None):
+  """
+    Streams logs to stdout/stderr.
+    Order is not guaranteed (have tried 3 different methods)
+  """
+  # Method 1: pipe streams directly -- even this doesn't guarantee order
+  # Method 2: threads + readline
+  # Method 3: selectors + read1
+  method = 2
+
+  if (method == 1):
+    kwargs = {
+      "stdout": sys.stdout,
+      "stderr": sys.stderr,
+    }
+  elif (method == 2):
+    kwargs = {
+      "stdout": subprocess.PIPE,
+      "stderr": subprocess.PIPE,
+      "bufsize": 1,
+      "universal_newlines": True,
+    }
+  elif (method == 3):
+    kwargs = {
+      "stdout": subprocess.PIPE,
+      "stderr": subprocess.PIPE,
+      "bufsize": 1,
+    }
+
+  prefix = f"[{name or container.id[:7]}] "
+  print(prefix + "== Streaming logs (stdout/stderr order not guaranteed): ==")
+
+  sp = subprocess.Popen(
+    ['docker', 'logs', '-f', container.id],
+    **kwargs
+  )
+
+  if (method == 2):
+    def reader(pipe):
+      while True:
+        read = pipe.readline()
+        if read == '' and sp.poll() is not None:
+          break
+        print(prefix + read, end='')
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+    Thread(target=reader, args=[sp.stdout]).start()
+    Thread(target=reader, args=[sp.stderr]).start()
+
+  elif (method == 3):
+    selector = selectors.DefaultSelector()
+    selector.register(sp.stdout, selectors.EVENT_READ)
+    selector.register(sp.stderr, selectors.EVENT_READ)
+    loop = True
+
+    while loop:
+      for key, _ in selector.select():
+          data = key.fileobj.read1().decode()
+          if not data:
+              loop = False
+              break
+          line = prefix + str(data).rstrip().replace("\n", "\n" + prefix)
+          if key.fileobj is sp.stdout:
+              print(line)
+              sys.stdout.flush()
+          else:
+              print(line, file=sys.stderr)
+              sys.stderr.flush()
+
+def get_free_port():
+    s = socket.socket()
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+
+def startContainer(image, command = None, stream_logs=False, **kwargs):
   container = dockerClient.containers.run(
     image,
     command,
-    auto_remove=True,
+    # auto_remove=True,
     detach=True,
     **kwargs
   )
+
+  if stream_logs:
+    log_streamer(container)
+
   myContainers.append(container)
 
-  while container.status != "running":
+  while container.status != "running" and container.status != "exited":
     time.sleep(1)
-    container.reload()
+    try:
+      container.reload()
+    except Exception as error:
+      print(container.logs())
+      raise error
     print(container.status)
+
+  # if (container.status == "exited"):
+  #  print(container.logs())
+  #  raise Exception("unexpected exit")
+
+  print("returned", container)
   return container
+
 
 _minioCache = None
 def getMinio():
@@ -40,13 +149,15 @@ def getMinio():
   if _minioCache:
     return _minioCache
 
+  port=get_free_port()
+
   container = startContainer(
     "minio/minio",
-    "server /data --console-address :9011",
-    ports={9000:9010,9011:9011},
+    "server /data --console-address :9001",
+    ports={9000:port},
   )
 
-  endpoint_url = f"http://{DOCKER_GW_IP}:9010"
+  endpoint_url = f"http://{DOCKER_GW_IP}:{port}"
 
   while True:
     time.sleep(1)
@@ -74,6 +185,7 @@ def getMinio():
 
   result = {
     "container": container,
+    "port": port,
     "endpoint_url": endpoint_url,
     "s3": s3,
   }
@@ -81,19 +193,19 @@ def getMinio():
   return result
 
 _ddaCache = None
-def getDDA(minio = None):
+def getDDA(minio = None, command = None, environment = {}, stream_logs = False, wait = True):
   global _ddaCache
   if _ddaCache:
     return _ddaCache
 
-  PORT=8010
+  port=get_free_port()
 
-  environment = {
+  environment.update({
       "HF_AUTH_TOKEN": os.getenv("HF_AUTH_TOKEN"),
       "http_proxy": os.getenv("DDA_http_proxy"),
       "https_proxy": os.getenv("DDA_https_proxy"),
       "REQUESTS_CA_BUNDLE": os.getenv("DDA_http_proxy") and "/usr/local/share/ca-certificates/squid-self-signed.crt"
-  }
+  })
 
   if minio:
     environment.update({
@@ -106,17 +218,27 @@ def getDDA(minio = None):
 
   container = startContainer(
     "gadicc/diffusers-api:test",
-    ports={8000:PORT},
+    command,
+    stream_logs=stream_logs,
+    ports={8000:port},
     device_requests=[
         docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
     ],
     environment=environment,
   )
 
-  url = f"http://{DOCKER_GW_IP}:{PORT}/"
+  url = f"http://{DOCKER_GW_IP}:{port}/"
 
-  while True:
+  while wait:
     time.sleep(1)
+    container.reload()
+    if container.status == "exited":
+      if not stream_logs:
+        print("--- EARLY EXIT ---")
+        print(container.logs().decode())
+        print("--- EARLY EXIT ---")
+      raise Exception("Early exit before successful healthcheck")
+
     response = None
     try:
       # print(url + "healthcheck")
@@ -140,6 +262,7 @@ def getDDA(minio = None):
   data = {
     "container": container,
     "minio": minio,
+    "port": port,
     "url": url,
   }
 
@@ -152,5 +275,7 @@ def cleanup():
     print("Stopping")
     print(container)
     container.stop()
+    print("removing")
+    container.remove()
 
 atexit.register(cleanup)
