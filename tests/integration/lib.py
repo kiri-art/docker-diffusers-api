@@ -160,10 +160,15 @@ def getMinio():
 
   port=get_free_port()
 
+  def onstop():
+    global _minioCache
+    _minioCache = None
+
   container, stop = startContainer(
     "minio/minio",
     "server /data --console-address :9001",
     ports={9000:port},
+    onstop=onstop,
   )
 
   endpoint_url = f"http://{DOCKER_GW_IP}:{port}"

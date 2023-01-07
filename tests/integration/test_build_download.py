@@ -36,6 +36,7 @@ def test_cloudcache_build_download():
     )
 
     dda.stop()
+    minio.stop()
     assert result["image_base64"]
     print("test successs\n\n")
 
@@ -46,8 +47,6 @@ def test_huggingface_build_download():
     NOTE / TODO: Good starting point, but this still runs with gpu and
     uploads if missing.
     """
-    minio = getMinio()
-    print(minio)
     environment = {
       "RUNTIME_DOWNLOADS": 0,
       "MODEL_ID": "stabilityai/stable-diffusion-2-1-base",
@@ -56,7 +55,6 @@ def test_huggingface_build_download():
     }
     conda="conda run --no-capture-output -n xformers"
     dda = getDDA(
-      minio=minio,
       stream_logs=True,
       environment=environment,
       command=["sh", "-c", f"{conda} python3 -u download.py && ls -l && {conda} python3 -u server.py"],

@@ -9,7 +9,7 @@ def test_cloud_cache_create_and_upload():
     """
     minio = getMinio()
     print(minio)
-    dda = getDDA(minio=minio)
+    dda = getDDA(minio=minio, stream_logs=True)
     print(dda)
 
     ## bucket.objects.all().delete()
@@ -26,6 +26,8 @@ def test_cloud_cache_create_and_upload():
         {"num_inference_steps": 1},
     )
 
+    dda.stop()
+    minio.stop()
     timings = result["$timings"]
     assert timings["download"] > 0
     assert timings["upload"] > 0
