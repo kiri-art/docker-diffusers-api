@@ -56,7 +56,8 @@ def download_model(
     hf_model_id = hf_model_id or model_id
     normalized_model_id = model_id
 
-    if model_url != "":
+    # if model_url != "": # throws an error, useful to debug stdout/stderr order
+    if model_url:
         normalized_model_id = normalize_model_id(model_id, model_revision)
         print({"normalized_model_id": normalized_model_id})
         filename = model_url.split("/").pop()
@@ -142,15 +143,14 @@ def download_model(
 
             # TODO, swap directories, inside HF's cache structure.
 
-        return
-
-    # do a dry run of loading the huggingface model, which will download weights at build time
-    loadModel(
-        model_id=normalized_model_id,
-        load=False,
-        precision=model_precision,
-        revision=model_revision,
-    )
+    else:
+        # do a dry run of loading the huggingface model, which will download weights at build time
+        loadModel(
+            model_id=normalized_model_id,
+            load=False,
+            precision=model_precision,
+            revision=model_revision,
+        )
 
     # if USE_DREAMBOOTH:
     # Actually we can re-use these from the above loaded model

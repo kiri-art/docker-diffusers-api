@@ -11,6 +11,7 @@ import sys
 import subprocess
 import selectors
 from threading import Thread
+from argparse import Namespace
 
 AWS_S3_DEFAULT_BUCKET="test"
 DOCKER_GW_IP="172.17.0.1" # will override below if found
@@ -43,7 +44,7 @@ def log_streamer(container, name=None):
   # Method 1: pipe streams directly -- even this doesn't guarantee order
   # Method 2: threads + readline
   # Method 3: selectors + read1
-  method = 2
+  method = 1
 
   if (method == 1):
     kwargs = {
@@ -112,7 +113,9 @@ def get_free_port():
     s.close()
     return port
 
-def startContainer(image, command = None, stream_logs=False, **kwargs):
+def startContainer(image, command = None, stream_logs=False, onstop=None, **kwargs):
+  global myContainers
+
   container = dockerClient.containers.run(
     image,
     command,
@@ -125,6 +128,13 @@ def startContainer(image, command = None, stream_logs=False, **kwargs):
     log_streamer(container)
 
   myContainers.append(container)
+  def stop():
+    print("stop", container.id)
+    container.stop()
+    container.remove()
+    myContainers.remove(container)
+    if (onstop):
+      onstop()
 
   while container.status != "running" and container.status != "exited":
     time.sleep(1)
@@ -140,18 +150,17 @@ def startContainer(image, command = None, stream_logs=False, **kwargs):
   #  raise Exception("unexpected exit")
 
   print("returned", container)
-  return container
-
+  return container, stop
 
 _minioCache = None
 def getMinio():
   global _minioCache
   if _minioCache:
-    return _minioCache
+    return Namespace(**_minioCache)
 
   port=get_free_port()
 
-  container = startContainer(
+  container, stop = startContainer(
     "minio/minio",
     "server /data --console-address :9001",
     ports={9000:port},
@@ -185,18 +194,22 @@ def getMinio():
 
   result = {
     "container": container,
+    "stop": stop,
     "port": port,
     "endpoint_url": endpoint_url,
     "s3": s3,
   }
   _minioCache = result
-  return result
+  return Namespace(**result)
 
 _ddaCache = None
 def getDDA(minio = None, command = None, environment = {}, stream_logs = False, wait = True):
   global _ddaCache
   if _ddaCache:
-    return _ddaCache
+    print("return _ddaCache")
+    return Namespace(**_ddaCache)
+  else:
+    print("create new _dda")
 
   port=get_free_port()
 
@@ -213,10 +226,14 @@ def getDDA(minio = None, command = None, environment = {}, stream_logs = False, 
       "AWS_SECRET_ACCESS_KEY": "minioadmin",
       "AWS_DEFAULT_REGION": "",
       "AWS_S3_DEFAULT_BUCKET": "test",
-      "AWS_S3_ENDPOINT_URL": minio["endpoint_url"],
+      "AWS_S3_ENDPOINT_URL": minio.endpoint_url,
     })
 
-  container = startContainer(
+  def onstop():
+    global _ddaCache
+    _ddaCache = None
+
+  container, stop = startContainer(
     "gadicc/diffusers-api:test",
     command,
     stream_logs=stream_logs,
@@ -225,6 +242,7 @@ def getDDA(minio = None, command = None, environment = {}, stream_logs = False, 
         docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
     ],
     environment=environment,
+    onstop=onstop,
   )
 
   url = f"http://{DOCKER_GW_IP}:{port}/"
@@ -261,13 +279,14 @@ def getDDA(minio = None, command = None, environment = {}, stream_logs = False, 
 
   data = {
     "container": container,
+    "stop": stop,
     "minio": minio,
     "port": port,
     "url": url,
   }
 
   _ddaCache = data
-  return data
+  return Namespace(**data)
   
 def cleanup():
   print("cleanup")
