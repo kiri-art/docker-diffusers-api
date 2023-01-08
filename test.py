@@ -283,7 +283,7 @@ test(
     {
         "modelInputs": {
             "prompt": "A fantasy landscape, trending on artstation",
-            "init_image": b64encode_file("sketch-mountains-input.jpg"),
+            "image": b64encode_file("sketch-mountains-input.jpg"),
         },
         "callInputs": {
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
@@ -296,7 +296,7 @@ test(
     {
         "modelInputs": {
             "prompt": "a cat sitting on a bench",
-            "init_image": b64encode_file("overture-creations-5sI6fQgYIuo.png"),
+            "image": b64encode_file("overture-creations-5sI6fQgYIuo.png"),
             "mask_image": b64encode_file("overture-creations-5sI6fQgYIuo_mask.png"),
         },
         "callInputs": {
@@ -343,9 +343,7 @@ if os.getenv("USE_PATCHMATCH"):
         {
             "modelInputs": {
                 "prompt": "girl with a pearl earing standing in a big room",
-                "init_image": b64encode_file(
-                    "girl_with_pearl_earing_outpainting_in.png"
-                ),
+                "image": b64encode_file("girl_with_pearl_earing_outpainting_in.png"),
             },
             "callInputs": {
                 "MODEL_ID": "CompVis/stable-diffusion-v1-4",
