@@ -208,7 +208,7 @@ def getMinio():
   return Namespace(**result)
 
 _ddaCache = None
-def getDDA(minio = None, command = None, environment = {}, stream_logs = False, wait = True):
+def getDDA(minio = None, command = None, environment = {}, stream_logs = False, wait = True, **kwargs):
   global _ddaCache
   if _ddaCache:
     print("return _ddaCache")
@@ -248,6 +248,7 @@ def getDDA(minio = None, command = None, environment = {}, stream_logs = False, 
     ],
     environment=environment,
     onstop=onstop,
+    **kwargs,
   )
 
   url = f"http://{DOCKER_GW_IP}:{port}/"
