@@ -1,3 +1,11 @@
+## [1.2.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.1...v1.2.2) (2023-01-09)
+
+
+### Bug Fixes
+
+* **dreambooth:** runtime_dls path fix; integration tests ([ce3827f](https://github.com/kiri-art/docker-diffusers-api/commit/ce3827f6aabd5158c39c99ffae0358d832de2e39))
+* **loadModel:** revision = None if revision == "" else revision ([1773631](https://github.com/kiri-art/docker-diffusers-api/commit/1773631e292e28fae20b0a6c93406378aed85d47))
+
 ## [1.2.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.0...v1.2.1) (2023-01-05)
 
 
