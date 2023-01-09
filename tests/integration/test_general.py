@@ -21,10 +21,10 @@ class TestGeneralClass:
 
     def setup_class(self):
         print("setup_class")
-        # self.minio = minio = getMinio()
+        self.minio = minio = getMinio("global")
 
         self.dda = dda = getDDA(
-            # minio=minio
+            minio=minio
             # stream_logs=True,
         )
         print(dda)
@@ -33,7 +33,7 @@ class TestGeneralClass:
 
     def teardown_class(self):
         print("teardown_class")
-        # self.minio.stop()
+        # self.minio.stop() - leave global up
         self.dda.stop()
 
     def test_txt2img(self):

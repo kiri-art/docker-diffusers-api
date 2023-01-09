@@ -13,7 +13,7 @@ class TestDreamBoothS3:
 
     def teardown_class(self):
         print("teardown_class")
-        self.minio.stop()
+        # self.minio.stop() # leave global up.
 
     def test_training_s3(self):
         dda = getDDA(
