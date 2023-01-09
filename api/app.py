@@ -339,6 +339,11 @@ def inference(all_inputs: dict) -> dict:
                     "message": 'Called with callInput { train: "dreambooth" } but built with USE_DREAMBOOTH=0',
                 }
             }
+
+        if RUNTIME_DOWNLOADS:
+            if os.path.isdir(model_dir):
+                normalized_model_id = model_dir
+
         torch.set_grad_enabled(True)
         result = result | TrainDreamBooth(
             normalized_model_id, pipeline, model_inputs, call_inputs
