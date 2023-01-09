@@ -182,7 +182,7 @@ def getMinio(id="disposable"):
             result = {
                 # don't link to actual container, and don't rm it at end
                 "container": "global",
-                "stop": lambda x: x,
+                "stop": lambda: print(),
                 # "port": port,
                 "endpoint_url": endpoint_url,
                 "aws_access_key_id": aws_access_key_id,
