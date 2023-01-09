@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.2...v1.2.3) (2023-01-09)
+
+
+### Bug Fixes
+
+* **re:** use raw strings r"" for regexps ([41310c2](https://github.com/kiri-art/docker-diffusers-api/commit/41310c26bbc19069db492781313b162f0fc4d7d9))
+
 ## [1.2.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.1...v1.2.2) (2023-01-09)
 
 
