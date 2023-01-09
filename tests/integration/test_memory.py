@@ -9,11 +9,9 @@ def test_memory():
     Make sure when switching models we release VRAM afterwards.
     """
     minio = getMinio("global")
-    HOME = os.getenv("HOME")
     dda = getDDA(
         minio=minio,
         stream_logs=True,
-        volumes=[f"{HOME}/root-cache:/root/.cache"],
     )
     print(dda)
 

@@ -23,11 +23,9 @@ class TestGeneralClass:
         print("setup_class")
         # self.minio = minio = getMinio()
 
-        HOME = os.getenv("HOME")
         self.dda = dda = getDDA(
             # minio=minio
             # stream_logs=True,
-            volumes=[f"{HOME}/root-cache:/root/.cache"],
         )
         print(dda)
 

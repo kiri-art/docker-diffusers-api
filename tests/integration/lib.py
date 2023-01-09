@@ -169,7 +169,7 @@ def getMinio(id="disposable"):
             print("Reusing existing global minio")
             aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
             aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-
+            aws_s3_default_bucket = AWS_S3_DEFAULT_BUCKET
             s3 = boto3.client(
                 "s3",
                 endpoint_url=endpoint_url,
@@ -187,6 +187,7 @@ def getMinio(id="disposable"):
                 "endpoint_url": endpoint_url,
                 "aws_access_key_id": aws_access_key_id,
                 "aws_secret_access_key": aws_secret_access_key,
+                "aws_s3_default_bucket": aws_s3_default_bucket,
                 "s3": s3,
             }
             _minioCache.update({id: result})
@@ -222,6 +223,7 @@ def getMinio(id="disposable"):
 
     aws_access_key_id = "minioadmin"
     aws_secret_access_key = "minioadmin"
+    aws_s3_default_bucket = AWS_S3_DEFAULT_BUCKET
     s3 = boto3.client(
         "s3",
         endpoint_url=endpoint_url,
@@ -241,6 +243,7 @@ def getMinio(id="disposable"):
         "endpoint_url": endpoint_url,
         "aws_access_key_id": aws_access_key_id,
         "aws_secret_access_key": aws_secret_access_key,
+        "aws_s3_default_bucket": aws_s3_default_bucket,
         "s3": s3,
     }
     _minioCache.update({id: result})
@@ -251,7 +254,13 @@ _ddaCache = None
 
 
 def getDDA(
-    minio=None, command=None, environment={}, stream_logs=False, wait=True, **kwargs
+    minio=None,
+    command=None,
+    environment={},
+    stream_logs=False,
+    wait=True,
+    root_cache=True,
+    **kwargs,
 ):
     global _ddaCache
     if _ddaCache:
@@ -278,7 +287,7 @@ def getDDA(
                 "AWS_ACCESS_KEY_ID": minio.aws_access_key_id,
                 "AWS_SECRET_ACCESS_KEY": minio.aws_secret_access_key,
                 "AWS_DEFAULT_REGION": "",
-                "AWS_S3_DEFAULT_BUCKET": AWS_S3_DEFAULT_BUCKET,
+                "AWS_S3_DEFAULT_BUCKET": minio.aws_s3_default_bucket,
                 "AWS_S3_ENDPOINT_URL": minio.endpoint_url,
             }
         )
@@ -287,6 +296,8 @@ def getDDA(
         global _ddaCache
         _ddaCache = None
 
+    HOME = os.getenv("HOME")
+
     container, stop = startContainer(
         "gadicc/diffusers-api:test",
         command,
@@ -294,6 +305,7 @@ def getDDA(
         ports={8000: port},
         device_requests=[docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])],
         environment=environment,
+        volumes=root_cache and [f"{HOME}/root-cache:/root/.cache"],
         onstop=onstop,
         **kwargs,
     )
