@@ -31,7 +31,7 @@ class S3Storage:
             url = "https" + url[8:]
 
         s3_dest = re.match(
-            "^(?P<endpoint>https?://[^/]*)(/(?P<bucket>[^/]+))?(/(?P<path>.*))?$",
+            r"^(?P<endpoint>https?://[^/]*)(/(?P<bucket>[^/]+))?(/(?P<path>.*))?$",
             url,
         ).groupdict()
 
