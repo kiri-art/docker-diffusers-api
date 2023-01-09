@@ -13,7 +13,7 @@ import selectors
 from threading import Thread
 from argparse import Namespace
 
-AWS_S3_DEFAULT_BUCKET = "test"
+AWS_S3_DEFAULT_BUCKET = os.environ.get("AWS_S3_DEFAULT_BUCKET", "test")
 DOCKER_GW_IP = "172.17.0.1"  # will override below if found
 
 myContainers = list()
@@ -24,10 +24,6 @@ for network in dockerClient.networks.list():
     if network.attrs["Scope"] == "local" and network.attrs["Driver"] == "bridge":
         DOCKER_GW_IP = network.attrs["IPAM"]["Config"][0]["Gateway"]
         break
-
-print(dockerClient.containers.list())
-
-i = 0
 
 # # https://stackoverflow.com/a/53255955/1839099
 # def fire_and_forget(f):
@@ -159,19 +155,49 @@ def startContainer(image, command=None, stream_logs=False, onstop=None, **kwargs
     return container, stop
 
 
-_minioCache = None
+_minioCache = {}
 
 
-def getMinio():
-    global _minioCache
-    if _minioCache:
-        return Namespace(**_minioCache)
+def getMinio(id="disposable"):
+    cached = _minioCache.get(id, None)
+    if cached:
+        return Namespace(**cached)
+
+    if id == "global":
+        endpoint_url = os.getenv("AWS_S3_ENDPOINT_URL")
+        if endpoint_url:
+            print("Reusing existing global minio")
+            aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+            aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+
+            s3 = boto3.client(
+                "s3",
+                endpoint_url=endpoint_url,
+                config=boto3.session.Config(signature_version="s3v4"),
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=None,
+                # verify=False,
+            )
+            result = {
+                # don't link to actual container, and don't rm it at end
+                "container": "global",
+                "stop": lambda x: x,
+                # "port": port,
+                "endpoint_url": endpoint_url,
+                "aws_access_key_id": aws_access_key_id,
+                "aws_secret_access_key": aws_secret_access_key,
+                "s3": s3,
+            }
+            _minioCache.update({id: result})
+            return Namespace(**result)
+        else:
+            print("Creating new global minio")
 
     port = get_free_port()
 
     def onstop():
-        global _minioCache
-        _minioCache = None
+        del _minioCache[id]
 
     container, stop = startContainer(
         "minio/minio",
@@ -194,12 +220,14 @@ def getMinio():
         if response and response.status_code == 200:
             break
 
+    aws_access_key_id = "minioadmin"
+    aws_secret_access_key = "minioadmin"
     s3 = boto3.client(
         "s3",
         endpoint_url=endpoint_url,
         config=boto3.session.Config(signature_version="s3v4"),
-        aws_access_key_id="minioadmin",
-        aws_secret_access_key="minioadmin",
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
         aws_session_token=None,
         # verify=False,
     )
@@ -211,9 +239,11 @@ def getMinio():
         "stop": stop,
         "port": port,
         "endpoint_url": endpoint_url,
+        "aws_access_key_id": aws_access_key_id,
+        "aws_secret_access_key": aws_secret_access_key,
         "s3": s3,
     }
-    _minioCache = result
+    _minioCache.update({id: result})
     return Namespace(**result)
 
 
@@ -245,10 +275,10 @@ def getDDA(
     if minio:
         environment.update(
             {
-                "AWS_ACCESS_KEY_ID": "minioadmin",
-                "AWS_SECRET_ACCESS_KEY": "minioadmin",
+                "AWS_ACCESS_KEY_ID": minio.aws_access_key_id,
+                "AWS_SECRET_ACCESS_KEY": minio.aws_secret_access_key,
                 "AWS_DEFAULT_REGION": "",
-                "AWS_S3_DEFAULT_BUCKET": "test",
+                "AWS_S3_DEFAULT_BUCKET": AWS_S3_DEFAULT_BUCKET,
                 "AWS_S3_ENDPOINT_URL": minio.endpoint_url,
             }
         )
