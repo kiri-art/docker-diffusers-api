@@ -79,7 +79,7 @@ RUN pip install -r requirements.txt
 # Make sure our cache is up-to-date
 # ADD https://api.github.com/repos/huggingface/diffusers/git/refs/heads/main version.json
 
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 6b68afd8e4cbf05a06a9ed72127bfdc3acff1db4
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 8d326e61cfbe5d76e25deca6093ecb22967d634e
 # WORKDIR /api/diffusers
 # RUN git checkout eb1abee693104dd45376dbddd614320f2a0beb24
 WORKDIR /api
