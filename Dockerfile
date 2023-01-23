@@ -37,9 +37,8 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-#RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 6b68afd8e4cbf05a06a9ed72127bfdc3acff1db4
-# 2022-12-30 [train_text_to_image] allow using non-ema weights for training (#1834) TODO dreambooth sync
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 62608a9102e423ad0fe79f12a8ceb1710d2027b2
+# 2023-01-23 Dreambooth: reduce VRAM usage (#2039) TODO dreambooth sync
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout a66f2baeb782e091dde4e1e6394e46f169e5ba58
 WORKDIR /api
 RUN pip install -e diffusers
 
