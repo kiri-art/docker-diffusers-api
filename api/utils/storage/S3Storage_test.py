@@ -1,25 +1,25 @@
 import unittest
 import os
-from S3Storage import S3Storage, AWS_S3_ENDPOINT_URL
+from .S3Storage import S3Storage, AWS_S3_ENDPOINT_URL, AWS_S3_DEFAULT_BUCKET
 
 
 class S3StorageTest(unittest.TestCase):
     def test_endpoint_only_s3(self):
         storage = S3Storage("s3://hostname:9000")
         self.assertEqual(storage.endpoint_url, "https://hostname:9000")
-        self.assertEqual(storage.bucket_name, None)
+        self.assertEqual(storage.bucket_name, AWS_S3_DEFAULT_BUCKET)
         self.assertEqual(storage.path, "")
 
     def test_endpoint_only_http_s3(self):
         storage = S3Storage("http+s3://hostname:9000")
         self.assertEqual(storage.endpoint_url, "http://hostname:9000")
-        self.assertEqual(storage.bucket_name, None)
+        self.assertEqual(storage.bucket_name, AWS_S3_DEFAULT_BUCKET)
         self.assertEqual(storage.path, "")
 
     def test_endpoint_only_https_s3(self):
         storage = S3Storage("https+s3://hostname:9000")
         self.assertEqual(storage.endpoint_url, "https://hostname:9000")
-        self.assertEqual(storage.bucket_name, None)
+        self.assertEqual(storage.bucket_name, AWS_S3_DEFAULT_BUCKET)
         self.assertEqual(storage.path, "")
 
     def test_bucket_only(self):

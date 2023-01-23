@@ -37,7 +37,6 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 # DDA
-from precision import revision, torch_dtype
 from send import send, get_now
 from utils import Storage
 import subprocess
@@ -55,7 +54,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     params = {
         # Defaults
         "pretrained_model_name_or_path": model_id,  # DDA, TODO
-        "revision": revision,  # DDA, was: None
+        "revision": None,
         "tokenizer_name": None,
         "instance_data_dir": "instance_data_dir",  # DDA TODO
         "class_data_dir": "class_data_dir",  # DDA, was: None,

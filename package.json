@@ -1,0 +1,16 @@
+{
+  "name": "docker-diffusers-api",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/kiri-art/docker-diffusers-api.git",
+  "author": "Gadi Cohen <dragon@wastelands.net>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@semantic-release-plus/docker": "^3.1.2",
+    "@semantic-release/changelog": "^6.0.2",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^19.0.5",
+    "semantic-release-plus": "^20.0.0"
+  }
+}

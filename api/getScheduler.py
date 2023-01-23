@@ -4,6 +4,8 @@ import time
 from diffusers import schedulers as _schedulers
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
+HOME = os.path.expanduser("~")
+MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
 
 SCHEDULERS = [
     "DPMSolverMultistepScheduler",
@@ -41,8 +43,12 @@ def initScheduler(MODEL_ID: str, scheduler_id: str, download=False):
     if scheduler == None:
         return None
 
+    model_dir = os.path.join(MODELS_DIR, MODEL_ID)
+    if not os.path.isdir(model_dir):
+        model_dir = None
+
     inittedScheduler = scheduler.from_pretrained(
-        MODEL_ID,
+        model_dir or MODEL_ID,
         subfolder="scheduler",
         use_auth_token=HF_AUTH_TOKEN,
         local_files_only=not download,

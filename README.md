@@ -1,6 +1,8 @@
 # docker-diffusers-api ("banana-sd-base")
 
-Diffusers / Stable Diffusion in docker with a REST API, supporting various models, pipelines & schedulers.  Used by [kiri.art](https://kiri.art/), perfect for [banana.dev](https://www.banana.dev/).
+Diffusers / Stable Diffusion in docker with a REST API, supporting various models, pipelines & schedulers.  Used by [kiri.art](https://kiri.art/), perfect for local, server & serverless.
+
+[![Docker](https://img.shields.io/docker/v/gadicc/diffusers-api?sort=semver)](https://hub.docker.com/r/gadicc/diffusers-api/tags) [![CircleCI](https://img.shields.io/circleci/build/github/kiri-art/docker-diffusers-api/split)](https://circleci.com/gh/kiri-art/docker-diffusers-api?branch=split) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Copyright (c) Gadi Cohen, 2022.  MIT Licensed.
 Please give credit and link back to this repo if you use it in a public project.
@@ -11,7 +13,7 @@ Please give credit and link back to this repo if you use it in a public project.
 * Pipelines: txt2img, img2img and inpainting in a single container
 
   (
-  [all diffusers official and community pipelines](https://banana-forums.dev/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
+  [all diffusers official and community pipelines](https://forums.kiri.art/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
 * All model inputs supported, including setting nsfw filter per request
 * *Permute* base config to multiple forks based on yaml config with vars
 * Optionally send signed event logs / performance data to a REST endpoint
@@ -22,61 +24,60 @@ Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
 assumptions.  If anything is unclear, please open an issue.
 
-## Updates and Help
+## Important Notices
 
-* [Official `docker-diffusers-api` Forum](https://banana-forums.dev/c/open-source/docker-diffusers-api/16):
+* [Official `docker-diffusers-api` Forum](https://forums.kiri.art/c/docker-diffusers-api/16):
   help, updates, discussion.
 * Subscribe ("watch") these forum topics for:
-  * [notable **`main`** branch updates](https://banana-forums.dev/t/official-releases-main-branch/35)
-  * [notable **`dev`** branch updates](https://banana-forums.dev/t/development-releases-dev-branch/53)
+  * [notable **`main`** branch updates](https://forums.kiri.art/t/official-releases-main-branch/35)
+  * [notable **`dev`** branch updates](https://forums.kiri.art/t/development-releases-dev-branch/53)
 * Always [check the CHANGELOG](./CHANGELOG.md) for important updates when upgrading.
 
-**Official help in our dedicated forum https://banana-forums.dev/c/open-source/docker-diffusers-api/16.**
+**Official help in our dedicated forum https://forums.kiri.art/c/docker-diffusers-api/16.**
 
-*[See the `dev` branch for the latest features.](https://github.com/kiri-art/docker-diffusers-api/tree/dev)
-**Pull Requests must be submitted against the dev branch.***
+**This README refers to the in-development `dev` branch** and may
+reference features and fixes not yet in the published releases.
+
+**`v1` has not yet been officially released yet** but has been
+running well in production on kiri.art for almost a month.  We'd
+be grateful for any feedback from early adopters to help make
+this official.  For more details, see [Upgrading from v0 to
+v1](https://forums.kiri.art/t/wip-upgrading-from-v0-to-v1/116).
+
+**Currently only NVIDIA / CUDA devices are supported**.  Tracking
+Apple / M1 support in issue
+[#20](https://github.com/kiri-art/docker-diffusers-api/issues/20).
+
+## Installation & Setup:
+
+Setup varies depending on your use case.
+
+1. **To run locally or on a *server*, with runtime downloads:**
+
+    `docker run --gpus all -p 8000:8000 -e HF_AUTH_TOKEN=$HF_AUTH_TOKEN gadicc/diffusers-api`.
+
+    See the [guides for various cloud providers](https://forums.kiri.art/t/running-on-other-cloud-providers/89/7).
+
+1. **To run *serverless*, include the model at build time:**
+
+    1. [docker-diffusers-api-build-download](https://github.com/kiri-art/docker-diffusers-api-build-download) (
+    [banana](https://forums.kiri.art/t/run-diffusers-api-on-banana-dev/103), others)
+    1. [docker-diffusers-api-runpod](https://github.com/kiri-art/docker-diffusers-api-runpod),
+    see the [guide](https://forums.kiri.art/t/run-diffusers-api-on-runpod-io/102)
+
+1. **Building from source**.
+
+    1. Fork / clone this repo.
+    1. `docker build -t gadicc/diffusers-api .`
+    1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
+
+*Other configurations are possible but these are the most common cases*
+
+Everything is set via docker build-args or environment variables.
 
 ## Usage:
 
-Firstly, fork and clone this repo.
-
-Most of the configuration happens via docker build variables.  You can
-see all the options in the [Dockerfile](./Dockerfile), and edit them
-there directly, or set via docker command line or e.g. Banana's dashboard
-UI once support for build variables land (any day now).
-
-If you're only deploying one container, that's all you need!  If you
-intend to deploy multiple containers each with different variables
-(e.g. a few different models), you can edit the example
-[`scripts/permutations.yaml`](scripts/permutations.yaml)] file and
-run [`scripts/permute.sh`](scripts/permute.sh) to create a number
-of sub-repos in the `permutations` directory.
-
-Lastly, there's an option to set `MODEL_ID=ALL`, and *all* models will
-be downloaded, and switched at request time (great for dev, useless for
-serverless).
-
-**Deploying to banana?** That's it!  You're done.  Commit your changes and push.
-
-## Running locally / development:
-
-**Building**
-
-1. `docker build -t diffusers-api --build-arg HF_AUTH_TOKEN=$HF_AUTH_TOKEN .`
-1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
-1. Note: your first build can take a really long time, depending on
-    your PC & network speed, and *especially when using the `CHECKPOINT_URL`
-    feature*.  Great time to grab a coffee or take a walk.
-
-**Running**
-
-1. `docker run -it --gpus all -p 8000:8000 diffusers-api`
-1. Note: the `-it` is optional but makes it alot quicker/easier to stop the
-    container using `Ctrl-C`.
-1. If you get a `CUDA initialization: CUDA unknown error` after suspend,
-    just stop the container, `rmmod nvidia_uvm`, and restart.
-
-## Sending requests
+See also [Testing](#testing) below.
 
 The container expects an `HTTP POST` request with the following JSON body:
 
@@ -91,6 +92,7 @@ The container expects an `HTTP POST` request with the following JSON body:
     "seed": 3239022079
   },
   "callInputs": {
+    // You can leave these out to use the default
     "MODEL_ID": "runwayml/stable-diffusion-v1-5",
     "PIPELINE": "StableDiffusionPipeline",
     "SCHEDULER": "LMSDiscreteScheduler",
@@ -98,19 +100,6 @@ The container expects an `HTTP POST` request with the following JSON body:
   },
 }
 ```
-
-If you're using banana's SDK, it looks something like this:
-
-```js
-const out = await banana.run(apiKey, modelKey, { "modelInputs": modelInputs, "callInputs": callInputs });
-```
-
-NB: if you're coming from another banana starter repo, note that we
-explicitly name `modelInputs` above, and send a bigger object (with
-`modelInputs` and `callInputs` keys) for the banana-sdk's
-"modelInputs" argument.
-
-If provided, `init_image` and `mask_image` should be base64 encoded.
 
 **Schedulers**: docker-diffusers-api is simply a wrapper around diffusers,
 literally any scheduler included in diffusers will work out of the box,
@@ -120,6 +109,8 @@ schedulers are the most common and most well tested:
 `DPMSolverMultistepScheduler` (fast!  only needs 20 steps!),
 `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
 `EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.
+
+**Pipelines**:
 
 <a name="testing"></a>
 ## Examples and testing
@@ -153,7 +144,19 @@ Request took 3.0s (init: 2.4s, inference: 2.1s)
 The best example of course is https://kiri.art/ and it's
 [source code](https://github.com/kiri-art/stable-diffusion-react-nextjs-mui-pwa).
 
+## Help on [Official Forums](https://forums.kiri.art/c/docker-diffusers-api/16).
 
+## Adding other Models
+
+You have two options.
+
+1. For a diffusers model, simply set `MODEL_ID` build-var / call-arg to the name
+  of the model hosted on HuggingFace, and it will be downloaded automatically at
+  build time.
+
+1. For a non-diffusers model, simply set the `CHECKPOINT_URL` build-var / call-arg
+  to the URL of a `.ckpt` file, which will be downloaded and converted to the diffusers
+  format automatically at build time.  `CHECKPOINT_CONFIG_URL` can also be set.
 
 ## Troubleshooting
 
@@ -162,33 +165,6 @@ The best example of course is https://kiri.art/ and it's
   Make sure you've accepted the license on the model card of the HuggingFace model
   specified in `MODEL_ID`, and that you correctly passed `HF_AUTH_TOKEN` to the
   container.
-
-## Adding other Models
-
-You have two options.
-
-1. For a diffusers model, simply set the `MODEL_ID` docker build variable to the name
-  of the model hosted on HuggingFace, and it will be downloaded automatically at
-  build time.
-
-1. For a non-diffusers model, simply set the `CHECKPOINT_URL` docker build variable
-  to the URL of a `.ckpt` file, which will be downloaded and converted to the diffusers
-  format automatically at build time.
-
-## Keeping forks up to date
-
-Per your personal preferences, rebase or merge, e.g.
-
-1. `git fetch upstream`
-1. `git merge upstream/main`
-1. `git push`
-
-Or, if you're confident, do it in one step with no confirmations:
-
-  `git fetch upstream && git merge upstream/main --no-edit && git push`
-
-Check `scripts/permute.sh` and your git remotes, some URLs are hardcoded, I'll
-make this easier in a future release.
 
 ## Event logs / performance data
 

@@ -15,10 +15,13 @@ from io import BytesIO
 from PIL import Image
 from pathlib import Path, PosixPath
 
-path = os.path.dirname(os.path.realpath(sys.argv[0]))
+# path = os.path.dirname(os.path.realpath(sys.argv[0]))
+path = "."
 TESTS = path + os.sep + "tests"
 FIXTURES = TESTS + os.sep + "fixtures"
 OUTPUT = TESTS + os.sep + "output"
+TEST_URL = os.environ.get("TEST_URL", "http://localhost:8000/")
+BANANA_API_URL = os.environ.get("BANANA_API_URL", "https://api.banana.dev")
 Path(OUTPUT).mkdir(parents=True, exist_ok=True)
 
 
@@ -67,7 +70,7 @@ def test(name, inputs):
     all_tests.update({name: inputs})
 
 
-def runTest(name, banana, extraCallInputs, extraModelInputs):
+def runTest(name, args, extraCallInputs, extraModelInputs):
     inputs = all_tests.get(name)
     if not inputs.get("callInputs", None):
         inputs.update({"callInputs": {}})
@@ -94,7 +97,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     print()
 
     start = time.time()
-    if banana:
+    if args.get("banana", None):
         BANANA_API_KEY = os.getenv("BANANA_API_KEY")
         BANANA_MODEL_KEY = os.getenv("BANANA_MODEL_KEY")
         if BANANA_MODEL_KEY == None or BANANA_API_KEY == None:
@@ -109,7 +112,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             "modelInputs": inputs,
             "startOnly": False,
         }
-        response = requests.post("https://api.banana.dev/start/v4/", json=payload)
+        response = requests.post(f"{BANANA_API_URL}/start/v4/", json=payload)
         result = response.json()
         callID = result.get("callID")
 
@@ -128,9 +131,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
                     "apiKey": BANANA_API_KEY,
                     "callID": callID,
                 }
-                response = requests.post(
-                    "https://api.banana.dev/check/v4/", json=payload
-                )
+                response = requests.post(f"{BANANA_API_URL}/check/v4/", json=payload)
                 result = response.json()
 
         modelOutputs = result.get("modelOutputs", None)
@@ -140,9 +141,55 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
             print(result)
             return
         result = modelOutputs[0]
-    else:
-        response = requests.post("http://localhost:8000/", json=inputs)
+    elif args.get("runpod", None):
+        RUNPOD_API_URL = "https://api.runpod.ai/v1/"
+        RUNPOD_API_KEY = os.getenv("RUNPOD_API_KEY")
+        RUNPOD_MODEL_KEY = os.getenv("RUNPOD_MODEL_KEY")
+        if not (RUNPOD_API_KEY and RUNPOD_MODEL_KEY):
+            print("Error: RUNPOD_API_KEY or RUNPOD_MODEL_KEY not set, aborting...")
+            sys.exit(1)
+
+        url_base = RUNPOD_API_URL + RUNPOD_MODEL_KEY
+
+        payload = {
+            "input": inputs,
+        }
+        print(url_base + "/run")
+        response = requests.post(
+            url_base + "/run",
+            json=payload,
+            headers={"Authorization": "Bearer " + RUNPOD_API_KEY},
+        )
+
+        if response.status_code != 200:
+            print("Unexpected HTTP response code: " + str(response.status_code))
+            sys.exit(1)
+
+        print(response)
         result = response.json()
+        print(result)
+
+        id = result["id"]
+
+        while result["status"] != "COMPLETED":
+            time.sleep(1)
+            response = requests.get(
+                f"{url_base}/status/{id}",
+                headers={"Authorization": "Bearer " + RUNPOD_API_KEY},
+            )
+            result = response.json()
+
+        result = result["output"]
+
+    else:
+        test_url = args.get("test_url", None) or TEST_URL
+        response = requests.post(test_url, json=inputs)
+        try:
+            result = response.json()
+        except requests.exceptions.JSONDecodeError as error:
+            print(error)
+            print(response.text)
+            sys.exit(1)
 
     finish = time.time() - start
     timings = result.get("$timings")
@@ -188,7 +235,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
 
         print(json.dumps(result, indent=4))
         print()
-        return
+        return result
 
     images_base64 = result.get("images_base64", None)
     if images_base64:
@@ -200,6 +247,7 @@ def runTest(name, banana, extraCallInputs, extraModelInputs):
     print()
     print(json.dumps(result, indent=4))
     print()
+    return result
 
 
 test(
@@ -235,7 +283,7 @@ test(
     {
         "modelInputs": {
             "prompt": "A fantasy landscape, trending on artstation",
-            "init_image": b64encode_file("sketch-mountains-input.jpg"),
+            "image": b64encode_file("sketch-mountains-input.jpg"),
         },
         "callInputs": {
             "PIPELINE": "StableDiffusionImg2ImgPipeline",
@@ -248,7 +296,7 @@ test(
     {
         "modelInputs": {
             "prompt": "a cat sitting on a bench",
-            "init_image": b64encode_file("overture-creations-5sI6fQgYIuo.png"),
+            "image": b64encode_file("overture-creations-5sI6fQgYIuo.png"),
             "mask_image": b64encode_file("overture-creations-5sI6fQgYIuo_mask.png"),
         },
         "callInputs": {
@@ -275,15 +323,27 @@ test(
     },
 )
 
+test(
+    "checkpoint",
+    {
+        "modelInputs": {
+            "prompt": "1girl",
+        },
+        "callInputs": {
+            "MODEL_ID": "hakurei/waifu-diffusion-v1-3",
+            "MODEL_URL": "s3://",
+            "CHECKPOINT_URL": "http://huggingface.co/hakurei/waifu-diffusion-v1-3/resolve/main/wd-v1-3-float16.ckpt",
+        },
+    },
+)
+
 if os.getenv("USE_PATCHMATCH"):
     test(
         "outpaint",
         {
             "modelInputs": {
                 "prompt": "girl with a pearl earing standing in a big room",
-                "init_image": b64encode_file(
-                    "girl_with_pearl_earing_outpainting_in.png"
-                ),
+                "image": b64encode_file("girl_with_pearl_earing_outpainting_in.png"),
             },
             "callInputs": {
                 "MODEL_ID": "CompVis/stable-diffusion-v1-4",
@@ -324,7 +384,7 @@ if True or os.getenv("USE_DREAMBOOTH"):
     )
 
 
-def main(tests_to_run, banana, extraCallInputs, extraModelInputs):
+def main(tests_to_run, args, extraCallInputs, extraModelInputs):
     invalid_tests = []
     for test in tests_to_run:
         if all_tests.get(test, None) == None:
@@ -335,12 +395,13 @@ def main(tests_to_run, banana, extraCallInputs, extraModelInputs):
         exit(1)
 
     for test in tests_to_run:
-        runTest(test, banana, extraCallInputs, extraModelInputs)
+        runTest(test, args, extraCallInputs, extraModelInputs)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--banana", required=False, action="store_true")
+    parser.add_argument("--runpod", required=False, action="store_true")
     parser.add_argument(
         "--xmfe",
         required=False,
@@ -399,7 +460,7 @@ if __name__ == "__main__":
 
     main(
         tests_to_run,
-        banana=args.banana,
+        vars(args),
         extraCallInputs=call_inputs,
         extraModelInputs=model_inputs,
     )

@@ -13,13 +13,13 @@ import os
 import numpy as np
 import skimage
 import skimage.measure
-from PyPatchMatch import patch_match
 from getScheduler import getScheduler, SCHEDULERS
 from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipelines
 import re
 import requests
-from download import download_model
+from download import download_model, normalize_model_id
 import traceback
+from precision import MODEL_REVISION, MODEL_PRECISION
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -29,8 +29,16 @@ if USE_DREAMBOOTH:
 MODEL_ID = os.environ.get("MODEL_ID")
 PIPELINE = os.environ.get("PIPELINE")
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
+HOME = os.path.expanduser("~")
+MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
+
+print(os.environ.get("USE_PATCHMATCH"))
+if os.environ.get("USE_PATCHMATCH") == "1":
+    from PyPatchMatch import patch_match
+
 
 torch.set_grad_enabled(False)
+always_normalize_model_id = None
 
 
 class DummySafetyChecker:
@@ -44,6 +52,7 @@ class DummySafetyChecker:
 def init():
     global model  # needed for bananna optimizations
     global dummy_safety_checker
+    global always_normalize_model_id
 
     send(
         "init",
@@ -63,7 +72,21 @@ def init():
         last_model_id = None
 
     if not RUNTIME_DOWNLOADS:
-        model = loadModel(MODEL_ID)
+        normalized_model_id = normalize_model_id(MODEL_ID, MODEL_REVISION)
+        model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+        if os.path.isdir(model_dir):
+            always_normalize_model_id = model_dir
+        else:
+            normalized_model_id = MODEL_ID
+
+        model = loadModel(
+            model_id=always_normalize_model_id or MODEL_ID,
+            load=True,
+            precision=MODEL_PRECISION,
+            revision=MODEL_REVISION,
+        )
+    else:
+        model = None
 
     send("init", "done")
 
@@ -96,7 +119,6 @@ def truncateInputs(inputs: dict):
 
 
 last_xformers_memory_efficient_attention = {}
-downloaded_models = {}
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -107,6 +129,7 @@ def inference(all_inputs: dict) -> dict:
     global schedulers
     global dummy_safety_checker
     global last_xformers_memory_efficient_attention
+    global always_normalize_model_id
 
     clearSession()
 
@@ -130,11 +153,19 @@ def inference(all_inputs: dict) -> dict:
     if not model_id:
         model_id = MODEL_ID
         result["$meta"].update({"MODEL_ID": MODEL_ID})
+    normalized_model_id = model_id
 
     if RUNTIME_DOWNLOADS:
-        global downloaded_models
-        if last_model_id != model_id:
-            if not downloaded_models.get(model_id, None):
+        hf_model_id = call_inputs.get("HF_MODEL_ID", None)
+        model_revision = call_inputs.get("MODEL_REVISION", None)
+        model_precision = call_inputs.get("MODEL_PRECISION", None)
+        checkpoint_url = call_inputs.get("CHECKPOINT_URL", None)
+        checkpoint_config_url = call_inputs.get("CHECKPOINT_CONFIG_URL", None)
+        normalized_model_id = normalize_model_id(model_id, model_revision)
+        model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+        if last_model_id != normalized_model_id:
+            # if not downloaded_models.get(normalized_model_id, None):
+            if not os.path.isdir(model_dir):
                 model_url = call_inputs.get("MODEL_URL", None)
                 if not model_url:
                     return {
@@ -143,17 +174,38 @@ def inference(all_inputs: dict) -> dict:
                             "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
                         }
                     }
-                download_model(model_id=model_id, model_url=model_url)
-                downloaded_models.update({model_id: True})
-            model = loadModel(model_id)
+                download_model(
+                    model_id=model_id,
+                    model_url=model_url,
+                    model_revision=model_revision,
+                    checkpoint_url=checkpoint_url,
+                    checkpoint_config_url=checkpoint_config_url,
+                    hf_model_id=hf_model_id,
+                    model_precision=model_precision,
+                )
+                # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
-            last_model_id = model_id
+            if model:
+                model.to("cpu")  # Necessary to avoid a memory leak
+            model = loadModel(
+                model_id=normalized_model_id, load=True, precision=model_precision
+            )
+            last_model_id = normalized_model_id
+    else:
+        if always_normalize_model_id:
+            normalized_model_id = always_normalize_model_id
+        print(
+            {
+                "always_normalize_model_id": always_normalize_model_id,
+                "normalized_model_id": normalized_model_id,
+            }
+        )
 
     if MODEL_ID == "ALL":
-        if last_model_id != model_id:
-            model = loadModel(model_id)
+        if last_model_id != normalized_model_id:
             clearPipelines()
-            last_model_id = model_id
+            model = loadModel(normalized_model_id)
+            last_model_id = normalized_model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
             return {
@@ -171,7 +223,7 @@ def inference(all_inputs: dict) -> dict:
             pipeline_name = "StableDiffusionPipeline"
             result["$meta"].update({"PIPELINE": pipeline_name})
 
-        pipeline = getPipelineForModel(pipeline_name, model, model_id)
+        pipeline = getPipelineForModel(pipeline_name, model, normalized_model_id)
         if not pipeline:
             return {
                 "$error": {
@@ -189,7 +241,7 @@ def inference(all_inputs: dict) -> dict:
         scheduler_name = "DPMSolverMultistepScheduler"
         result["$meta"].update({"SCHEDULER": scheduler_name})
 
-    pipeline.scheduler = getScheduler(model_id, scheduler_name)
+    pipeline.scheduler = getScheduler(normalized_model_id, scheduler_name)
     if pipeline.scheduler == None:
         return {
             "$error": {
@@ -287,8 +339,15 @@ def inference(all_inputs: dict) -> dict:
                     "message": 'Called with callInput { train: "dreambooth" } but built with USE_DREAMBOOTH=0',
                 }
             }
+
+        if RUNTIME_DOWNLOADS:
+            if os.path.isdir(model_dir):
+                normalized_model_id = model_dir
+
         torch.set_grad_enabled(True)
-        result = result | TrainDreamBooth(model_id, pipeline, model_inputs, call_inputs)
+        result = result | TrainDreamBooth(
+            normalized_model_id, pipeline, model_inputs, call_inputs
+        )
         torch.set_grad_enabled(False)
         send("inference", "done", {"startRequestId": startRequestId})
         result.update({"$timings": getTimings()})
@@ -343,6 +402,10 @@ def inference(all_inputs: dict) -> dict:
     else:
         result = result | {"image_base64": images_base64[0]}
 
-    result = result | {"$timings": getTimings()}
+    mem_usage = 0
+    if torch.cuda.is_available():
+        mem_usage = torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated()
+
+    result = result | {"$timings": getTimings(), "$mem_usage": mem_usage}
 
     return result

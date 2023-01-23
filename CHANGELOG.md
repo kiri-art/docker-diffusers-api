@@ -1,3 +1,101 @@
+## [1.2.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.1...v1.2.2) (2023-01-09)
+
+
+### Bug Fixes
+
+* **dreambooth:** runtime_dls path fix; integration tests ([ce3827f](https://github.com/kiri-art/docker-diffusers-api/commit/ce3827f6aabd5158c39c99ffae0358d832de2e39))
+* **loadModel:** revision = None if revision == "" else revision ([1773631](https://github.com/kiri-art/docker-diffusers-api/commit/1773631e292e28fae20b0a6c93406378aed85d47))
+
+## [1.2.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.0...v1.2.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* **build-download:** support regular HF download not just cloud cache ([52edf6b](https://github.com/kiri-art/docker-diffusers-api/commit/52edf6b8e52cba4a03c8ea0f72b8fd1e69fa87ad))
+
+# [1.2.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.1.0...v1.2.0) (2023-01-04)
+
+
+### Features
+
+* **build:** separate MODEL_REVISION, MODEL_PRECISION, HF_MODEL_ID ([fa9dd16](https://github.com/kiri-art/docker-diffusers-api/commit/fa9dd16b7369d37f3997ef46581df471bca8e7c1))
+
+# [1.1.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.2...v1.1.0) (2023-01-04)
+
+
+### Features
+
+* **downloads:** allow HF_MODEL_ID call-arg (defauls to MODEL_ID) ([adaa7f6](https://github.com/kiri-art/docker-diffusers-api/commit/adaa7f67aba49058b2e52117e6eb0fed6417b773))
+* **downloads:** allow separate MODEL_REVISION and MODEL_PRECISION ([6edc821](https://github.com/kiri-art/docker-diffusers-api/commit/6edc821da1593f34e4502352dba8f2f4cd808e95))
+
+## [1.0.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.1...v1.0.2) (2023-01-01)
+
+
+### Bug Fixes
+
+* **diffusers:** bump to 2022-12-30 commit 62608a9 ([2f29165](https://github.com/kiri-art/docker-diffusers-api/commit/2f291655967a253b81da9f44c99d4ac68e1c8353))
+
+## [1.0.1](https://github.com/kiri-art/docker-diffusers-api/compare/v1.0.0...v1.0.1) (2022-12-31)
+
+
+### Bug Fixes
+
+* **ci:** different token, https auth ([ecd0b5d](https://github.com/kiri-art/docker-diffusers-api/commit/ecd0b5d8efe734693ff9647cfc2d0bc0b8f90e42))
+
+# 1.0.0 (2022-12-31)
+
+
+### Bug Fixes
+
+* **app:** clearPipelines() before loadModel() to free RAM ([ec45acf](https://github.com/kiri-art/docker-diffusers-api/commit/ec45acf7db7796682597d1d1c440d3742df84425))
+* **app:** init: don't process MODEL_ID if not RUNTIME_DOWNLOADS ([683677f](https://github.com/kiri-art/docker-diffusers-api/commit/683677f0bdbd49c11cb0310c7c365047b536a4f7))
+* **dockerfile:** bump diffusers to eb1abee693104dd45376dbddd614320f2a0beb24 ([1769330](https://github.com/kiri-art/docker-diffusers-api/commit/1769330d4ec1f5932591383daf078be0953accdc))
+* **downloads:** model_url, model_id should be optional ([9a19e7e](https://github.com/kiri-art/docker-diffusers-api/commit/9a19e7e1e742c46471f9a7e6fcebacea5f887d35))
+* **dreambooth:** don't crash on cleanup when no class_data_dir created ([36e64b1](https://github.com/kiri-art/docker-diffusers-api/commit/36e64b101bb12c7e09445f5958acaab1ab59a301))
+* **dreambooth:** enable mixed_precision training, default to fp16 ([0430d23](https://github.com/kiri-art/docker-diffusers-api/commit/0430d2380b5c6e5e43f2c8657017ba701bfaec41))
+* **gitScheduler:** fix deprecation warning s/from_config/from_pretrained/ ([92b2b43](https://github.com/kiri-art/docker-diffusers-api/commit/92b2b433bd9dfb4e1af1473cfa430e55bc83b170))
+* **pipelines:** community pipelines, set torch_dtype too ([0cc1b63](https://github.com/kiri-art/docker-diffusers-api/commit/0cc1b63f72f98ad9267cdc71707bb4b533ad303d))
+* **pipelines:** fix clearPipelines(), load model w/ correct precision ([3085412](https://github.com/kiri-art/docker-diffusers-api/commit/308541243c78cf528ebcd4c68900f5cdd52e6f8f))
+* **requirements:** bumps transformers from 4.22.2 to 4.25.1 ([b13b58c](https://github.com/kiri-art/docker-diffusers-api/commit/b13b58c89fcd30e90ebb58c193c803450db43ebd))
+* **s3:** incorrect value for tqdm causing crash ([9527ece](https://github.com/kiri-art/docker-diffusers-api/commit/9527ece90e4b5b4366f1c418d837dd659764203c))
+* **send:** container_id detection, use /containers/ to grep ([5c0606a](https://github.com/kiri-art/docker-diffusers-api/commit/5c0606a0fdfd9b1a410b6f96eff009da6b768dbe))
+* **tests:** default to DPMSolverMultistepScheduler and 20 steps ([a9c7bb0](https://github.com/kiri-art/docker-diffusers-api/commit/a9c7bb091821640a84d37d3090d365b7a54f2615))
+
+
+### Features
+
+* ability for custom config.yaml in CHECKPOINT_CONFIG_URL ([d2b507c](https://github.com/kiri-art/docker-diffusers-api/commit/d2b507ca225a033dda35897999e489541faecb8c))
+* add PyPatchMatch for outpainting support ([3675bd3](https://github.com/kiri-art/docker-diffusers-api/commit/3675bd31a12d7b1f9627e34f59b661ea7261c272))
+* **app:** don't track downloads in mem, check on disk ([51729e2](https://github.com/kiri-art/docker-diffusers-api/commit/51729e21440e4f0721b73ea497ddd2136306f11d))
+* **app:** runtime downloads with MODEL_URL ([7abc4ac](https://github.com/kiri-art/docker-diffusers-api/commit/7abc4aced15f4aec441d4c220f39e046d2e35179))
+* **app:** runtime downloads, re-use loaded model if requested again ([b84e822](https://github.com/kiri-art/docker-diffusers-api/commit/b84e822cacdb249693a301eb62a600ac9e0ee8f9))
+* **callInputs:** `MODEL_ID`, `PIPELINE`, `SCHEDULER` now optional ([ef420a1](https://github.com/kiri-art/docker-diffusers-api/commit/ef420a1022b3d80950e7df79f1aff006e775c313))
+* **cloud_cache:** normalize model_id and include precision ([ad1b2ef](https://github.com/kiri-art/docker-diffusers-api/commit/ad1b2efc60216c7a8854139ae816d78f6c4a9a19))
+* **diffusers:** bump to v0.10.12 and one commit after (6b68afd) ([ec9117b](https://github.com/kiri-art/docker-diffusers-api/commit/ec9117b747985b7b3d80a4211c4e7bf6253a24a1))
+* **diffusers:** bump to v0.9.0 ([0504d97](https://github.com/kiri-art/docker-diffusers-api/commit/0504d97e38eb85924ef7453c3c8690428f54870d))
+* **docker:** diffusers-api-base image, build, run.sh ([1cbfc4f](https://github.com/kiri-art/docker-diffusers-api/commit/1cbfc4f41b46ea8d38600ac6902cf5f095357344))
+* **dockerfile:** FROM_IMAGE build-arg to pick base image ([a0c37a6](https://github.com/kiri-art/docker-diffusers-api/commit/a0c37a6a87b300771f6ecf168b8bb1516caa5ab9))
+* **Dockerfile:** make SDv2 the default (+ some formatting cleanup) ([c1e73ef](https://github.com/kiri-art/docker-diffusers-api/commit/c1e73efcdb6e5c95d36c83f9d1398182a1b7e77e))
+* **dockerfile:** runtime downloads ([b40ae86](https://github.com/kiri-art/docker-diffusers-api/commit/b40ae868ce59ddb0232bcdb27ebb0a2c91068f51))
+* **Dockerfile:** SAFETENSORS_FAST_GPU ([62209be](https://github.com/kiri-art/docker-diffusers-api/commit/62209be9963f9699ba32ea7520a361545b55034e))
+* **download:** default_path as normalized_model_id.tar.zst ([5ad0d88](https://github.com/kiri-art/docker-diffusers-api/commit/5ad0d88b0b9b5a5a07596457c3bc83b7b32b25f5))
+* **download:** delete .zst file after uncompress ([ab25280](https://github.com/kiri-art/docker-diffusers-api/commit/ab25280125bc1ccc38a0a2588fc09e33a576f6b0))
+* **download:** record download timings ([7457e50](https://github.com/kiri-art/docker-diffusers-api/commit/7457e505c826c44d9f45a05fe486e819d442b4ca))
+* **downloads:** runtime checkpoint conversion ([2414cd9](https://github.com/kiri-art/docker-diffusers-api/commit/2414cd9e3ac232273a1f2441134c65c25d0f7b49))
+* **dreambooth:** save in safetensors format, tar up with -v ([5c3e86a](https://github.com/kiri-art/docker-diffusers-api/commit/5c3e86a8f99331c41c34b36c932b70e11f7b80b0))
+* **errors:** try...catch everything, return as JSON ([901679c](https://github.com/kiri-art/docker-diffusers-api/commit/901679c7829796dc585af25f658cd6ab9115c7e7))
+* **getScheduler:** make DPMSolverMultistepScheduler the default ([085d06f](https://github.com/kiri-art/docker-diffusers-api/commit/085d06f6b993a24b16521a1c3ee77d92289e04ed))
+* **k-diffusion:** add pip package for use in k-diffusion shedulers ([3e901ad](https://github.com/kiri-art/docker-diffusers-api/commit/3e901adc64f750f5501b5dd19d87d0a5e294de22))
+* **models:** store in ~/.cache/diffusers-api (volume support) ([8032ec1](https://github.com/kiri-art/docker-diffusers-api/commit/8032ec11b8f6590015110c9b89437f5619f2374c))
+* **pipelines:** allow calling of ALL PIPELINES (official+community) ([1ccbaad](https://github.com/kiri-art/docker-diffusers-api/commit/1ccbaad1f405b8e5d16ca1a9880cc1d279f6d3f9))
+* **pipelines:** initial community pipeline support ([7af45cf](https://github.com/kiri-art/docker-diffusers-api/commit/7af45cfdc4cbcc95c905834628775d0e8858509e))
+* **s3:** s3client(), file_exists() methods ([0308af9](https://github.com/kiri-art/docker-diffusers-api/commit/0308af910d07be6d912104663263663b086def9c))
+* **s3:** upload/download progress indicators ([76dd303](https://github.com/kiri-art/docker-diffusers-api/commit/76dd303a58a57b90ecc2c0038547b23b906ecca5))
+* **send:** prefer env var CONTAINER_ID if set to full docker uuid ([eec5112](https://github.com/kiri-art/docker-diffusers-api/commit/eec511252035b8205f5365f45abb5777c164cb57))
+* **send:** SEND_URL and SIGN_KEY now settable with build-vars ([01cf354](https://github.com/kiri-art/docker-diffusers-api/commit/01cf35461c5855a75651a30e3aeccb4ad1e9c8ac))
+* **test:** allow TEST_URL to override https://localhost:8000/ ([9b46387](https://github.com/kiri-art/docker-diffusers-api/commit/9b463872257c0a3ffae553765aed62a2df6af717))
+* **tests:** allow override BANANA_API_URL ([aca6aca](https://github.com/kiri-art/docker-diffusers-api/commit/aca6aca6e7ed46d0bf711548cea82a588fdd7d2a))
+
 # CHANGELOG
 
 * **NEXT MAIN**

@@ -1,0 +1,22 @@
+{
+  "python.testing.pytestArgs": [
+    "--cov=.",
+    "--cov-report=xml",
+    "--ignore=test.py",
+    // "unit_tests.py"
+    // "."
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.defaultInterpreterPath": "/opt/conda/envs/xformers/bin/python",
+  "runItOn": {
+    "commands": [
+        {
+            "match": "\\.py$",
+            "isAsync": true,
+            "isShellCommand": false,
+            "cmd": "testing.runAll"
+        },
+    ],
+  }
+}

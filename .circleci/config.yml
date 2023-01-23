@@ -1,0 +1,78 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+     - image: cimg/python:3.9-node
+    resource_class: medium
+
+    # would have been nice, but not for $2,000/month!
+    # machine:
+    #   image: ubuntu-2004-cuda-11.4:202110-01
+    # resource_class: gpu.nvidia.small
+
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run: docker build -t gadicc/diffusers-api .
+
+      # unit tests
+      - run: docker run gadicc/diffusers-api conda run --no-capture -n xformers pytest --cov=. --cov-report=xml --ignore=diffusers
+
+      - run: echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+
+      # push for non-semver branches (e.g. dev, feature branches)
+      # - run:
+      #     name: Push to hub on branches not handled by semantic-release
+      #     command: |
+      #       SEMVER_BRANCHES=$(cat release.config.js | sed 's/module.exports = //' | sed 's/\/\/.*//' | jq .branches[])
+      # 
+      #       if [[ ${SEMVER_BRANCHES[@]} =~ "$CIRCLE_BRANCH" ]] ; then
+      #         echo "Skipping because '\$CIRCLE_BRANCH' == '$CIRCLE_BRANCH'"
+      #         echo "Semantic-release will handle the publishing"
+      #       else
+      #         echo "docker push gadicc/diffusers-api:$CIRCLE_BRANCH"
+      #         docker push gadicc/diffusers-api:$CIRCLE_BRANCH
+      #         echo "Skipping integration tests"
+      #         circleci-agent step halt
+      #       fi
+
+      # needed for later "apt install" steps
+      - run: sudo apt-get update
+
+      ## TODO.  The below was a great first step, but in future, let's build
+      # the container on the host, run docker remotely on lambda, and
+      # publish the same built image if tests pass.
+
+      # TODO, only run on main channel for releases (with sem-rel too)
+      # integration tests
+      - run: sudo apt install -yqq rsync pv
+      - run: ./run_integration_tests_on_lambda.sh
+
+      - run:
+          name: Push to hub on branches not handled by semantic-release
+          command: |
+            SEMVER_BRANCHES=$(cat release.config.js | sed 's/module.exports = //' | sed 's/\/\/.*//' | jq .branches[])
+
+            if [[ ${SEMVER_BRANCHES[@]} =~ "$CIRCLE_BRANCH" ]] ; then
+              echo "Skipping because '\$CIRCLE_BRANCH' == '$CIRCLE_BRANCH'"
+              echo "Semantic-release will handle the publishing"
+            else
+              echo "docker push gadicc/diffusers-api:$CIRCLE_BRANCH"
+              docker push gadicc/diffusers-api:$CIRCLE_BRANCH
+              # echo "Skipping integration tests"
+              # circleci-agent step halt
+            fi
+
+      # deploy the image
+      # - run: docker push company/app:$CIRCLE_BRANCH
+      # https://github.com/semantic-release-plus/semantic-release-plus/tree/master/packages/plugins/docker
+      - run:
+          name: release
+          command: |
+            sudo apt-get install yarn
+            yarn install
+            yarn run semantic-release-plus
