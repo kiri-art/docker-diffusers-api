@@ -43,6 +43,8 @@ running well in production on kiri.art for almost a month.  We'd
 be grateful for any feedback from early adopters to help make
 this official.  For more details, see [Upgrading from v0 to
 v1](https://forums.kiri.art/t/wip-upgrading-from-v0-to-v1/116).
+Previous releases available on the `dev-v0-final` and
+`main-v0-final` branches.
 
 **Currently only NVIDIA / CUDA devices are supported**.  Tracking
 Apple / M1 support in issue
