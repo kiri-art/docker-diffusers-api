@@ -35,6 +35,7 @@ jobs:
       #         echo "Semantic-release will handle the publishing"
       #       else
       #         echo "docker push gadicc/diffusers-api:$CIRCLE_BRANCH"
+      #         docker build -t gadicc/diffusers-api:$CIRCLE_BRANCH .
       #         docker push gadicc/diffusers-api:$CIRCLE_BRANCH
       #         echo "Skipping integration tests"
       #         circleci-agent step halt
@@ -62,6 +63,7 @@ jobs:
               echo "Semantic-release will handle the publishing"
             else
               echo "docker push gadicc/diffusers-api:$CIRCLE_BRANCH"
+              docker build -t gadicc/diffusers-api:$CIRCLE_BRANCH .
               docker push gadicc/diffusers-api:$CIRCLE_BRANCH
               # echo "Skipping integration tests"
               # circleci-agent step halt
