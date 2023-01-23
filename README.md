@@ -35,31 +35,37 @@ assumptions.  If anything is unclear, please open an issue.
 
 **Official help in our dedicated forum https://forums.kiri.art/c/docker-diffusers-api/16.**
 
-*[See the `dev` branch for the latest features.](https://github.com/kiri-art/docker-diffusers-api/tree/dev)
-**Pull Requests must be submitted against the dev branch.***
+**This README refers to the in-development `dev` branch** and may
+reference features and fixes not yet in the published releases.
+
+**`v1` has not yet been officially released yet** but has been
+running well in production on kiri.art for almost a month.  We'd
+be grateful for any feedback from early adopters to help make
+this official.  For more details, see [Upgrading from v0 to
+v1](https://forums.kiri.art/t/wip-upgrading-from-v0-to-v1/116).
 
 ## Installation & Setup:
 
 Setup varies depending on your use case.
 
-1. **To run locally or on a *server*, with runtime downloads:**:
+1. **To run locally or on a *server*, with runtime downloads:**
 
-  `docker run --gpus all -p 8000:8000 -e HF_AUTH_TOKEN=$HF_AUTH_TOKEN gadicc/diffusers-api`.
+    `docker run --gpus all -p 8000:8000 -e HF_AUTH_TOKEN=$HF_AUTH_TOKEN gadicc/diffusers-api`.
 
-  See the [guides for various cloud providers](https://forums.kiri.art/t/running-on-other-cloud-providers/89/7).
+    See the [guides for various cloud providers](https://forums.kiri.art/t/running-on-other-cloud-providers/89/7).
 
-1. **To run *serverless*, include the model at build time**.
+1. **To run *serverless*, include the model at build time:**
 
-  1. [docker-diffusers-api-build-download](https://github.com/kiri-art/docker-diffusers-api-build-download) (
+    1. [docker-diffusers-api-build-download](https://github.com/kiri-art/docker-diffusers-api-build-download) (
     [banana](https://forums.kiri.art/t/run-diffusers-api-on-banana-dev/103), others)
-  1. [docker-diffusers-api-runpod](https://github.com/kiri-art/docker-diffusers-api-runpod),
-  see the [guide](https://forums.kiri.art/t/run-diffusers-api-on-runpod-io/102)
+    1. [docker-diffusers-api-runpod](https://github.com/kiri-art/docker-diffusers-api-runpod),
+    see the [guide](https://forums.kiri.art/t/run-diffusers-api-on-runpod-io/102)
 
 1. **Building from source**.
 
-  1. Fork / clone this repo.
-  1. `docker build -t gadicc/diffusers-api .`
-  1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
+    1. Fork / clone this repo.
+    1. `docker build -t gadicc/diffusers-api .`
+    1. See [CONTRIBUTING.md](./CONTRIBUTING.md) for more helpful hints.
 
 *Other configurations are possible but these are the most common cases*
 
