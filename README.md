@@ -24,7 +24,7 @@ Note: This image was created for [kiri.art](https://kiri.art/).
 Everything is open source but there may be certain request / response
 assumptions.  If anything is unclear, please open an issue.
 
-## Updates and Help
+## Important Notices
 
 * [Official `docker-diffusers-api` Forum](https://forums.kiri.art/c/docker-diffusers-api/16):
   help, updates, discussion.
@@ -43,6 +43,10 @@ running well in production on kiri.art for almost a month.  We'd
 be grateful for any feedback from early adopters to help make
 this official.  For more details, see [Upgrading from v0 to
 v1](https://forums.kiri.art/t/wip-upgrading-from-v0-to-v1/116).
+
+**Currently only NVIDIA / CUDA devices are supported**.  Tracking
+Apple / M1 support in issue
+[#20](https://github.com/kiri-art/docker-diffusers-api/issues/20).
 
 ## Installation & Setup:
 
