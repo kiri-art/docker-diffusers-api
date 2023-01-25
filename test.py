@@ -71,9 +71,11 @@ def test(name, inputs):
 
 
 def runTest(name, args, extraCallInputs, extraModelInputs):
-    inputs = all_tests.get(name)
-    if not inputs.get("callInputs", None):
-        inputs.update({"callInputs": {}})
+    origInputs = all_tests.get(name)
+    inputs = {
+        "modelInputs": origInputs.get("modelInputs", {}).copy(),
+        "callInputs": origInputs.get("callInputs", {}).copy(),
+    }
     inputs.get("callInputs").update(extraCallInputs)
     inputs.get("modelInputs").update(extraModelInputs)
 
