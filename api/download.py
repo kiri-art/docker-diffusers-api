@@ -146,7 +146,7 @@ def download_model(
     else:
         # do a dry run of loading the huggingface model, which will download weights at build time
         loadModel(
-            model_id=normalized_model_id,
+            model_id=hf_model_id,
             load=False,
             precision=model_precision,
             revision=model_revision,

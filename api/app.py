@@ -168,12 +168,13 @@ def inference(all_inputs: dict) -> dict:
             if not os.path.isdir(model_dir):
                 model_url = call_inputs.get("MODEL_URL", None)
                 if not model_url:
-                    return {
-                        "$error": {
-                            "code": "NO_MODEL_URL",
-                            "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
-                        }
-                    }
+                    # return {
+                    #     "$error": {
+                    #         "code": "NO_MODEL_URL",
+                    #         "message": "Currently RUNTIME_DOWNOADS requires a MODEL_URL callInput",
+                    #     }
+                    # }
+                    normalized_model_id = hf_model_id or model_id
                 download_model(
                     model_id=model_id,
                     model_url=model_url,
