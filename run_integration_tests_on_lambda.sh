@@ -190,7 +190,7 @@ commands() {
   instance_run_command $INSTANCE_ID "docker pull gadicc/diffusers-api:test"
 
   # instance_run_script $INSTANCE_ID run_integration_tests.sh docker-diffusers-api
-  instance_run_command $INSTANCE_ID "python3.9 -m pytest -s tests/integration" docker-diffusers-api
+  instance_run_command $INSTANCE_ID "export HF_AUTH_TOKEN=\"$HF_AUTH_TOKEN\" && python3.9 -m pytest -s tests/integration" docker-diffusers-api
 }
 
 commands
