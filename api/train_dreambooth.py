@@ -1,4 +1,4 @@
-# Based on https://github.com/huggingface/diffusers/blob/8b84f8519264942fa0e52444881390767cb766c5/examples/dreambooth/train_dreambooth.py
+# Based on https://github.com/huggingface/diffusers/blob/180841bbde4b200be43350164eef80c93a68983a/examples/dreambooth/train_dreambooth.py
 
 # Reasons for not using that file directly:
 #
@@ -7,11 +7,27 @@
 
 # Deps
 
+#!/usr/bin/env python
+# coding=utf-8
+# Copyright 2022 The HuggingFace Inc. team. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
 import argparse
 import hashlib
 import itertools
+import logging
 import math
 import os
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -20,21 +36,26 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 from torch.utils.data import Dataset
 
+import datasets
+import diffusers
+import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
 from diffusers import (
     AutoencoderKL,
     DDPMScheduler,
-    StableDiffusionPipeline,
+    DiffusionPipeline,
     UNet2DConditionModel,
 )
 from diffusers.optimization import get_scheduler
-from huggingface_hub import HfFolder, Repository, whoami
+from diffusers.utils import check_min_version
+from diffusers.utils.import_utils import is_xformers_available
+from huggingface_hub import HfFolder, Repository, create_repo, whoami
 from PIL import Image
 from torchvision import transforms
 from tqdm.auto import tqdm
-from transformers import CLIPTextModel, CLIPTokenizer
+from transformers import AutoTokenizer, PretrainedConfig
 
 # DDA
 from send import send, get_now
@@ -54,6 +75,8 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
     params = {
         # Defaults
         "pretrained_model_name_or_path": model_id,  # DDA, TODO
+        # Revision of pretrained model identifier from huggingface.co/models. Trainable model components should be
+        # float32 precision.
         "revision": None,
         "tokenizer_name": None,
         "instance_data_dir": "instance_data_dir",  # DDA TODO
@@ -66,19 +89,29 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "output_dir": "text-inversion-model",
         "seed": None,
         "resolution": 512,
-        "center_crop": None,
+        # Whether to center crop the input images to the resolution. If not set, the images will be randomly
+        # cropped. The images will be resized to the resolution first before cropping.
+        "center_crop": False,
+        # Whether to train the text encoder. If set, the text encoder should be float32 precision.
         "train_text_encoder": None,
         "train_batch_size": 1,  # DDA, was: 4
         "sample_batch_size": 1,  # DDA, was: 4,
         "num_train_epochs": 1,
         "max_train_steps": 800,  # DDA, was: None,
+        "checkpointing_steps": 1000000000,  # DDA, was: 500
+        "resume_from_checkpoint": None,
         "gradient_accumulation_steps": 1,
         "gradient_checkpointing": True,  # DDA was: None (needed for 16GB)
         "learning_rate": 5e-6,
         "scale_lr": False,
         "lr_scheduler": "constant",
         "lr_warmup_steps": 0,  # DDA, was: 500,
+        "lr_num_cycles": 1,
+        # Power factor of the polynomial scheduler
+        "lr_power": 1.0,
         "use_8bit_adam": True,  # DDA, was: None (needed for 16GB)
+        # Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
+        "dataloader_num_workers": 0,
         "adam_beta1": 0.9,
         "adam_beta2": 0.999,
         "adam_weight_decay": 1e-6,
@@ -88,8 +121,22 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         "hub_token": HF_AUTH_TOKEN,
         "hub_model_id": None,
         "logging_dir": "logs",
-        "mixed_precision": "fp16",  # DDA, was: None
+        # Whether or not to allow TF32 on Ampere GPUs. Can be used to speed up training. For more information, see
+        # https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices
+        "allow_tf32": None,
+        # The integration to report the results and logs to. Supported platforms are `"tensorboard"`
+        # (default), `"wandb"` and `"comet_ml"`. Use `"all"` to report to all integrations.
+        "report_to": "tensorboard",
+        "mixed_precision": None,  # DDA, was: None  XXX fp16
+        # Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >=
+        # 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32.
+        "prior_generation_precision": None,  # "no", "fp32", "fp16", "bf16"
         "local_rank": -1,
+        "enable_xformers_memory_efficient_attention": True,  # DDA, was: None
+        # Save more memory by using setting grads to None instead of zero. Be aware, that this changes certain
+        # behaviors, so disable this argument if it causes any problems. More info:
+        # https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
+        "set_grads_to_none": None,
     }
 
     instance_images = model_inputs["instance_images"]
@@ -160,8 +207,34 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 # What follows is mostly the original train_dreambooth.py
 # Any changes are marked with in comments with [DDA].
 
+# Will error if the minimal version of diffusers is not installed. Remove at your own risks.
+check_min_version("0.12.0")
 
 logger = get_logger(__name__)
+
+
+def import_model_class_from_model_name_or_path(
+    pretrained_model_name_or_path: str, revision: str
+):
+    text_encoder_config = PretrainedConfig.from_pretrained(
+        pretrained_model_name_or_path,
+        subfolder="text_encoder",
+        revision=revision,
+    )
+    model_class = text_encoder_config.architectures[0]
+
+    if model_class == "CLIPTextModel":
+        from transformers import CLIPTextModel
+
+        return CLIPTextModel
+    elif model_class == "RobertaSeriesModelWithTransformation":
+        from diffusers.pipelines.alt_diffusion.modeling_roberta_series import (
+            RobertaSeriesModelWithTransformation,
+        )
+
+        return RobertaSeriesModelWithTransformation
+    else:
+        raise ValueError(f"{model_class} is not supported.")
 
 
 class DreamBoothDataset(Dataset):
@@ -186,7 +259,9 @@ class DreamBoothDataset(Dataset):
 
         self.instance_data_root = Path(instance_data_root)
         if not self.instance_data_root.exists():
-            raise ValueError("Instance images root doesn't exists.")
+            raise ValueError(
+                f"Instance {self.instance_data_root} images root doesn't exists."
+            )
 
         self.instance_images_path = list(Path(instance_data_root).iterdir())
         self.num_instance_images = len(self.instance_images_path)
@@ -229,9 +304,10 @@ class DreamBoothDataset(Dataset):
         example["instance_images"] = self.image_transforms(instance_image)
         example["instance_prompt_ids"] = self.tokenizer(
             self.instance_prompt,
-            padding="do_not_pad",
             truncation=True,
+            padding="max_length",
             max_length=self.tokenizer.model_max_length,
+            return_tensors="pt",
         ).input_ids
 
         if self.class_data_root:
@@ -243,12 +319,35 @@ class DreamBoothDataset(Dataset):
             example["class_images"] = self.image_transforms(class_image)
             example["class_prompt_ids"] = self.tokenizer(
                 self.class_prompt,
-                padding="do_not_pad",
                 truncation=True,
+                padding="max_length",
                 max_length=self.tokenizer.model_max_length,
+                return_tensors="pt",
             ).input_ids
 
         return example
+
+
+def collate_fn(examples, with_prior_preservation=False):
+    input_ids = [example["instance_prompt_ids"] for example in examples]
+    pixel_values = [example["instance_images"] for example in examples]
+
+    # Concat class and instance examples for prior preservation.
+    # We do this to avoid doing two forward passes.
+    if with_prior_preservation:
+        input_ids += [example["class_prompt_ids"] for example in examples]
+        pixel_values += [example["class_images"] for example in examples]
+
+    pixel_values = torch.stack(pixel_values)
+    pixel_values = pixel_values.to(memory_format=torch.contiguous_format).float()
+
+    input_ids = torch.cat(input_ids, dim=0)
+
+    batch = {
+        "input_ids": input_ids,
+        "pixel_values": pixel_values,
+    }
+    return batch
 
 
 class PromptDataset(Dataset):
@@ -286,7 +385,7 @@ def main(args, init_pipeline):
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
-        log_with="tensorboard",
+        log_with=args.report_to,
         logging_dir=logging_dir,
     )
 
@@ -303,9 +402,27 @@ def main(args, init_pipeline):
             "Please set gradient_accumulation_steps to 1. This feature will be supported in the future."
         )
 
+    # Make one log on every process with the configuration for debugging.
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        level=logging.INFO,
+    )
+    logger.info(accelerator.state, main_process_only=False)
+    if accelerator.is_local_main_process:
+        datasets.utils.logging.set_verbosity_warning()
+        transformers.utils.logging.set_verbosity_warning()
+        diffusers.utils.logging.set_verbosity_info()
+    else:
+        datasets.utils.logging.set_verbosity_error()
+        transformers.utils.logging.set_verbosity_error()
+        diffusers.utils.logging.set_verbosity_error()
+
+    # If passed along, set the training seed now.
     if args.seed is not None:
         set_seed(args.seed)
 
+    # Generate class images if prior preservation is enabled.
     if args.with_prior_preservation:
         class_images_dir = Path(args.class_data_dir)
         if not class_images_dir.exists():
@@ -317,10 +434,16 @@ def main(args, init_pipeline):
             # torch_dtype = (
             #    torch.float16 if accelerator.device.type == "cuda" else torch.float32
             # )
+            # if args.prior_generation_precision == "fp32":
+            #     torch_dtype = torch.float32
+            # elif args.prior_generation_precision == "fp16":
+            #     torch_dtype = torch.float16
+            # elif args.prior_generation_precision == "bf16":
+            #     torch_dtype = torch.bfloat16
             # DDA
             pipeline = init_pipeline
             pipeline.safety_checker = None
-            # pipeline = StableDiffusionPipeline.from_pretrained(
+            # pipeline = DiffusionPipeline.from_pretrained(
             #     args.pretrained_model_name_or_path,
             #     torch_dtype=torch_dtype,
             #     safety_checker=None,
@@ -367,11 +490,17 @@ def main(args, init_pipeline):
                 )
             else:
                 repo_name = args.hub_model_id
+            create_repo(
+                repo_name,
+                exist_ok=True,
+                token=args.hub_token,
+                private=True,  # DDA
+            )
             repo = Repository(
                 args.output_dir,
                 clone_from=repo_name,
-                use_auth_token=args.hub_token,  # DDA
-                private=True,  # DDA
+                token=args.hub_token,
+                # use_auth_token=args.hub_token,  # DDA
             )
 
             with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
@@ -384,15 +513,12 @@ def main(args, init_pipeline):
 
     # Load the tokenizer
     if args.tokenizer_name:
-        tokenizer = CLIPTokenizer.from_pretrained(
-            args.tokenizer_name,
-            revision=args.revision,
-            use_auth_token=args.hub_token,  # DDA
-            local_files_only=True,  # DDA
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.tokenizer_name, revision=args.revision, use_fast=False
         )
     elif args.pretrained_model_name_or_path:
         tokenizer = init_pipeline.components["tokenizer"]  # DDA
-        # tokenizer = CLIPTokenizer.from_pretrained(
+        # tokenizer = AutoTokenizer.from_pretrained(
         #     args.pretrained_model_name_or_path,
         #     subfolder="tokenizer",
         #     revision=args.revision,
@@ -400,8 +526,22 @@ def main(args, init_pipeline):
         #     local_files_only=True,  # DDA
         # )
 
-    # Load models and create wrapper for stable diffusion
-    # text_encoder = CLIPTextModel.from_pretrained(
+    # import correct text encoder class
+    # DDA
+    # text_encoder_cls = import_model_class_from_model_name_or_path(
+    #     args.pretrained_model_name_or_path,
+    #     args.revision
+    # )
+
+    # Load scheduler and models
+    # noise_scheduler = DDPMScheduler.from_pretrained(
+    #     args.pretrained_model_name_or_path,
+    #     subfolder="scheduler",
+    #     use_auth_token=args.hub_token,  # DDA
+    #     local_files_only=True,  # DDA
+    # )
+
+    # text_encoder = text_encoder_cls.from_pretrained(
     #     args.pretrained_model_name_or_path,
     #     subfolder="text_encoder",
     #     revision=args.revision,
@@ -424,18 +564,28 @@ def main(args, init_pipeline):
     # )
     # print("pipeline.disable_xformers_memory_efficient_attention()")
     # init_pipeline.disable_xformers_memory_efficient_attention()
+    noise_scheduler = init_pipeline.components["scheduler"]  # DDA
     text_encoder = init_pipeline.components["text_encoder"]  # DDA
     vae = init_pipeline.components["vae"]  # DDA
     unet = init_pipeline.components["unet"]  # DDA
 
-    vae.requires_grad_(False)
-    if not args.train_text_encoder:
-        text_encoder.requires_grad_(False)
+    if args.enable_xformers_memory_efficient_attention:
+        if is_xformers_available():
+            unet.enable_xformers_memory_efficient_attention()
+        else:
+            raise ValueError(
+                "xformers is not available. Make sure it is installed correctly"
+            )
 
     if args.gradient_checkpointing:
         unet.enable_gradient_checkpointing()
         if args.train_text_encoder:
             text_encoder.gradient_checkpointing_enable()
+
+    # Enable TF32 for faster training on Ampere GPUs,
+    # cf https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices
+    if args.allow_tf32:
+        torch.backends.cuda.matmul.allow_tf32 = True
 
     if args.scale_lr:
         args.learning_rate = (
@@ -458,6 +608,7 @@ def main(args, init_pipeline):
     else:
         optimizer_class = torch.optim.AdamW
 
+    # Optimizer creation
     params_to_optimize = (
         itertools.chain(unet.parameters(), text_encoder.parameters())
         if args.train_text_encoder
@@ -471,14 +622,7 @@ def main(args, init_pipeline):
         eps=args.adam_epsilon,
     )
 
-    # noise_scheduler = DDPMScheduler.from_config(
-    #     args.pretrained_model_name_or_path,
-    #     subfolder="scheduler",
-    #     use_auth_token=args.hub_token,  # DDA
-    #     local_files_only=True,  # DDA
-    # )
-    noise_scheduler = init_pipeline.components["scheduler"]  # DDA
-
+    # Dataset and DataLoaders creation:
     train_dataset = DreamBoothDataset(
         instance_data_root=args.instance_data_dir,
         instance_prompt=args.instance_prompt,
@@ -489,38 +633,12 @@ def main(args, init_pipeline):
         center_crop=args.center_crop,
     )
 
-    def collate_fn(examples):
-        input_ids = [example["instance_prompt_ids"] for example in examples]
-        pixel_values = [example["instance_images"] for example in examples]
-
-        # Concat class and instance examples for prior preservation.
-        # We do this to avoid doing two forward passes.
-        if args.with_prior_preservation:
-            input_ids += [example["class_prompt_ids"] for example in examples]
-            pixel_values += [example["class_images"] for example in examples]
-
-        pixel_values = torch.stack(pixel_values)
-        pixel_values = pixel_values.to(memory_format=torch.contiguous_format).float()
-
-        input_ids = tokenizer.pad(
-            {"input_ids": input_ids},
-            padding="max_length",
-            max_length=tokenizer.model_max_length,
-            return_tensors="pt",
-        ).input_ids
-
-        batch = {
-            "input_ids": input_ids,
-            "pixel_values": pixel_values,
-        }
-        return batch
-
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.train_batch_size,
         shuffle=True,
-        collate_fn=collate_fn,
-        num_workers=1,
+        collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
+        num_workers=args.dataloader_num_workers,
     )
 
     # Scheduler and math around the number of training steps.
@@ -537,8 +655,11 @@ def main(args, init_pipeline):
         optimizer=optimizer,
         num_warmup_steps=args.lr_warmup_steps * args.gradient_accumulation_steps,
         num_training_steps=args.max_train_steps * args.gradient_accumulation_steps,
+        num_cycles=args.lr_num_cycles,
+        power=args.lr_power,
     )
 
+    # Prepare everything with our `accelerator`.
     if args.train_text_encoder:
         (
             unet,
@@ -554,18 +675,36 @@ def main(args, init_pipeline):
             unet, optimizer, train_dataloader, lr_scheduler
         )
 
+    # For mixed precision training we cast the text_encoder and vae weights to half-precision
+    # as these models are only used for inference, keeping weights in full precision is not required.
     weight_dtype = torch.float32
     if accelerator.mixed_precision == "fp16":
         weight_dtype = torch.float16
     elif accelerator.mixed_precision == "bf16":
         weight_dtype = torch.bfloat16
 
-    # Move text_encode and vae to gpu.
-    # For mixed precision training we cast the text_encoder and vae weights to half-precision
-    # as these models are only used for inference, keeping weights in full precision is not required.
+    # Move vae and text_encoder to device and cast to weight_dtype
     vae.to(accelerator.device, dtype=weight_dtype)
     if not args.train_text_encoder:
         text_encoder.to(accelerator.device, dtype=weight_dtype)
+
+    low_precision_error_string = (
+        "Please make sure to always have all model weights in full float32 precision when starting training - even if"
+        " doing mixed precision training. copy of the weights should still be float32."
+    )
+
+    if accelerator.unwrap_model(unet).dtype != torch.float32:
+        raise ValueError(
+            f"Unet loaded as datatype {accelerator.unwrap_model(unet).dtype}. {low_precision_error_string}"
+        )
+    if (
+        args.train_text_encoder
+        and accelerator.unwrap_model(text_encoder).dtype != torch.float32
+    ):
+        raise ValueError(
+            f"Text encoder loaded as datatype {accelerator.unwrap_model(text_encoder).dtype}."
+            f" {low_precision_error_string}"
+        )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(
@@ -598,21 +737,61 @@ def main(args, init_pipeline):
     )
     logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
     logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    global_step = 0
+    first_epoch = 0
+
+    # Potentially load in the weights and states from a previous save
+    if args.resume_from_checkpoint:
+        if args.resume_from_checkpoint != "latest":
+            path = os.path.basename(args.resume_from_checkpoint)
+        else:
+            # Get the mos recent checkpoint
+            dirs = os.listdir(args.output_dir)
+            dirs = [d for d in dirs if d.startswith("checkpoint")]
+            dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
+            path = dirs[-1] if len(dirs) > 0 else None
+
+        if path is None:
+            accelerator.print(
+                f"Checkpoint '{args.resume_from_checkpoint}' does not exist. Starting a new training run."
+            )
+            args.resume_from_checkpoint = None
+        else:
+            accelerator.print(f"Resuming from checkpoint {path}")
+            accelerator.load_state(os.path.join(args.output_dir, path))
+            global_step = int(path.split("-")[1])
+
+            resume_global_step = global_step * args.gradient_accumulation_steps
+            first_epoch = global_step // num_update_steps_per_epoch
+            resume_step = resume_global_step % (
+                num_update_steps_per_epoch * args.gradient_accumulation_steps
+            )
+
     # Only show the progress bar once on each machine.
     progress_bar = tqdm(
-        range(args.max_train_steps), disable=not accelerator.is_local_main_process
+        range(global_step, args.max_train_steps),
+        disable=not accelerator.is_local_main_process,
     )
     progress_bar.set_description("Steps")
-    global_step = 0
 
     # DDA
     send("training", "start", {})
 
-    for epoch in range(args.num_train_epochs):
+    for epoch in range(first_epoch, args.num_train_epochs):
         unet.train()
         if args.train_text_encoder:
             text_encoder.train()
         for step, batch in enumerate(train_dataloader):
+            # Skip steps until we reach the resumed step
+            if (
+                args.resume_from_checkpoint
+                and epoch == first_epoch
+                and step < resume_step
+            ):
+                if step % args.gradient_accumulation_steps == 0:
+                    progress_bar.update(1)
+                continue
+
             with accelerator.accumulate(unet):
                 # Convert images to latent space
                 latents = vae.encode(
@@ -640,32 +819,40 @@ def main(args, init_pipeline):
                 encoder_hidden_states = text_encoder(batch["input_ids"])[0]
 
                 # Predict the noise residual
-                noise_pred = unet(
+                model_pred = unet(
                     noisy_latents, timesteps, encoder_hidden_states
                 ).sample
 
+                # Get the target for loss depending on the prediction type
+                if noise_scheduler.config.prediction_type == "epsilon":
+                    target = noise
+                elif noise_scheduler.config.prediction_type == "v_prediction":
+                    target = noise_scheduler.get_velocity(latents, noise, timesteps)
+                else:
+                    raise ValueError(
+                        f"Unknown prediction type {noise_scheduler.config.prediction_type}"
+                    )
+
                 if args.with_prior_preservation:
-                    # Chunk the noise and noise_pred into two parts and compute the loss on each part separately.
-                    noise_pred, noise_pred_prior = torch.chunk(noise_pred, 2, dim=0)
-                    noise, noise_prior = torch.chunk(noise, 2, dim=0)
+                    # Chunk the noise and model_pred into two parts and compute the loss on each part separately.
+                    model_pred, model_pred_prior = torch.chunk(model_pred, 2, dim=0)
+                    target, target_prior = torch.chunk(target, 2, dim=0)
 
                     # Compute instance loss
-                    loss = (
-                        F.mse_loss(noise_pred.float(), noise.float(), reduction="none")
-                        .mean([1, 2, 3])
-                        .mean()
+                    loss = F.mse_loss(
+                        model_pred.float(), target.float(), reduction="mean"
                     )
 
                     # Compute prior loss
                     prior_loss = F.mse_loss(
-                        noise_pred_prior.float(), noise_prior.float(), reduction="mean"
+                        model_pred_prior.float(), target_prior.float(), reduction="mean"
                     )
 
                     # Add the prior loss to the instance loss.
                     loss = loss + args.prior_loss_weight * prior_loss
                 else:
                     loss = F.mse_loss(
-                        noise_pred.float(), noise.float(), reduction="mean"
+                        model_pred.float(), target.float(), reduction="mean"
                     )
 
                 accelerator.backward(loss)
@@ -678,12 +865,21 @@ def main(args, init_pipeline):
                     accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 optimizer.step()
                 lr_scheduler.step()
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=args.set_grads_to_none)
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
                 progress_bar.update(1)
                 global_step += 1
+
+                if global_step % args.checkpointing_steps == 0:
+                    if accelerator.is_main_process:
+                        save_path = os.path.join(
+                            args.output_dir, f"checkpoint-{global_step}"
+                        )
+                        pipeline.save_pretrained(save_path)
+                        accelerator.save_state(save_path)
+                        logger.info(f"Saved state to {save_path}")
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
@@ -692,14 +888,11 @@ def main(args, init_pipeline):
             if global_step >= args.max_train_steps:
                 break
 
-        accelerator.wait_for_everyone()
-
-    # DDA
-    send("training", "done")
-
     # Create the pipeline using using the trained modules and save it.
+    accelerator.wait_for_everyone()
+    send("training", "done")  # DDA
     if accelerator.is_main_process:
-        pipeline = StableDiffusionPipeline.from_pretrained(
+        pipeline = DiffusionPipeline.from_pretrained(
             args.pretrained_model_name_or_path,
             unet=accelerator.unwrap_model(unet),
             text_encoder=accelerator.unwrap_model(text_encoder),
