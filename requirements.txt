@@ -1,27 +1,49 @@
 sanic==22.6.2
-#diffusers==0.4.1
-#git+https://github.com/huggingface/diffusers@v0.5.1
-#git+https://github.com/HazyResearch/diffusers
-transformers==4.25.1
-scipy==1.9.3
+
+# now manually git cloned in a later step
+# diffusers==0.4.1
+# git+https://github.com/huggingface/diffusers@v0.5.1
+
+# transformers==4.25.1
+transformers==4.26.0
+
+# scipy==1.9.3
+scipy==1.10.0
+
 requests_futures==1.0.0
-# numpy==1.23.4
-numpy==1.23.5
+
+# numpy==1.23.5
+numpy==1.24.1
+
 scikit-image==0.19.3
+
 # accelerate==0.13.2
 accelerate==0.15.0
+
 # triton==2.0.0.dev20221105
 triton==2.0.0.dev20221202
+
 ftfy==6.1.1
-spacy==3.4.3
-boto3==1.26.12
-botocore==1.29.27
+
+# spacy==3.4.3
+spacy==3.5.0
+
 k-diffusion==0.0.12
-safetensors==0.2.5
+
+# safetensors==0.2.5
+safetensors==0.2.8
+
 # must match conda installed version in Dockerfile
 torch==1.12.1
 # xformers 0.0.15.dev344+git.8910bb5 requires pyre-extensions==0.0.23
 pyre-extensions==0.0.23
-pytest==7.2.0
+
+# boto3==1.26.12
+boto3==1.26.57
+# botocore==1.29.27
+botocore==1.29.57
+
+# pytest==7.2.0
+pytest==7.2.1
 pytest-cov==4.0.0
 datasets==2.8.0
