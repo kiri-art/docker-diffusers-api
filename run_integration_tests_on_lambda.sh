@@ -156,7 +156,7 @@ instance_create
 instance_wait $INSTANCE_ID
 
 commands() {
-  instance_run_command $INSTANCE_ID "echo 'export HF_AUTH_TOKEN=\"$HF_AUTH_TOKEN\" >> ~/.bashrc'"
+  instance_run_command $INSTANCE_ID "echo 'export HF_AUTH_TOKEN=\"$HF_AUTH_TOKEN\"' >> ~/.bashrc"
 
   # Whether to build or just for test scripts, lets transfer this checkout.
   instance_rsync $INSTANCE_ID . docker-diffusers-api
