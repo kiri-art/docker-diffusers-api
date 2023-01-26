@@ -37,8 +37,8 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# 2023-01-25 Release: v0.12.0
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 180841bbde4b200be43350164eef80c93a68983a
+# [dreambooth] check the low-precision guard before preparing model (#2102)
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 946d1cb200a875f694818be37c9c9f7547e9db45
 WORKDIR /api
 RUN pip install -e diffusers
 

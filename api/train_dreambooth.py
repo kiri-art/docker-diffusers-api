@@ -1,4 +1,4 @@
-# Based on https://github.com/huggingface/diffusers/blob/180841bbde4b200be43350164eef80c93a68983a/examples/dreambooth/train_dreambooth.py
+# Based on https://github.com/huggingface/diffusers/blob/946d1cb200a875f694818be37c9c9f7547e9db45/examples/dreambooth/train_dreambooth.py
 
 # Reasons for not using that file directly:
 #
@@ -127,7 +127,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         # The integration to report the results and logs to. Supported platforms are `"tensorboard"`
         # (default), `"wandb"` and `"comet_ml"`. Use `"all"` to report to all integrations.
         "report_to": "tensorboard",
-        "mixed_precision": None,  # DDA, was: None  XXX fp16
+        "mixed_precision": "fp16",  # DDA, was: None
         # Choose prior generation precision between fp32, fp16 and bf16 (bfloat16). Bf16 requires PyTorch >=
         # 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32.
         "prior_generation_precision": None,  # "no", "fp32", "fp16", "bf16"
@@ -582,6 +582,26 @@ def main(args, init_pipeline):
         if args.train_text_encoder:
             text_encoder.gradient_checkpointing_enable()
 
+    # Check that all trainable models are in full precision
+    low_precision_error_string = (
+        "Please make sure to always have all model weights in full float32 precision when starting training - even if"
+        " doing mixed precision training. copy of the weights should still be float32."
+    )
+
+    if accelerator.unwrap_model(unet).dtype != torch.float32:
+        raise ValueError(
+            f"Unet loaded as datatype {accelerator.unwrap_model(unet).dtype}. {low_precision_error_string}"
+        )
+
+    if (
+        args.train_text_encoder
+        and accelerator.unwrap_model(text_encoder).dtype != torch.float32
+    ):
+        raise ValueError(
+            f"Text encoder loaded as datatype {accelerator.unwrap_model(text_encoder).dtype}."
+            f" {low_precision_error_string}"
+        )
+
     # Enable TF32 for faster training on Ampere GPUs,
     # cf https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices
     if args.allow_tf32:
@@ -687,24 +707,6 @@ def main(args, init_pipeline):
     vae.to(accelerator.device, dtype=weight_dtype)
     if not args.train_text_encoder:
         text_encoder.to(accelerator.device, dtype=weight_dtype)
-
-    low_precision_error_string = (
-        "Please make sure to always have all model weights in full float32 precision when starting training - even if"
-        " doing mixed precision training. copy of the weights should still be float32."
-    )
-
-    if accelerator.unwrap_model(unet).dtype != torch.float32:
-        raise ValueError(
-            f"Unet loaded as datatype {accelerator.unwrap_model(unet).dtype}. {low_precision_error_string}"
-        )
-    if (
-        args.train_text_encoder
-        and accelerator.unwrap_model(text_encoder).dtype != torch.float32
-    ):
-        raise ValueError(
-            f"Text encoder loaded as datatype {accelerator.unwrap_model(text_encoder).dtype}."
-            f" {low_precision_error_string}"
-        )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
     num_update_steps_per_epoch = math.ceil(
