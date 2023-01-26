@@ -1,3 +1,23 @@
+# [1.3.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.2...v1.3.0) (2023-01-26)
+
+
+### Bug Fixes
+
+* **diffusers:** bump to v0.12.0 ([635d9d9](https://github.com/kiri-art/docker-diffusers-api/commit/635d9d97a010c49ef7875fcb4b43b668848ced0b))
+* **diffusers:** update to latest commit ([87632aa](https://github.com/kiri-art/docker-diffusers-api/commit/87632aa2c32faddfeb049fe969884b568066edd3))
+* **dreambooth:** bump diffusers, fixes fp16 mixed precision training ([0f5d5ff](https://github.com/kiri-art/docker-diffusers-api/commit/0f5d5ff2bf5b73260b9d60521389f0938f205219))
+* **dreambooth:** merge commits to v0.12.0 (NB: mixed-precision issue) ([88f04f8](https://github.com/kiri-art/docker-diffusers-api/commit/88f04f870814aa9baf2a7c09513dcc796070b814))
+* **pipelines:** fix clearPipelines() backport from cloud-cache ([9577f93](https://github.com/kiri-art/docker-diffusers-api/commit/9577f9344f0060edc185e32eadeb57e83551aa7f))
+* **requirements:** bump transformers,accelerate,safetensors & others ([aebcf65](https://github.com/kiri-art/docker-diffusers-api/commit/aebcf6562808a817e6ee29e88f178f22f54c861b))
+* **re:** use raw strings r"" for regexps ([41310c2](https://github.com/kiri-art/docker-diffusers-api/commit/41310c26bbc19069db492781313b162f0fc4d7d9))
+* **tests/lambda:** export HF_AUTH_TOKEN ([9f11e7b](https://github.com/kiri-art/docker-diffusers-api/commit/9f11e7b2f0d2a377a44b22d446274677bd025813))
+* **test:** shallow copy to avoid mutating base test inputs ([8c41167](https://github.com/kiri-art/docker-diffusers-api/commit/8c41167461308b14066be1472fd8957dc6cdd658))
+
+
+### Features
+
+* **downloads:** RUNTIME_DOWNLOAD from HF when no MODEL_URL given ([73784a1](https://github.com/kiri-art/docker-diffusers-api/commit/73784a1844ef2b14c628eb399bec0e52661df35c))
+
 ## [1.2.2](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.1...v1.2.2) (2023-01-09)
 
 
