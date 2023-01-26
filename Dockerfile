@@ -37,8 +37,8 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# 2023-01-23 Dreambooth: reduce VRAM usage (#2039) TODO dreambooth sync
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout a66f2baeb782e091dde4e1e6394e46f169e5ba58
+# 2023-01-25 Release: v0.12.0
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 180841bbde4b200be43350164eef80c93a68983a
 WORKDIR /api
 RUN pip install -e diffusers
 
