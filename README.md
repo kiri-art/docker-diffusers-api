@@ -81,7 +81,7 @@ Everything is set via docker build-args or environment variables.
 
 See also [Testing](#testing) below.
 
-The container expects an `HTTP POST` request with the following JSON body:
+The container expects an `HTTP POST` request to `/`, with a JSON body resembling the following:
 
 ```json
 {
@@ -103,16 +103,50 @@ The container expects an `HTTP POST` request with the following JSON body:
 }
 ```
 
-**Schedulers**: docker-diffusers-api is simply a wrapper around diffusers,
-literally any scheduler included in diffusers will work out of the box,
-provided it can loaded with its default config and without requiring
-any other explicit arguments at init time.  In any event, the following
-schedulers are the most common and most well tested:
-`DPMSolverMultistepScheduler` (fast!  only needs 20 steps!),
-`LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
-`EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.
+It's important to remember that `docker-diffusers-api` is primarily a wrapper
+around HuggingFace's
+[diffusers](https://huggingface.co/docs/diffusers/index) library.
+**Basic familiarity with `diffusers` is indespensible for a good experience
+with `docker-diffusers-api`.**  Explaining some of the options above:
 
-**Pipelines**:
+* **modelInputs** - for the most part - are passed directly to the selected
+diffusers pipeline unchanged.  So, for the default `StableDiffusionPipeline`,
+you can see all options in the relevant pipeline docs for its
+[`__call__`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline.__call__) method.  The main exceptions are:
+
+    * Only valid JSON values can be given (strings, numbers, etc)
+    * **seed**, a number, is transformed into a `generator`.
+    * **images** are converted to / from base64 encoded strings.
+
+* **callInputs** affect which model, pipeline, scheduler and other lower
+level options are used to construct the final pipeline.  Notably:
+
+    * **`SCHEDULER`**: any scheduler included in diffusers should work out
+    the box, provided it can loaded with its default config and without
+    requiring any other explicit arguments at init time.  In any event,
+    the following schedulers are the most common and most well tested:
+    `DPMSolverMultistepScheduler` (fast!  only needs 20 steps!),
+    `LMSDiscreteScheduler`, `DDIMScheduler`, `PNDMScheduler`,
+    `EulerAncestralDiscreteScheduler`, `EulerDiscreteScheduler`.
+
+    * **`PIPELINE`**: the most common are
+    [`StableDiffusionPipeline`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img),
+    [`StableDiffusionImg2ImgPipeline`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/img2img),
+    [`StableDiffusionInpaintPipeline`](https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint), and the community
+    [`lpw_stable_diffusion`](https://forums.kiri.art/t/lpw-stable-diffusion-pipeline-longer-prompts-prompt-weights/82)
+    which allows for long prompts (more than 77 tokens) and prompt weights
+    (things like `((big eyes))`, `(red hair:1.2)`, etc), and accepts a
+    `custom_pipeline_method` callInput with values `text2img` ("text", not "txt"),
+    `img2img` and `inpaint`.  See these links for all the possible `modelInputs`'s
+    that can be passed to the pipeline's `__call__` method.
+
+    * **`MODEL_URL`** (optional) can be used to retrieve the model from
+    locations other than HuggingFace, e.g. an `HTTP` server, S3-compatible
+    storage, etc.  For more info, see the
+    [storage docs](https://github.com/kiri-art/docker-diffusers-api/blob/dev/docs/storage.md)
+    and
+    [this post](https://forums.kiri.art/t/safetensors-our-own-optimization-faster-model-init/98)
+    for info on how to use and store optimized models from your own cloud.
 
 <a name="testing"></a>
 ## Examples and testing
