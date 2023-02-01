@@ -202,14 +202,15 @@ You have two options.
   specified in `MODEL_ID`, and that you correctly passed `HF_AUTH_TOKEN` to the
   container.
 
-## Event logs / performance data
+## Event logs / web hooks / performance data
 
-Set `CALL_URL` and `SIGN_KEY` environment variables to send timing data on `init`
-and `inference` start and end data.  You'll need to check the source code of here
-and sd-mui as the format is in flux.
+Set `SEND_URL` and `SIGN_KEY` environment variables to send event and timing
+data on `init`, `inference` and other start and end events.  This can either
+be used to log performance data, or for webhooks on event start / finish.
 
-This info is now logged regardless, and `init()` and `inference()` times are sent
-back via `{ $timings: { init: timeInMs, inference: timeInMs } }`.
+The timing data is now returned in the response payload too, like this:
+`{ $timings: { init: timeInMs, inference: timeInMs } }`, with any other
+events (such a `training`, `upload`, etc).
 
 ## Acknowledgements
 
