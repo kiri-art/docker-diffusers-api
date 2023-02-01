@@ -213,5 +213,17 @@ back via `{ $timings: { init: timeInMs, inference: timeInMs } }`.
 
 ## Acknowledgements
 
-Originally based on https://github.com/bananaml/serverless-template-stable-diffusion.
+* The container image is originally based on
+  https://github.com/bananaml/serverless-template-stable-diffusion.
 
+* [CompVis](https://github.com/CompVis),
+  [Stability AI](https://stability.ai/),
+  [LAION](https://laion.ai/)
+  and [RunwayML](https://runwayml.com/)
+  for their incredible time, work and efforts in creating Stable Diffusion,
+  and no less so, their decision to release it publicly with an open source
+  license.
+
+* [HuggingFace](https://huggingface.co/) - for their passion and inspiration
+  for making machine learning more accessibe to developers, and in particular,
+  their [Diffusers](https://github.com/huggingface/diffusers) library.
