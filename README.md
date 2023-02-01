@@ -11,12 +11,10 @@ Please give credit and link back to this repo if you use it in a public project.
 
 * Models: stable-diffusion, waifu-diffusion, and easy to add others (e.g. jp-sd)
 * Pipelines: txt2img, img2img and inpainting in a single container
-
-  (
-  [all diffusers official and community pipelines](https://forums.kiri.art/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
+  ([all diffusers official and community pipelines](https://forums.kiri.art/t/all-your-pipelines-are-belong-to-us/83) are wrapped, but untested)
 * All model inputs supported, including setting nsfw filter per request
 * *Permute* base config to multiple forks based on yaml config with vars
-* Optionally send signed event logs / performance data to a REST endpoint
+* Optionally send signed event logs / performance data to a REST endpoint / webhook.
 * Can automatically download a checkpoint file and convert to diffusers.
 * S3 support, dreambooth training.
 
@@ -212,6 +210,10 @@ start / finish.
 The timing data is now returned in the response payload too, like this:
 `{ $timings: { init: timeInMs, inference: timeInMs } }`, with any other
 events (such a `training`, `upload`, etc).
+
+You can go to https://webhook.site/ and use the provided "unique URL"
+as your `SEND_URL` to see how it works, if you don't have your own
+REST endpoint (yet).
 
 If `SIGN_KEY` is used, you can verify the signature like this (TypeScript):
 
