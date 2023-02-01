@@ -204,13 +204,34 @@ You have two options.
 
 ## Event logs / web hooks / performance data
 
-Set `SEND_URL` and `SIGN_KEY` environment variables to send event and timing
-data on `init`, `inference` and other start and end events.  This can either
-be used to log performance data, or for webhooks on event start / finish.
+Set `SEND_URL` (and optionally `SIGN_KEY`) environment variable(s) to send
+event and timing data on `init`, `inference` and other start and end events.
+This can either be used to log performance data, or for webhooks on event
+start / finish.
 
 The timing data is now returned in the response payload too, like this:
 `{ $timings: { init: timeInMs, inference: timeInMs } }`, with any other
 events (such a `training`, `upload`, etc).
+
+If `SIGN_KEY` is used, you can verify the signature like this (TypeScript):
+
+```ts
+import crypto from "crypto";
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const data = req.body;
+
+  const containerSig = data.sig as string;
+  delete data.sig;
+
+  const ourSig = crypto
+    .createHash("md5")
+    .update(JSON.stringify(data) + process.env.SIGN_KEY)
+    .digest("hex");
+
+  const signatureIsValid = containerSig === ourSig;
+}
+```
 
 ## Acknowledgements
 
