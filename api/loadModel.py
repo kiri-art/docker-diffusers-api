@@ -3,6 +3,7 @@ import os
 from diffusers import pipelines as _pipelines, StableDiffusionPipeline
 from getScheduler import getScheduler, DEFAULT_SCHEDULER
 from precision import torch_dtype_from_precision
+from device import device
 import time
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
@@ -70,7 +71,7 @@ def loadModel(model_id: str, load=True, precision=None, revision=None):
 
     if load:
         to_gpu = time.time()
-        model.to("cuda")
+        model.to(device)
         to_gpu = round((time.time() - to_gpu) * 1000)
         print(f"Loaded from disk in {from_pretrained} ms, to gpu in {to_gpu} ms")
     else:

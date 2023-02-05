@@ -20,6 +20,7 @@ import requests
 from download import download_model, normalize_model_id
 import traceback
 from precision import MODEL_REVISION, MODEL_PRECISION
+from device import device, device_id, device_name
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -58,7 +59,7 @@ def init():
         "init",
         "start",
         {
-            "device": torch.cuda.get_device_name(),
+            "device": device_name,
             "hostname": os.getenv("HOSTNAME"),
             "model_id": MODEL_ID,
             "diffusers": __version__,
@@ -329,7 +330,7 @@ def inference(all_inputs: dict) -> dict:
         last_xformers_memory_efficient_attention.update({pipeline: x_m_e_a})
 
     # Run the model
-    # with autocast("cuda"):
+    # with autocast(device_id):
     # image = pipeline(**model_inputs).images[0]
 
     if call_inputs.get("train", None) == "dreambooth":
@@ -357,10 +358,10 @@ def inference(all_inputs: dict) -> dict:
     # Do this after dreambooth as dreambooth accepts a seed int directly.
     seed = model_inputs.get("seed", None)
     if seed == None:
-        generator = torch.Generator(device="cuda")
+        generator = torch.Generator(device=device)
         generator.seed()
     else:
-        generator = torch.Generator(device="cuda").manual_seed(seed)
+        generator = torch.Generator(device=device).manual_seed(seed)
         del model_inputs["seed"]
 
     model_inputs.update({"generator": generator})
@@ -375,7 +376,7 @@ def inference(all_inputs: dict) -> dict:
             # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
             # still broken in 0.5.1
             elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
-                with autocast("cuda"):
+                with autocast(device_id):
                     images = pipeline(**model_inputs).images
             else:
                 images = pipeline(**model_inputs).images
@@ -403,6 +404,7 @@ def inference(all_inputs: dict) -> dict:
     else:
         result = result | {"image_base64": images_base64[0]}
 
+    # TODO, move and generalize in device.py
     mem_usage = 0
     if torch.cuda.is_available():
         mem_usage = torch.cuda.memory_allocated() / torch.cuda.max_memory_allocated()

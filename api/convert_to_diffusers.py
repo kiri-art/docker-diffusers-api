@@ -3,6 +3,7 @@ import requests
 import subprocess
 import torch
 from utils import Storage
+from device import device_id
 
 MODEL_ID = os.environ.get("MODEL_ID", None)
 CHECKPOINT_DIR = "/root/.cache/checkpoints"
@@ -36,17 +37,13 @@ def main(model_id: str, checkpoint_url: str, checkpoint_config_url: str):
         "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py"
     )
 
-    gpu = False
-    if torch.cuda.is_available():
-        gpu = True
-
     print("Converting " + fname + " to diffusers model " + model_id + "...", flush=True)
 
     subprocess.run(
         ["pip", "install", "omegaconf", "pytorch_lightning", "tensorboard"], check=True
     )
     subprocess.run(["apt-get", "install", "-y", "wget"], check=True)
-    if not gpu:
+    if device_id == "cpu":
         subprocess.run(
             [
                 "sed",

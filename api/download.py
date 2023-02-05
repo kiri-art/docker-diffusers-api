@@ -101,7 +101,7 @@ def download_model(
                         "model_revision": model_revision,
                     }
                 )
-                # This would be quicker to just model.to("cuda") afterwards, but
+                # This would be quicker to just model.to(device) afterwards, but
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
                 send("download", "start", {})
