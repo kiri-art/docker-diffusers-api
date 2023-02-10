@@ -121,6 +121,7 @@ def truncateInputs(inputs: dict):
 
 last_xformers_memory_efficient_attention = {}
 
+
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
 def inference(all_inputs: dict) -> dict:
@@ -366,6 +367,16 @@ def inference(all_inputs: dict) -> dict:
 
     model_inputs.update({"generator": generator})
 
+    callback = None
+    if model_inputs.get("callback_steps", None):
+
+        def callback(step: int, timestep: int, latents: torch.FloatTensor):
+            send(
+                "inference",
+                "progress",
+                {"startRequestId": startRequestId, "step": step},
+            )
+
     with torch.inference_mode():
         try:
             custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
@@ -377,9 +388,9 @@ def inference(all_inputs: dict) -> dict:
             # still broken in 0.5.1
             elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
                 with autocast(device_id):
-                    images = pipeline(**model_inputs).images
+                    images = pipeline(callback=callback, **model_inputs).images
             else:
-                images = pipeline(**model_inputs).images
+                images = pipeline(callback=callback, **model_inputs).images
         except Exception as err:
             return {
                 "$error": {
