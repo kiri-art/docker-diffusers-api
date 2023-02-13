@@ -25,7 +25,7 @@ MODEL_IDS = [
 ]
 
 
-def loadModel(model_id: str, load=True, precision=None, revision=None):
+def loadModel(model_id: str, load=True, precision=None, revision=None, send_opts={}):
     torch_dtype = torch_dtype_from_precision(precision)
     if revision == "":
         revision = None

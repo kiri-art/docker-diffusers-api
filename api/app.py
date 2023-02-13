@@ -140,6 +140,12 @@ def inference(all_inputs: dict) -> dict:
     call_inputs = all_inputs.get("callInputs", None)
     result = {"$meta": {}}
 
+    send_opts = {}
+    if call_inputs.get("SEND_URL", None):
+        send_opts.update({"SEND_URL": call_inputs.get("SEND_URL")})
+    if call_inputs.get("SIGN_KEY", None):
+        send_opts.update({"SIGN_KEY": call_inputs.get("SIGN_KEY")})
+
     if model_inputs == None or call_inputs == None:
         return {
             "$error": {
@@ -185,13 +191,17 @@ def inference(all_inputs: dict) -> dict:
                     checkpoint_config_url=checkpoint_config_url,
                     hf_model_id=hf_model_id,
                     model_precision=model_precision,
+                    send_opts=send_opts,
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
             if model:
                 model.to("cpu")  # Necessary to avoid a memory leak
             model = loadModel(
-                model_id=normalized_model_id, load=True, precision=model_precision
+                model_id=normalized_model_id,
+                load=True,
+                precision=model_precision,
+                send_opts=send_opts,
             )
             last_model_id = normalized_model_id
     else:
@@ -207,7 +217,7 @@ def inference(all_inputs: dict) -> dict:
     if MODEL_ID == "ALL":
         if last_model_id != normalized_model_id:
             clearPipelines()
-            model = loadModel(normalized_model_id)
+            model = loadModel(normalized_model_id, send_opts=send_opts)
             last_model_id = normalized_model_id
     else:
         if model_id != MODEL_ID and not RUNTIME_DOWNLOADS:
@@ -295,7 +305,7 @@ def inference(all_inputs: dict) -> dict:
             )
         )
 
-    send("inference", "start", {"startRequestId": startRequestId})
+    send("inference", "start", {"startRequestId": startRequestId}, send_opts)
 
     # Run patchmatch for inpainting
     if call_inputs.get("FILL_MODE", None) == "patchmatch":
@@ -349,10 +359,14 @@ def inference(all_inputs: dict) -> dict:
 
         torch.set_grad_enabled(True)
         result = result | TrainDreamBooth(
-            normalized_model_id, pipeline, model_inputs, call_inputs
+            normalized_model_id,
+            pipeline,
+            model_inputs,
+            call_inputs,
+            send_opts=send_opts,
         )
         torch.set_grad_enabled(False)
-        send("inference", "done", {"startRequestId": startRequestId})
+        send("inference", "done", {"startRequestId": startRequestId}, send_opts)
         result.update({"$timings": getTimings()})
         return result
 
@@ -375,6 +389,7 @@ def inference(all_inputs: dict) -> dict:
                 "inference",
                 "progress",
                 {"startRequestId": startRequestId, "step": step},
+                send_opts,
             )
 
     with torch.inference_mode():
@@ -407,7 +422,7 @@ def inference(all_inputs: dict) -> dict:
         image.save(buffered, format="PNG")
         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
-    send("inference", "done", {"startRequestId": startRequestId})
+    send("inference", "done", {"startRequestId": startRequestId}, send_opts)
 
     # Return the results as a dictionary
     if len(images_base64) > 1:

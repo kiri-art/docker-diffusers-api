@@ -21,11 +21,11 @@ MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
 Path(MODELS_DIR).mkdir(parents=True, exist_ok=True)
 
 # i.e. don't run during build
-def send(type: str, status: str, payload: dict = {}):
+def send(type: str, status: str, payload: dict = {}, send_opts: dict = {}):
     if RUNTIME_DOWNLOADS:
         from send import send as _send
 
-        _send(type, status, payload)
+        _send(type, status, payload, send_opts)
 
 
 def normalize_model_id(model_id: str, model_revision):
@@ -43,6 +43,7 @@ def download_model(
     checkpoint_config_url=None,
     hf_model_id=None,
     model_precision=None,
+    send_opts={},
 ):
     print(
         "download_model",
@@ -104,14 +105,14 @@ def download_model(
                 # This would be quicker to just model.to(device) afterwards, but
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
-                send("download", "start", {})
+                send("download", "start", {}, send_opts)
                 model = loadModel(
                     hf_model_id,
                     False,
                     precision=model_precision,
                     revision=model_revision,
                 )  # download
-                send("download", "done", {})
+                send("download", "done", {}, send_opts)
 
             print("load")
             model = loadModel(
@@ -122,19 +123,19 @@ def download_model(
             model.save_pretrained(dir, safe_serialization=True)
 
             # This is all duped from train_dreambooth, need to refactor TODO XXX
-            send("compress", "start", {})
+            send("compress", "start", {}, send_opts)
             subprocess.run(
                 f"tar cvf - -C {dir} . | zstd -o {model_file}",
                 shell=True,
                 check=True,  # TODO, rather don't raise and return an error in JSON
             )
 
-            send("compress", "done")
+            send("compress", "done", {}, send_opts)
             subprocess.run(["ls", "-l", model_file])
 
-            send("upload", "start", {})
+            send("upload", "start", {}, send_opts)
             upload_result = storage.upload_file(model_file, filename)
-            send("upload", "done")
+            send("upload", "done", {}, send_opts)
             print(upload_result)
             os.remove(model_file)
 

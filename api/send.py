@@ -19,13 +19,13 @@ def get_now():
     return round(time.time() * 1000)
 
 
-send_url = os.getenv("SEND_URL")
-if send_url == "":
-    send_url = None
+SEND_URL = os.getenv("SEND_URL")
+if SEND_URL == "":
+    SEND_URL = None
 
-sign_key = os.getenv("SIGN_KEY")
-if sign_key == "":
-    sign_key = None
+SIGN_KEY = os.getenv("SIGN_KEY", "")
+if SIGN_KEY == "":
+    SIGN_KEY = None
 
 futureSession = FuturesSession()
 
@@ -70,8 +70,10 @@ def getTimings():
     return timings
 
 
-def send(type: str, status: str, payload: dict = {}):
+def send(type: str, status: str, payload: dict = {}, opts: dict = {}):
     now = get_now()
+    send_url = opts.get("SEND_URL", SEND_URL)
+    sign_key = opts.get("SIGN_KEY", SIGN_KEY)
 
     if status == "start":
         session.update({type: {"start": now, "last_time": now}})
@@ -90,7 +92,7 @@ def send(type: str, status: str, payload: dict = {}):
         "payload": payload,
     }
 
-    if send_url:
+    if send_url and sign_key:
         input = json.dumps(data, separators=(",", ":")) + sign_key
         sig = hashlib.md5(input.encode("utf-8")).hexdigest()
         data["sig"] = sig

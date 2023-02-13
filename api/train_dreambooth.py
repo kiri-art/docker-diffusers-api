@@ -69,7 +69,7 @@ import shutil
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
 
 
-def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
+def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs, send_opts):
     # required inputs: instance_images instance_prompt
 
     params = {
@@ -166,7 +166,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
 
     subprocess.run(["ls", "-l", args.instance_data_dir])
 
-    result = result | main(args, pipeline)
+    result = result | main(args, pipeline, send_opts=send_opts)
 
     dest_url = call_inputs.get("dest_url")
     if dest_url:
@@ -179,7 +179,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
         print(filename)
 
         # fp16 model timings: zip 1m20s, tar+zstd 4s and a tiny bit smaller!
-        send("compress", "start", {})
+        send("compress", "start", {}, send_opts)
 
         # TODO, steaming upload (turns out docker disk write is super slow)
         subprocess.run(
@@ -188,12 +188,12 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs):
             check=True,  # TODO, rather don't raise and return an error in JSON
         )
 
-        send("compress", "done")
+        send("compress", "done", {}, send_opts)
         subprocess.run(["ls", "-l", filename])
 
-        send("upload", "start", {})
+        send("upload", "start", {}, send_opts)
         upload_result = storage.upload_file(filename, filename)
-        send("upload", "done")
+        send("upload", "done", {}, send_opts)
         print(upload_result)
         os.remove(filename)
 
@@ -379,7 +379,7 @@ def get_full_repo_name(
         return f"{organization}/{model_id}"
 
 
-def main(args, init_pipeline):
+def main(args, init_pipeline, send_opts):
     logging_dir = Path(args.output_dir, args.logging_dir)
 
     accelerator = Accelerator(
@@ -777,7 +777,7 @@ def main(args, init_pipeline):
     progress_bar.set_description("Steps")
 
     # DDA
-    send("training", "start", {})
+    send("training", "start", {}, send_opts)
 
     for epoch in range(first_epoch, args.num_train_epochs):
         unet.train()
@@ -892,7 +892,7 @@ def main(args, init_pipeline):
 
     # Create the pipeline using using the trained modules and save it.
     accelerator.wait_for_everyone()
-    send("training", "done")  # DDA
+    send("training", "done", {}, send_opts)  # DDA
     if accelerator.is_main_process:
         pipeline = DiffusionPipeline.from_pretrained(
             args.pretrained_model_name_or_path,
@@ -905,7 +905,7 @@ def main(args, init_pipeline):
 
         if args.push_to_hub:
             # DDA
-            send("upload", "start", {})
+            send("upload", "start", {}, send_opts)
 
             repo.push_to_hub(
                 commit_message="End of training",
@@ -917,7 +917,7 @@ def main(args, init_pipeline):
             )
 
             # DDA
-            send("upload", "done")
+            send("upload", "done", {}, send_opts)
 
     accelerator.end_training()
 
