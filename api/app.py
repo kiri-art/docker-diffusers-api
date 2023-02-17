@@ -21,6 +21,7 @@ from download import download_model, normalize_model_id
 import traceback
 from precision import MODEL_REVISION, MODEL_PRECISION
 from device import device, device_id, device_name
+from diffusers.models.cross_attention import CrossAttnProcessor, LoRACrossAttnProcessor
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -120,7 +121,7 @@ def truncateInputs(inputs: dict):
 
 
 last_xformers_memory_efficient_attention = {}
-
+last_attn_procs = None
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
@@ -132,6 +133,7 @@ def inference(all_inputs: dict) -> dict:
     global dummy_safety_checker
     global last_xformers_memory_efficient_attention
     global always_normalize_model_id
+    global last_attn_procs
 
     clearSession()
 
@@ -271,6 +273,21 @@ def inference(all_inputs: dict) -> dict:
     )
     is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
+
+    attn_procs = call_inputs.get("attn_procs", None)
+    if attn_procs is not last_attn_procs:
+        last_attn_procs = attn_procs
+        if attn_procs:
+            print("Load attn_procs " + attn_procs)
+            pipeline.unet.load_attn_procs(attn_procs)
+        else:
+            print("Clearing attn procs")
+            pipeline.unet.set_attn_processor(CrossAttnProcessor())
+
+    # TODO, generalize
+    cross_attention_kwargs = model_inputs.get("cross_attention_kwargs", None)
+    if cross_attention_kwargs:
+        model_inputs["cross_attention_kwargs"] = json.loads(cross_attention_kwargs)
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
