@@ -37,8 +37,9 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# [dreambooth] check the low-precision guard before preparing model (#2102)
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 946d1cb200a875f694818be37c9c9f7547e9db45
+# [b6b73d9] Fixing typos in documentation (#2389)
+# Also includes misc LoRA fixes / improvements; xformers, enable/disable, etc.
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout b6b73d97b4365395d1ab7d0f7480d9681c72279f
 WORKDIR /api
 RUN pip install -e diffusers
 
