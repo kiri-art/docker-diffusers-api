@@ -68,52 +68,61 @@ class TestDreamBoothS3:
         assert result["image_base64"]
 
 
-class TestDreamBoothHF:
-    def test_training_hf(self):
-        dda = getDDA(
-            stream_logs=True,
-        )
-        print(dda)
+if os.getenv("TEST_DREAMBOOTH_HF", None):
 
-        result = runTest(
-            "dreambooth",
-            {"test_url": dda.url},
-            {
-                "MODEL_ID": "stabilityai/stable-diffusion-2-1-base",
-                "MODEL_REVISION": "",
-                "MODEL_PRECISION": "",
-                "MODEL_URL": "s3://",
-                "train": "dreambooth",
-            },
-            {
-                "hub_model_id": f"{HF_USERNAME}/dreambooth_test",
-                "push_to_hub": True,
-                "max_train_steps": 1,
-            },
-        )
+    class TestDreamBoothHF:
+        def test_training_hf(self):
+            dda = getDDA(
+                stream_logs=True,
+            )
+            print(dda)
 
-        dda.stop()
-        timings = result["$timings"]
-        assert timings["training"] > 0
-        assert timings["upload"] > 0
+            result = runTest(
+                "dreambooth",
+                {"test_url": dda.url},
+                {
+                    "MODEL_ID": "stabilityai/stable-diffusion-2-1-base",
+                    "MODEL_REVISION": "",
+                    "MODEL_PRECISION": "",
+                    "MODEL_URL": "s3://",
+                    "train": "dreambooth",
+                },
+                {
+                    "hub_model_id": f"{HF_USERNAME}/dreambooth_test",
+                    "push_to_hub": True,
+                    "max_train_steps": 1,
+                },
+            )
 
-    # dependent on above, TODO, mark as such.
-    def test_hf_download_and_inference(self):
-        dda = getDDA(
-            stream_logs=True,
-            root_cache=False,
-        )
-        print(dda)
+            dda.stop()
+            timings = result["$timings"]
+            assert timings["training"] > 0
+            assert timings["upload"] > 0
 
-        result = runTest(
-            "txt2img",
-            {"test_url": dda.url},
-            {
-                "MODEL_ID": f"{HF_USERNAME}/dreambooth_test",
-                "MODEL_PRECISION": "fp16",
-            },
-            {"num_inference_steps": 1},
-        )
+        # dependent on above, TODO, mark as such.
+        def test_hf_download_and_inference(self):
+            dda = getDDA(
+                stream_logs=True,
+                root_cache=False,
+            )
+            print(dda)
 
-        dda.stop()
-        assert result["image_base64"]
+            result = runTest(
+                "txt2img",
+                {"test_url": dda.url},
+                {
+                    "MODEL_ID": f"{HF_USERNAME}/dreambooth_test",
+                    "MODEL_PRECISION": "fp16",
+                },
+                {"num_inference_steps": 1},
+            )
+
+            dda.stop()
+            assert result["image_base64"]
+
+else:
+
+    print(
+        "Skipping dreambooth HuggingFace upload/download tests by default\n"
+        "as they can be flaky.  To run, set env var TEST_DREAMBOOTH_HF=1"
+    )
