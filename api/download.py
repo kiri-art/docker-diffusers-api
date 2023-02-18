@@ -52,6 +52,8 @@ def download_model(
             "model_id": model_id,
             "model_revision": model_revision,
             "hf_model_id": hf_model_id,
+            "checkpoint_url": checkpoint_url,
+            "checkpoint_config_url": checkpoint_config_url,
         },
     )
     hf_model_id = hf_model_id or model_id
@@ -145,13 +147,21 @@ def download_model(
             # TODO, swap directories, inside HF's cache structure.
 
     else:
-        # do a dry run of loading the huggingface model, which will download weights at build time
-        loadModel(
-            model_id=hf_model_id,
-            load=False,
-            precision=model_precision,
-            revision=model_revision,
-        )
+        if checkpoint_url:
+            download_checkpoint(checkpoint_url)
+            convert_to_diffusers(
+                model_id=model_id,
+                checkpoint_url=checkpoint_url,
+                checkpoint_config_url=checkpoint_config_url,
+            )
+        else:
+            # do a dry run of loading the huggingface model, which will download weights at build time
+            loadModel(
+                model_id=hf_model_id,
+                load=False,
+                precision=model_precision,
+                revision=model_revision,
+            )
 
     # if USE_DREAMBOOTH:
     # Actually we can re-use these from the above loaded model
@@ -179,4 +189,6 @@ if __name__ == "__main__":
         hf_model_id=os.environ.get("HF_MODEL_ID"),
         model_revision=os.environ.get("MODEL_REVISION"),
         model_precision=os.environ.get("MODEL_PRECISION"),
+        checkpoint_url=os.environ.get("CHECKPOINT_URL"),
+        checkpoint_config_url=os.environ.get("CHECKPOINT_CONFIG_URL"),
     )

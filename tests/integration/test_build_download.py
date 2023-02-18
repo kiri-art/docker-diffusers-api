@@ -90,3 +90,45 @@ def test_huggingface_build_download():
 
     assert result["image_base64"]
     print("test successs\n\n")
+
+
+def test_checkpoint_url_build_download():
+    """
+    Download and convert a .ckpt at build time.  No cloud-cache.
+    """
+    environment = {
+        "RUNTIME_DOWNLOADS": 0,
+        "MODEL_ID": "hakurei/waifu-diffusion-v1-3",
+        "MODEL_PRECISION": "fp16",
+        "MODEL_REVISION": "fp16",
+        "CHECKPOINT_URL": "https://huggingface.co/hakurei/waifu-diffusion-v1-3/resolve/main/wd-v1-3-float16.ckpt",
+    }
+    conda = "conda run --no-capture-output -n xformers"
+    dda = getDDA(
+        stream_logs=True,
+        environment=environment,
+        root_cache=False,
+        command=[
+            "sh",
+            "-c",
+            f"{conda} python3 -u download.py && ls -l && {conda} python3 -u server.py",
+        ],
+    )
+    print(dda)
+    assert dda.container.status == "running"
+
+    ## bucket.objects.all().delete()
+    result = runTest(
+        "txt2img",
+        {"test_url": dda.url},
+        {
+            "MODEL_ID": "hakurei/waifu-diffusion-v1-3",
+            "MODEL_PRECISION": "fp16",
+            "MODEL_URL": "",  # <-- no model_url, i.e. no cloud cache
+        },
+        {"num_inference_steps": 1},
+    )
+    dda.stop()
+
+    assert result["image_base64"]
+    print("test successs\n\n")
