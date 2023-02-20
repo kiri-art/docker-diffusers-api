@@ -10,6 +10,10 @@ def get_now():
 
 
 class HTTPStorage:
+    @staticmethod
+    def test(url):
+        return re.search(r"^https?://", url)
+
     def __init__(self, url, **kwargs):
         self.url = url
 

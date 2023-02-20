@@ -20,6 +20,9 @@ def get_now():
 
 
 class S3Storage:
+    def test(url):
+        return re.search(r"^(https?\+)?s3://", url)
+
     def __init__(self, url, **kwargs):
         self.url = url
 
