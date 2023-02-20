@@ -21,7 +21,10 @@ from download import download_model, normalize_model_id
 import traceback
 from precision import MODEL_REVISION, MODEL_PRECISION
 from device import device, device_id, device_name
-from diffusers.models.cross_attention import CrossAttnProcessor, LoRACrossAttnProcessor
+from diffusers.models.cross_attention import CrossAttnProcessor
+from utils import Storage
+from hashlib import sha256
+
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
 USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
@@ -278,6 +281,18 @@ def inference(all_inputs: dict) -> dict:
     if attn_procs is not last_attn_procs:
         last_attn_procs = attn_procs
         if attn_procs:
+            storage = Storage(attn_procs, no_raise=True)
+            if storage:
+                fname = storage.url.split("/").pop()
+                hash = sha256(attn_procs.encode("utf-8")).hexdigest()
+                if True:
+                    # TODO, way to specify explicit name
+                    path = os.path.join(
+                        MODELS_DIR, "attn_proc--url_" + hash[:7] + "--" + fname
+                    )
+                attn_procs = path
+                if not os.path.exists(path):
+                    storage.download_and_extract(path)
             print("Load attn_procs " + attn_procs)
             pipeline.unet.load_attn_procs(attn_procs)
         else:
@@ -286,7 +301,7 @@ def inference(all_inputs: dict) -> dict:
 
     # TODO, generalize
     cross_attention_kwargs = model_inputs.get("cross_attention_kwargs", None)
-    if cross_attention_kwargs:
+    if isinstance(cross_attention_kwargs, str):
         model_inputs["cross_attention_kwargs"] = json.loads(cross_attention_kwargs)
 
     # Parse out your arguments
