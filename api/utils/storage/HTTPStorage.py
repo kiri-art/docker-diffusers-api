@@ -3,13 +3,14 @@ import os
 import time
 import requests
 from tqdm import tqdm
+from .BaseStorage import BaseStorage
 
 
 def get_now():
     return round(time.time() * 1000)
 
 
-class HTTPStorage:
+class HTTPStorage(BaseStorage):
     @staticmethod
     def test(url):
         return re.search(r"^https?://", url)

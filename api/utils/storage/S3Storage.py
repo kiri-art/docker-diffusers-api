@@ -5,7 +5,7 @@ import os
 import time
 from tqdm import tqdm
 from botocore.client import Config
-
+from .BaseStorage import BaseStorage
 
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", None)
 AWS_S3_DEFAULT_BUCKET = os.environ.get("AWS_S3_DEFAULT_BUCKET", None)
@@ -19,7 +19,7 @@ def get_now():
     return round(time.time() * 1000)
 
 
-class S3Storage:
+class S3Storage(BaseStorage):
     def test(url):
         return re.search(r"^(https?\+)?s3://", url)
 
