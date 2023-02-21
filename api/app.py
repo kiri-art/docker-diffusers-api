@@ -206,6 +206,7 @@ def inference(all_inputs: dict) -> dict:
                 model_id=normalized_model_id,
                 load=True,
                 precision=model_precision,
+                revision=model_revision,
                 send_opts=send_opts,
             )
             last_model_id = normalized_model_id
