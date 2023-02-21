@@ -37,9 +37,9 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# [b6b73d9] Fixing typos in documentation (#2389)
+# [39a3c77] fix: code snippet of instruct pix2pix from the docs. (#2446)
 # Also includes misc LoRA fixes / improvements; xformers, enable/disable, etc.
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout b6b73d97b4365395d1ab7d0f7480d9681c72279f
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 39a3c77e0d4a22de189b02398cf2d003d299b4ae
 WORKDIR /api
 RUN pip install -e diffusers
 
