@@ -37,9 +37,9 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# [39a3c77] fix: code snippet of instruct pix2pix from the docs. (#2446)
-# Also includes misc LoRA fixes / improvements; xformers, enable/disable, etc.
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 39a3c77e0d4a22de189b02398cf2d003d299b4ae
+# [5e5ce13] adds xformers support to train_unconditional.py (#2520)
+# Also includes LoRA safetensors support.
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 5e5ce13e2f89ac45a0066cb3f369462a3cf1d9ef
 WORKDIR /api
 RUN pip install -e diffusers
 
