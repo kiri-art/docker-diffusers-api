@@ -126,6 +126,7 @@ def truncateInputs(inputs: dict):
 last_xformers_memory_efficient_attention = {}
 last_attn_procs = None
 
+
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
 def inference(all_inputs: dict) -> dict:
@@ -295,6 +296,9 @@ def inference(all_inputs: dict) -> dict:
                 if not os.path.exists(path):
                     storage.download_and_extract(path)
             print("Load attn_procs " + attn_procs)
+            # Workaround https://github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119
+            if not re.match(r".safetensors", attn_procs):
+                attn_procs = torch.load(attn_procs, map_location="cpu")
             pipeline.unet.load_attn_procs(attn_procs)
         else:
             print("Clearing attn procs")
