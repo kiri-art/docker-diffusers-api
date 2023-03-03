@@ -1,3 +1,22 @@
+# [1.4.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.3.0...v1.4.0) (2023-02-28)
+
+
+### Bug Fixes
+
+* **checkpoints:** new conversion pipeline + convert w/o MODEL_URL ([cd7f54d](https://github.com/kiri-art/docker-diffusers-api/commit/cd7f54db370462f6c3e7ecb37df791388a9ccd34))
+* **diffusers:** bump to latest commit (includes v0.13.1) ([400e3d7](https://github.com/kiri-art/docker-diffusers-api/commit/400e3d7b0897e966ba3c1cc04194aedde8746edf))
+* **diffusers:** bump to recent commit, includes misc LoRA fixes ([7249c30](https://github.com/kiri-art/docker-diffusers-api/commit/7249c307a9c2892a061398e75cd70965329c3ac6))
+* **loadModel:** pass revision arg too ([cd5f995](https://github.com/kiri-art/docker-diffusers-api/commit/cd5f995dad9123aa4ea066ad4b9d369ef01df06b))
+
+
+### Features
+
+* **attn_procs:** initial URL work (see notes) ([6348836](https://github.com/kiri-art/docker-diffusers-api/commit/6348836622da4a17fa0e423ca9b92ebb489b4793))
+* **callback:** if modelInput.callback_steps, send() current step ([2279de1](https://github.com/kiri-art/docker-diffusers-api/commit/2279de103d70614fbdee620024941dd1db81c436))
+* **gpu:** auto-detect GPU (CUDA/MPS/cpu), remove hard-coded ([#20](https://github.com/kiri-art/docker-diffusers-api/issues/20)) ([682a342](https://github.com/kiri-art/docker-diffusers-api/commit/682a34221f5b586fd0d8e9c0789201cb238cf225))
+* **lora:** callInput `attn_procs` to load LoRA's for inference ([cb54291](https://github.com/kiri-art/docker-diffusers-api/commit/cb542910fd234af0a02a862934bf5c090384500d))
+* **send:** set / override SEND_URL, SIGN_KEY via callInputs ([74b4c53](https://github.com/kiri-art/docker-diffusers-api/commit/74b4c53bd49691df087364959123cfd48e04ac59))
+
 # [1.3.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.2.2...v1.3.0) (2023-01-26)
 
 
