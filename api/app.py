@@ -297,7 +297,7 @@ def inference(all_inputs: dict) -> dict:
                     storage.download_and_extract(path)
             print("Load attn_procs " + attn_procs)
             # Workaround https://github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119
-            if not re.match(r".safetensors", attn_procs):
+            if storage and not re.match(r".safetensors", attn_procs):
                 attn_procs = torch.load(attn_procs, map_location="cpu")
             pipeline.unet.load_attn_procs(attn_procs)
         else:
