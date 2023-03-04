@@ -22,7 +22,7 @@ class TestAttnProcs:
         # self.minio.stop() - leave global up
         self.dda.stop()
 
-    def test_hf_download(self):
+    def test_lora_hf_download(self):
         """
         Download user/repo from HuggingFace.
         """
@@ -46,12 +46,10 @@ class TestAttnProcs:
 
         assert result["image_base64"]
 
-    def test_http_download_diffusers_archive(self):
+    def test_lora_http_download_pytorch_bin(self):
         """
-        Download user/repo from HuggingFace.
+        Download pytroch_lora_weights.bin directly.
         """
-
-        # fp32 model is obviously bigger
         result = runTest(
             "txt2img",
             self.TEST_ARGS,
@@ -70,3 +68,25 @@ class TestAttnProcs:
         )
 
         assert result["image_base64"]
+
+    if False:
+        # These formats are not supported by diffusers yet :(
+        def test_lora_http_download_civitai_safetensors(self):
+            result = runTest(
+                "txt2img",
+                self.TEST_ARGS,
+                {
+                    "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+                    "MODEL_REVISION": "fp16",
+                    "MODEL_PRECISION": "fp16",
+                    "attn_procs": "https://civitai.com/api/download/models/11523",
+                    "attn_procs_from_safetensors": True,
+                },
+                {
+                    "num_inference_steps": 1,
+                    "prompt": "A picture of a sks dog in a bucket",
+                    "seed": 1,
+                },
+            )
+
+            assert result["image_base64"]

@@ -285,8 +285,15 @@ def inference(all_inputs: dict) -> dict:
         if attn_procs:
             storage = Storage(attn_procs, no_raise=True)
             if storage:
-                fname = storage.url.split("/").pop()
                 hash = sha256(attn_procs.encode("utf-8")).hexdigest()
+                attn_procs_from_safetensors = call_inputs.get(
+                    "attn_procs_from_safetensors", None
+                )
+                fname = storage.url.split("/").pop()
+                if attn_procs_from_safetensors and not re.match(
+                    r".safetensors", attn_procs
+                ):
+                    fname += ".safetensors"
                 if True:
                     # TODO, way to specify explicit name
                     path = os.path.join(
@@ -297,7 +304,7 @@ def inference(all_inputs: dict) -> dict:
                     storage.download_and_extract(path)
             print("Load attn_procs " + attn_procs)
             # Workaround https://github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119
-            if storage and not re.match(r".safetensors", attn_procs):
+            if storage and not re.search(r".safetensors", attn_procs):
                 attn_procs = torch.load(attn_procs, map_location="cpu")
             pipeline.unet.load_attn_procs(attn_procs)
         else:
