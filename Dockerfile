@@ -59,7 +59,8 @@ RUN conda create -n xformers python=3.10
 SHELL ["/opt/conda/bin/conda", "run", "--no-capture-output", "-n", "xformers", "/bin/bash", "-c"]
 RUN python --version
 RUN conda install -c pytorch -c conda-forge cudatoolkit=11.6 pytorch=1.12.1
-RUN conda install xformers -c xformers/label/dev
+#RUN conda install xformers -c xformers/label/dev
+RUN conda install xformers -c xformers
 
 # Install python packages
 # RUN pip3 install --upgrade pip
