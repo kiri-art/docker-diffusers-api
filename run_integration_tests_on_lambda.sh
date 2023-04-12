@@ -54,8 +54,8 @@ instance_create() {
   local RESULT=""
   cat > $PAYLOAD_FILE << __END__
   {
-    "region_name": "us-west-2",
-    "instance_type_name": "gpu_1x_a100_sxm4",
+    "region_name": "us-west-1",
+    "instance_type_name": "gpu_1x_a10",
     "ssh_key_names": [
       "diffusers-api-test"
     ],
