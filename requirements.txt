@@ -1,5 +1,6 @@
 # we pin sanic==22.6.2 for compatibility with banana
 sanic==22.6.2
+sanic-ext==22.6.2
 # earlier sanics don't pin but require websockets<11.0
 websockets<11.0
 

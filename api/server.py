@@ -4,9 +4,11 @@
 # Instead, edit the init() and inference() functions in app.py
 
 from sanic import Sanic, response
+from sanic_ext import Extend
 import subprocess
 import app as user_src
 import traceback
+import os
 
 # We do the model load-to-GPU step on server startup
 # so the model object is available globally for reuse
@@ -14,6 +16,9 @@ user_src.init()
 
 # Create the http server app
 server = Sanic("my_app")
+server.config.CORS_ORIGINS = os.getenv("CORS_ORIGINS") or "*"
+Extend(server)
+
 
 # Healthchecks verify that the environment is correct on Banana Serverless
 @server.route("/healthcheck", methods=["GET"])
