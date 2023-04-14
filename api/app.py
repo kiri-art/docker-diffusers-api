@@ -165,6 +165,13 @@ def inference(all_inputs: dict) -> dict:
 
     model_id = call_inputs.get("MODEL_ID", None)
     if not model_id:
+        if not MODEL_ID:
+            return {
+                "$error": {
+                    "code": "NO_MODEL_ID",
+                    "message": "No callInputs.MODEL_ID specified, nor was MODEL_ID env var set.",
+                }
+            }
         model_id = MODEL_ID
         result["$meta"].update({"MODEL_ID": MODEL_ID})
     normalized_model_id = model_id
