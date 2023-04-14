@@ -114,7 +114,9 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
             "modelInputs": inputs,
             "startOnly": False,
         }
+
         response = requests.post(f"{BANANA_API_URL}/start/v4/", json=payload)
+
         result = response.json()
         callID = result.get("callID")
 
@@ -185,13 +187,25 @@ def runTest(name, args, extraCallInputs, extraModelInputs):
 
     else:
         test_url = args.get("test_url", None) or TEST_URL
-        response = requests.post(test_url, json=inputs)
-        try:
-            result = response.json()
-        except requests.exceptions.JSONDecodeError as error:
-            print(error)
-            print(response.text)
-            sys.exit(1)
+        call_inputs = inputs["callInputs"]
+        stream_events = call_inputs and call_inputs.get("streamEvents", 0) != 0
+        print({"stream_events": stream_events})
+        if stream_events:
+            result = None
+            response = requests.post(test_url, json=inputs, stream=True)
+            for line in response.iter_lines():
+                if line:
+                    result = json.loads(line)
+                    if not result.get("$timings", None):
+                        print(result)
+        else:
+            response = requests.post(test_url, json=inputs)
+            try:
+                result = response.json()
+            except requests.exceptions.JSONDecodeError as error:
+                print(error)
+                print(response.text)
+                sys.exit(1)
 
     finish = time.time() - start
     timings = result.get("$timings")

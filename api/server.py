@@ -9,6 +9,7 @@ import subprocess
 import app as user_src
 import traceback
 import os
+import json
 
 # We do the model load-to-GPU step on server startup
 # so the model object is available globally for reuse
@@ -34,14 +35,21 @@ def healthcheck(request):
 
 # Inference POST handler at '/' is called for every http call from Banana
 @server.route("/", methods=["POST"])
-def inference(request):
+async def inference(request):
     try:
-        model_inputs = response.json.loads(request.json)
+        all_inputs = response.json.loads(request.json)
     except:
-        model_inputs = request.json
+        all_inputs = request.json
+
+    call_inputs = all_inputs.get("callInputs", None)
+    stream_events = call_inputs and call_inputs.get("streamEvents", 0) != 0
+
+    streaming_response = None
+    if stream_events:
+        streaming_response = await request.respond(content_type="application/x-ndjson")
 
     try:
-        output = user_src.inference(model_inputs)
+        output = await user_src.inference(all_inputs, streaming_response)
     except Exception as err:
         output = {
             "$error": {
@@ -52,7 +60,10 @@ def inference(request):
             }
         }
 
-    return response.json(output)
+    if stream_events:
+        await streaming_response.send(json.dumps(output) + "\n")
+    else:
+        return response.json(output)
 
 
 if __name__ == "__main__":

@@ -70,7 +70,7 @@ def getTimings():
     return timings
 
 
-def send(type: str, status: str, payload: dict = {}, opts: dict = {}):
+async def send(type: str, status: str, payload: dict = {}, opts: dict = {}):
     now = get_now()
     send_url = opts.get("SEND_URL", SEND_URL)
     sign_key = opts.get("SIGN_KEY", SIGN_KEY)
@@ -101,6 +101,11 @@ def send(type: str, status: str, payload: dict = {}, opts: dict = {}):
 
     if send_url:
         futureSession.post(send_url, json=data)
+
+    response = opts.get("response")
+    if response:
+        print("streaming above")
+        await response.send(json.dumps(data) + "\n")
 
     # try:
     #    requests.post(send_url, json=data)  # , timeout=0.0000000001)

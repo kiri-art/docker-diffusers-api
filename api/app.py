@@ -129,7 +129,7 @@ last_attn_procs = None
 
 # Inference is ran for every server call
 # Reference your preloaded global model variable here.
-def inference(all_inputs: dict) -> dict:
+async def inference(all_inputs: dict, response) -> dict:
     global model
     global pipelines
     global last_model_id
@@ -151,6 +151,8 @@ def inference(all_inputs: dict) -> dict:
         send_opts.update({"SEND_URL": call_inputs.get("SEND_URL")})
     if call_inputs.get("SIGN_KEY", None):
         send_opts.update({"SIGN_KEY": call_inputs.get("SIGN_KEY")})
+    if response:
+        send_opts.update({"response": response})
 
     if model_inputs == None or call_inputs == None:
         return {
@@ -356,7 +358,7 @@ def inference(all_inputs: dict) -> dict:
             )
         )
 
-    send("inference", "start", {"startRequestId": startRequestId}, send_opts)
+    await send("inference", "start", {"startRequestId": startRequestId}, send_opts)
 
     # Run patchmatch for inpainting
     if call_inputs.get("FILL_MODE", None) == "patchmatch":
@@ -417,7 +419,7 @@ def inference(all_inputs: dict) -> dict:
             send_opts=send_opts,
         )
         torch.set_grad_enabled(False)
-        send("inference", "done", {"startRequestId": startRequestId}, send_opts)
+        await send("inference", "done", {"startRequestId": startRequestId}, send_opts)
         result.update({"$timings": getTimings()})
         return result
 
@@ -435,8 +437,8 @@ def inference(all_inputs: dict) -> dict:
     callback = None
     if model_inputs.get("callback_steps", None):
 
-        def callback(step: int, timestep: int, latents: torch.FloatTensor):
-            send(
+        async def callback(step: int, timestep: int, latents: torch.FloatTensor):
+            await send(
                 "inference",
                 "progress",
                 {"startRequestId": startRequestId, "step": step},
@@ -473,7 +475,7 @@ def inference(all_inputs: dict) -> dict:
         image.save(buffered, format="PNG")
         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
-    send("inference", "done", {"startRequestId": startRequestId}, send_opts)
+    await send("inference", "done", {"startRequestId": startRequestId}, send_opts)
 
     # Return the results as a dictionary
     if len(images_base64) > 1:
