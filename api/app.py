@@ -1,3 +1,4 @@
+import asyncio
 from sched import scheduler
 import torch
 
@@ -446,19 +447,24 @@ async def inference(all_inputs: dict, response) -> dict:
             )
 
     with torch.inference_mode():
+        custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
+
         try:
-            custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
-            if custom_pipeline_method:
-                images = getattr(pipeline, custom_pipeline_method)(
-                    **model_inputs
-                ).images
-            # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
-            # still broken in 0.5.1
-            elif call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
+            async_pipeline = asyncio.to_thread(
+                getattr(pipeline, custom_pipeline_method)
+                if custom_pipeline_method
+                else pipeline,
+                callback=callback,
+                **model_inputs,
+            )
+            if call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
+                # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
+                # still broken in 0.5.1
                 with autocast(device_id):
-                    images = pipeline(callback=callback, **model_inputs).images
+                    images = (await async_pipeline).images
             else:
-                images = pipeline(callback=callback, **model_inputs).images
+                images = (await async_pipeline).images
+
         except Exception as err:
             return {
                 "$error": {
