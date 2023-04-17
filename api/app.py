@@ -438,12 +438,14 @@ async def inference(all_inputs: dict, response) -> dict:
     callback = None
     if model_inputs.get("callback_steps", None):
 
-        async def callback(step: int, timestep: int, latents: torch.FloatTensor):
-            await send(
-                "inference",
-                "progress",
-                {"startRequestId": startRequestId, "step": step},
-                send_opts,
+        def callback(step: int, timestep: int, latents: torch.FloatTensor):
+            asyncio.run(
+                send(
+                    "inference",
+                    "progress",
+                    {"startRequestId": startRequestId, "step": step},
+                    send_opts,
+                )
             )
 
     with torch.inference_mode():
