@@ -10,6 +10,7 @@ import PIL
 import json
 from loadModel import loadModel
 from send import send, getTimings, clearSession
+from status import status
 import os
 import numpy as np
 import skimage
@@ -25,6 +26,7 @@ from device import device, device_id, device_name
 from diffusers.models.cross_attention import CrossAttnProcessor
 from utils import Storage
 from hashlib import sha256
+from threading import Timer
 
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
@@ -154,6 +156,18 @@ async def inference(all_inputs: dict, response) -> dict:
         send_opts.update({"SIGN_KEY": call_inputs.get("SIGN_KEY")})
     if response:
         send_opts.update({"response": response})
+
+        async def sendStatusAsync():
+            await response.send(json.dumps(status.get()) + "\n")
+
+        def sendStatus():
+            try:
+                asyncio.run(sendStatusAsync())
+                Timer(1.0, sendStatus).start()
+            except:
+                pass
+
+        Timer(1.0, sendStatus).start()
 
     if model_inputs == None or call_inputs == None:
         return {
@@ -446,6 +460,13 @@ async def inference(all_inputs: dict, response) -> dict:
                     {"startRequestId": startRequestId, "step": step},
                     send_opts,
                 )
+            )
+
+    else:
+
+        def callback(step: int, timestep: int, latents: torch.FloatTensor):
+            status.update(
+                "inference", step / model_inputs.get("num_inference_steps", 50)
             )
 
     with torch.inference_mode():

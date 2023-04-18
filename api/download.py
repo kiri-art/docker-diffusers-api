@@ -11,6 +11,7 @@ from pathlib import Path
 import shutil
 from convert_to_diffusers import main as convert_to_diffusers
 from download_checkpoint import main as download_checkpoint
+from status import status
 
 USE_DREAMBOOTH = os.environ.get("USE_DREAMBOOTH")
 HF_AUTH_TOKEN = os.environ.get("HF_AUTH_TOKEN")
@@ -19,6 +20,7 @@ RUNTIME_DOWNLOADS = os.environ.get("RUNTIME_DOWNLOADS")
 HOME = os.path.expanduser("~")
 MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
 Path(MODELS_DIR).mkdir(parents=True, exist_ok=True)
+
 
 # i.e. don't run during build
 def send(type: str, status: str, payload: dict = {}, send_opts: dict = {}):

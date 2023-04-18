@@ -5,6 +5,7 @@ import time
 import requests
 import hashlib
 from requests_futures.sessions import FuturesSession
+from status import status as statusInstance
 
 print()
 environ = os.environ.copy()
@@ -91,6 +92,11 @@ async def send(type: str, status: str, payload: dict = {}, opts: dict = {}):
         "tsl": now - session[type]["last_time"],
         "payload": payload,
     }
+
+    if status == "start":
+        statusInstance.update(type, 0.0)
+    elif status == "done":
+        statusInstance.update(type, 1.0)
 
     if send_url and sign_key:
         input = json.dumps(data, separators=(",", ":")) + sign_key
