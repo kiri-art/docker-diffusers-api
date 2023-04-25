@@ -12,6 +12,7 @@ import shutil
 from convert_to_diffusers import main as convert_to_diffusers
 from download_checkpoint import main as download_checkpoint
 from status import status
+import asyncio
 
 USE_DREAMBOOTH = os.environ.get("USE_DREAMBOOTH")
 HF_AUTH_TOKEN = os.environ.get("HF_AUTH_TOKEN")
@@ -23,11 +24,11 @@ Path(MODELS_DIR).mkdir(parents=True, exist_ok=True)
 
 
 # i.e. don't run during build
-def send(type: str, status: str, payload: dict = {}, send_opts: dict = {}):
+async def send(type: str, status: str, payload: dict = {}, send_opts: dict = {}):
     if RUNTIME_DOWNLOADS:
         from send import send as _send
 
-        _send(type, status, payload, send_opts)
+        await _send(type, status, payload, send_opts)
 
 
 def normalize_model_id(model_id: str, model_revision):
@@ -37,7 +38,7 @@ def normalize_model_id(model_id: str, model_revision):
     return normalized_model_id
 
 
-def download_model(
+async def download_model(
     model_url=None,
     model_id=None,
     model_revision=None,
@@ -109,14 +110,14 @@ def download_model(
                 # This would be quicker to just model.to(device) afterwards, but
                 # this conveniently logs all the timings (and doesn't happen often)
                 print("download")
-                send("download", "start", {}, send_opts)
+                await send("download", "start", {}, send_opts)
                 model = loadModel(
                     hf_model_id,
                     False,
                     precision=model_precision,
                     revision=model_revision,
                 )  # download
-                send("download", "done", {}, send_opts)
+                await send("download", "done", {}, send_opts)
 
             print("load")
             model = loadModel(
@@ -127,19 +128,19 @@ def download_model(
             model.save_pretrained(dir, safe_serialization=True)
 
             # This is all duped from train_dreambooth, need to refactor TODO XXX
-            send("compress", "start", {}, send_opts)
+            await send("compress", "start", {}, send_opts)
             subprocess.run(
                 f"tar cvf - -C {dir} . | zstd -o {model_file}",
                 shell=True,
                 check=True,  # TODO, rather don't raise and return an error in JSON
             )
 
-            send("compress", "done", {}, send_opts)
+            await send("compress", "done", {}, send_opts)
             subprocess.run(["ls", "-l", model_file])
 
-            send("upload", "start", {}, send_opts)
+            await send("upload", "start", {}, send_opts)
             upload_result = storage.upload_file(model_file, filename)
-            send("upload", "done", {}, send_opts)
+            await send("upload", "done", {}, send_opts)
             print(upload_result)
             os.remove(model_file)
 
@@ -185,12 +186,14 @@ def download_model(
 
 
 if __name__ == "__main__":
-    download_model(
-        model_url=os.environ.get("MODEL_URL"),
-        model_id=os.environ.get("MODEL_ID"),
-        hf_model_id=os.environ.get("HF_MODEL_ID"),
-        model_revision=os.environ.get("MODEL_REVISION"),
-        model_precision=os.environ.get("MODEL_PRECISION"),
-        checkpoint_url=os.environ.get("CHECKPOINT_URL"),
-        checkpoint_config_url=os.environ.get("CHECKPOINT_CONFIG_URL"),
+    asyncio.run(
+        download_model(
+            model_url=os.environ.get("MODEL_URL"),
+            model_id=os.environ.get("MODEL_ID"),
+            hf_model_id=os.environ.get("HF_MODEL_ID"),
+            model_revision=os.environ.get("MODEL_REVISION"),
+            model_precision=os.environ.get("MODEL_PRECISION"),
+            checkpoint_url=os.environ.get("CHECKPOINT_URL"),
+            checkpoint_config_url=os.environ.get("CHECKPOINT_CONFIG_URL"),
+        )
     )

@@ -58,15 +58,20 @@ from tqdm.auto import tqdm
 from transformers import AutoTokenizer, PretrainedConfig
 
 # DDA
-from send import send, get_now
+from send import send as _send
 from utils import Storage
 import subprocess
 import re
 import shutil
+import asyncio
 
 # Our original code in docker-diffusers-api:
 
 HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
+
+
+def send(type: str, status: str, payload: dict = {}, send_opts: dict = {}):
+    asyncio.run((_send(type, status, payload, send_opts)))
 
 
 def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs, send_opts):

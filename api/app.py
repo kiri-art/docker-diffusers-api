@@ -62,15 +62,17 @@ def init():
     global dummy_safety_checker
     global always_normalize_model_id
 
-    send(
-        "init",
-        "start",
-        {
-            "device": device_name,
-            "hostname": os.getenv("HOSTNAME"),
-            "model_id": MODEL_ID,
-            "diffusers": __version__,
-        },
+    asyncio.run(
+        send(
+            "init",
+            "start",
+            {
+                "device": device_name,
+                "hostname": os.getenv("HOSTNAME"),
+                "model_id": MODEL_ID,
+                "diffusers": __version__,
+            },
+        )
     )
 
     dummy_safety_checker = DummySafetyChecker()
@@ -96,7 +98,7 @@ def init():
     else:
         model = None
 
-    send("init", "done")
+    asyncio.run(send("init", "done"))
 
 
 def decodeBase64Image(imageStr: str, name: str) -> PIL.Image:
@@ -213,7 +215,7 @@ async def inference(all_inputs: dict, response) -> dict:
                     #     }
                     # }
                     normalized_model_id = hf_model_id or model_id
-                download_model(
+                await download_model(
                     model_id=model_id,
                     model_url=model_url,
                     model_revision=model_revision,
@@ -426,7 +428,8 @@ async def inference(all_inputs: dict, response) -> dict:
                 normalized_model_id = model_dir
 
         torch.set_grad_enabled(True)
-        result = result | TrainDreamBooth(
+        result = result | await asyncio.to_thread(
+            TrainDreamBooth,
             normalized_model_id,
             pipeline,
             model_inputs,
