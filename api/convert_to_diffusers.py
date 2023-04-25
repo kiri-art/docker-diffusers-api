@@ -4,7 +4,7 @@ import subprocess
 import torch
 import json
 from diffusers.pipelines.stable_diffusion.convert_from_ckpt import (
-    load_pipeline_from_original_stable_diffusion_ckpt,
+    download_from_original_stable_diffusion_ckpt,
 )
 from utils import Storage
 from device import device_id
@@ -123,7 +123,7 @@ def main(
     # user overrides
     args.update(checkpoint_args)
 
-    pipe = load_pipeline_from_original_stable_diffusion_ckpt(**args)
+    pipe = download_from_original_stable_diffusion_ckpt(**args)
     pipe.save_pretrained(model_id, safe_serialization=True)
 
 
