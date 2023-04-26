@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 from abc import ABC, abstractmethod
+import xtarfile as tarfile
 
 
 class BaseArchive(ABC):
@@ -22,10 +23,10 @@ class BaseArchive(ABC):
         return base, ext, subext
 
 
-class TarZstdArchive(BaseArchive):
+class TarArchive(BaseArchive):
     @staticmethod
     def test(path):
-        return re.search(r"\.tar\.zstd?$", path)
+        return re.search(r"\.tar", path)
 
     def extract(self, dir, dry_run=False):
         self.updateStatus("extract", 0)
@@ -36,17 +37,18 @@ class TarZstdArchive(BaseArchive):
 
         if not dry_run:
             os.mkdir(dir)
-            subprocess.run(
-                [
-                    "tar",
-                    "--use-compress-program=unzstd",
-                    "-C",
-                    dir,
-                    "-xvf",
-                    self.path,
-                ],
-                check=True,
-            )
+
+            def track_progress(tar):
+                i = 0
+                members = tar.getmembers()
+                for member in members:
+                    i += 1
+                    self.updateStatus("extract", i / len(members))
+                    yield member
+
+            with tarfile.open(self.path, "r") as tar:
+                tar.extractall(path=dir, members=track_progress(tar))
+                tar.close()
             subprocess.run(["ls", "-l"])
             os.remove(self.path)
 
@@ -54,7 +56,7 @@ class TarZstdArchive(BaseArchive):
         return dir  # , base, ext, subext
 
 
-archiveClasses = [TarZstdArchive]
+archiveClasses = [TarArchive]
 
 
 def Archive(path, **kwargs):
