@@ -16,7 +16,7 @@ class HTTPStorage(BaseStorage):
         return re.search(r"^https?://", url)
 
     def __init__(self, url, **kwargs):
-        self.url = url
+        super().__init__(url, **kwargs)
 
     def upload_file(self, source, dest):
         raise RuntimeError("HTTP PUT not implemented yet")
@@ -37,6 +37,9 @@ class HTTPStorage(BaseStorage):
             unit_scale=True,
             unit_divisor=1024,
         ) as bar:
+            total_written = 0
             for data in resp.iter_content(chunk_size=1024):
                 size = file.write(data)
                 bar.update(size)
+                total_written += size
+                self.updateStatus("download", total_written / total)

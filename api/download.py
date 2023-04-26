@@ -70,27 +70,13 @@ async def download_model(
         if not filename:
             filename = normalized_model_id + ".tar.zst"
         model_file = os.path.join(MODELS_DIR, filename)
-        storage = Storage(model_url, default_path=normalized_model_id + ".tar.zst")
+        storage = Storage(
+            model_url, default_path=normalized_model_id + ".tar.zst", status=status
+        )
         exists = storage.file_exists()
         if exists:
-            storage.download_file(model_file)
-            # os.mkdir(id)
-            # Path(id).mkdir(parents=True, exist_ok=False)
             model_dir = os.path.join(MODELS_DIR, normalized_model_id)
-            os.mkdir(model_dir)
-            subprocess.run(
-                [
-                    "tar",
-                    "--use-compress-program=unzstd",
-                    "-C",
-                    model_dir,
-                    "-xvf",
-                    model_file,
-                ],
-                check=True,
-            )
-            subprocess.run(["ls", "-l"])
-            os.remove(model_file)
+            await asyncio.to_thread(storage.download_and_extract, model_file, model_dir)
         else:
             if checkpoint_url:
                 download_checkpoint(checkpoint_url)

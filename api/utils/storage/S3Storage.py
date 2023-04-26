@@ -24,7 +24,7 @@ class S3Storage(BaseStorage):
         return re.search(r"^(https?\+)?s3://", url)
 
     def __init__(self, url, **kwargs):
-        self.url = url
+        super().__init__(url, **kwargs)
 
         if url.startswith("s3://"):
             url = "https://" + url[5:]
@@ -90,10 +90,16 @@ class S3Storage(BaseStorage):
         upload_start = get_now()
         file_size = os.stat(source).st_size
         with tqdm(total=file_size, unit="B", unit_scale=True, desc="Uploading") as bar:
+            total_transferred = 0
+
+            def callback(bytes_transferred):
+                nonlocal total_transferred
+                bar.update(bytes_transferred),
+                total_transferred += bytes_transferred
+                self.updateStatus("upload", total_transferred / file_size)
+
             result = self.bucket().upload_file(
-                Filename=source,
-                Key=dest,
-                Callback=lambda bytes_transferred: bar.update(bytes_transferred),
+                Filename=source, Key=dest, Callback=callback
             )
         print(result)
         upload_total = get_now() - upload_start
@@ -110,10 +116,15 @@ class S3Storage(BaseStorage):
         with tqdm(
             total=object.content_length, unit="B", unit_scale=True, desc="Downloading"
         ) as bar:
-            object.download_file(
-                Filename=dest,
-                Callback=lambda bytes_transffered: bar.update(bytes_transffered),
-            )
+            total_transferred = 0
+
+            def callback(bytes_transferred):
+                nonlocal total_transferred
+                bar.update(bytes_transferred),
+                total_transferred += bytes_transferred
+                self.updateStatus("download", total_transferred / object.content_length)
+
+            object.download_file(Filename=dest, Callback=callback)
 
     def file_exists(self):
         # res = self.s3client().list_objects_v2(

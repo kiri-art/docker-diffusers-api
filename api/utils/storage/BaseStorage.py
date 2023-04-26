@@ -5,8 +5,13 @@ from abc import ABC, abstractmethod
 
 
 class BaseArchive(ABC):
-    def __init__(self, path):
+    def __init__(self, path, status=None):
         self.path = path
+        self.status = status
+
+    def updateStatus(self, type, progress):
+        if hasattr(self, "status"):
+            self.status.update(type, progress)
 
     def extract(self):
         print("TODO")
@@ -23,6 +28,7 @@ class TarZstdArchive(BaseArchive):
         return re.search(r"\.tar\.zstd?$", path)
 
     def extract(self, dir, dry_run=False):
+        self.updateStatus("extract", 0)
         if not dir:
             dir = os.path.dirname(self.path)
         base, ext, subext = self.splitext()
@@ -41,8 +47,10 @@ class TarZstdArchive(BaseArchive):
                 ],
                 check=True,
             )
+            subprocess.run(["ls", "-l"])
             os.remove(self.path)
 
+        self.updateStatus("extract", 1)
         return dir  # , base, ext, subext
 
 
@@ -63,6 +71,11 @@ class BaseStorage(ABC):
 
     def __init__(self, url, **kwargs):
         self.url = url
+        self.status = kwargs.get("status", None)
+
+    def updateStatus(self, type, progress):
+        if hasattr(self, "status"):
+            self.status.update(type, progress)
 
     def splitext(self):
         base, ext = os.path.splitext(self.url)
@@ -77,7 +90,7 @@ class BaseStorage(ABC):
         """Download the file to `dest`"""
         pass
 
-    def download_and_extract(self, fname, dry_run=False):
+    def download_and_extract(self, fname, dir=None, dry_run=False):
         """
         Downloads the file, and if it's an archive, extract it too.  Returns
         the filename if not, or directory name (fname without extension) if
@@ -86,12 +99,11 @@ class BaseStorage(ABC):
         if not fname:
             fname = self.get_filename()
 
-        dir = None
-        archive = Archive(fname, dry_run=dry_run)
+        archive = Archive(fname, status=self.status)
         if archive:
             # TODO, streaming pipeline
             self.download_file(fname)
-            return archive.extract()
+            return archive.extract(dir)
         else:
             self.download_file(fname)
             return fname
