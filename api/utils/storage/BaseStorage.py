@@ -11,7 +11,7 @@ class BaseArchive(ABC):
         self.status = status
 
     def updateStatus(self, type, progress):
-        if hasattr(self, "status"):
+        if self.status:
             self.status.update(type, progress)
 
     def extract(self):
@@ -74,12 +74,10 @@ class BaseStorage(ABC):
 
     def __init__(self, url, **kwargs):
         self.url = url
-        status = kwargs.get("status", None)
-        if status:
-            self.status = status
+        self.status = kwargs.get("status", None)
 
     def updateStatus(self, type, progress):
-        if hasattr(self, "status"):
+        if self.status:
             self.status.update(type, progress)
 
     def splitext(self):
