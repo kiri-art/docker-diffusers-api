@@ -18,6 +18,7 @@ user_src.init()
 # Create the http server app
 server = Sanic("my_app")
 server.config.CORS_ORIGINS = os.getenv("CORS_ORIGINS") or "*"
+server.config.RESPONSE_TIMEOUT = 60 * 60  # 1 hour (training can be long)
 Extend(server)
 
 
