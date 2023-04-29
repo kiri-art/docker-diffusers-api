@@ -31,9 +31,9 @@ class TarArchive(BaseArchive):
     def extract(self, dir, dry_run=False):
         self.updateStatus("extract", 0)
         if not dir:
-            dir = os.path.dirname(self.path)
-        base, ext, subext = self.splitext()
-        dir = os.path.join(dir, base)
+            base, ext, subext = self.splitext()
+            parent_dir = os.path.dirname(self.path)
+            dir = os.path.join(parent_dir, base)
 
         if not dry_run:
             os.mkdir(dir)
@@ -46,10 +46,11 @@ class TarArchive(BaseArchive):
                     self.updateStatus("extract", i / len(members))
                     yield member
 
+            print("Extracting to " + dir)
             with tarfile.open(self.path, "r") as tar:
                 tar.extractall(path=dir, members=track_progress(tar))
                 tar.close()
-            subprocess.run(["ls", "-l"])
+            subprocess.run(["ls", "-l", dir])
             os.remove(self.path)
 
         self.updateStatus("extract", 1)

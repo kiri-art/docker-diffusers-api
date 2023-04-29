@@ -76,6 +76,7 @@ async def download_model(
         exists = storage.file_exists()
         if exists:
             model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+            print("model_dir", model_dir)
             await asyncio.to_thread(storage.download_and_extract, model_file, model_dir)
         else:
             if checkpoint_url:
