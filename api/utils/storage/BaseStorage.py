@@ -73,7 +73,9 @@ class BaseStorage(ABC):
 
     def __init__(self, url, **kwargs):
         self.url = url
-        self.status = kwargs.get("status", None)
+        status = kwargs.get("status", None)
+        if status:
+            self.status = status
 
     def updateStatus(self, type, progress):
         if hasattr(self, "status"):
