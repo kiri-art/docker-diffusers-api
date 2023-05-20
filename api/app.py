@@ -229,12 +229,19 @@ async def inference(all_inputs: dict, response) -> dict:
             clearPipelines()
             if model:
                 model.to("cpu")  # Necessary to avoid a memory leak
-            model = loadModel(
+            await send(
+                "loadModel", "start", {"startRequestId": startRequestId}, send_opts
+            )
+            model = await asyncio.to_thread(
+                loadModel,
                 model_id=normalized_model_id,
                 load=True,
                 precision=model_precision,
                 revision=model_revision,
                 send_opts=send_opts,
+            )
+            await send(
+                "loadModel", "done", {"startRequestId": startRequestId}, send_opts
             )
             last_model_id = normalized_model_id
     else:
