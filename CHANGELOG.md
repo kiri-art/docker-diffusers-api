@@ -1,3 +1,35 @@
+# [1.5.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.4.0...v1.5.0) (2023-05-24)
+
+
+### Bug Fixes
+
+* **app:** async fixes for download, train_dreambooth ([0dcbd16](https://github.com/kiri-art/docker-diffusers-api/commit/0dcbd16c1a85a9f3fb867a28d66b00f0eccaba80))
+* **app:** diffusers callback cannot be async; use asyncio.run() ([7854649](https://github.com/kiri-art/docker-diffusers-api/commit/7854649011d370497690618fe3ea0e8ce2c79bc6))
+* **app:** up sanic RESPONSE_TIMEOUT from 1m to 1hr ([8e2003a](https://github.com/kiri-art/docker-diffusers-api/commit/8e2003afad8af93d4e1442138d6b7673e32af971))
+* **attn_procs:** apply workaround only for storage not hf repos ([b98710f](https://github.com/kiri-art/docker-diffusers-api/commit/b98710f144265df3d77a90bfb39d2dd30fbd8c96))
+* **attn_procs:** load non-safetensors attn_procs ourself ([072e7a3](https://github.com/kiri-art/docker-diffusers-api/commit/072e7a38f13d66b3e069427c318e16dcd5b6324d)), closes [/github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119](https://github.com//github.com/huggingface/diffusers/pull/2448/issues/issuecomment-1453938119)
+* **deps:** pin websockets<11.0 for sanic ([33ae2f4](https://github.com/kiri-art/docker-diffusers-api/commit/33ae2f4c905c5e92aa9ff6cc2f61a3adb81b1b59))
+* **inference:** return $error NO_MODEL_ID vs later crash on None ([46ea977](https://github.com/kiri-art/docker-diffusers-api/commit/46ea977cea6e469059931d722df5a38a3f931d77))
+* **storage:** actually, always set self.status (default None) ([c309ca9](https://github.com/kiri-art/docker-diffusers-api/commit/c309ca92fd1038f89dae186e35cc732e5822c8c2))
+* **storage:** don't set self.status to None ([9b88b80](https://github.com/kiri-art/docker-diffusers-api/commit/9b88b8089c4063e63aab547ce945ebb1a94f2fd7))
+* **storage:** extract with dir= must not mutate dir (download, logs) ([b1f8f87](https://github.com/kiri-art/docker-diffusers-api/commit/b1f8f87756f61ae0aa61c3785911ab043f911d98))
+* **tests:** pin urlllib3 to < 2, avoids break in docker package ([ccf8231](https://github.com/kiri-art/docker-diffusers-api/commit/ccf823139ac0f379e2f27d8dd5921f5343f20f8a))
+
+
+### Features
+
+* **app:** run pipeline via asyncio.to_thread ([e87f7e7](https://github.com/kiri-art/docker-diffusers-api/commit/e87f7e772fa1f5f22957600572be60b150999095))
+* **attn_procs:** from_safetensors override, save .savetensors fname ([5fb6487](https://github.com/kiri-art/docker-diffusers-api/commit/5fb6487579d8b809c52f9451c68bcfcafecca0f0))
+* **cors:** add sanic-ext and set default cors-origin to "*" ([eb2a385](https://github.com/kiri-art/docker-diffusers-api/commit/eb2a385684a309557b637d7c03f2e8cda00137b0))
+* **diffusers:** bump to 0.15.0 + 2 weeks with lpw fix (9965cb5) ([77e9078](https://github.com/kiri-art/docker-diffusers-api/commit/77e907892b5b6b9b27aa75f5ec5732a81ba784d6))
+* **diffusers:** bump to latest diffusers, 0.14 + patches (see note) ([48a99a5](https://github.com/kiri-art/docker-diffusers-api/commit/48a99a532503bf9f8932f64ddf20d7b81aab765b))
+* **download:** async, status; download.py: use download_and_extract ([bb7434a](https://github.com/kiri-art/docker-diffusers-api/commit/bb7434a4e39d02dce5ecbf602fe6e41511481c12))
+* **HTTPStorage:** store filename from content-disposition ([2066c44](https://github.com/kiri-art/docker-diffusers-api/commit/2066c446ba058209d1f594a46a8af0188e6e82fa))
+* **loadModel:** send loadModel status ([db75740](https://github.com/kiri-art/docker-diffusers-api/commit/db75740177688e25bba4066d099a2c034dd3eb93))
+* **status:** initial status work ([d1cd39e](https://github.com/kiri-art/docker-diffusers-api/commit/d1cd39ea93e4c967be91ed59b8b05a6ce9f117da))
+* **storage:** support misc tar compression; progress ([a8c8337](https://github.com/kiri-art/docker-diffusers-api/commit/a8c8337da4b750f92f9712397293da20974aa385))
+* **stream_events:** stream send()'s to client too ([08daf4f](https://github.com/kiri-art/docker-diffusers-api/commit/08daf4fdca1f3ad23965e9bf14a3b66fc57279fd))
+
 # [1.4.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.3.0...v1.4.0) (2023-02-28)
 
 
