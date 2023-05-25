@@ -116,7 +116,7 @@ def main(
             "original_config_file": configPath if checkpoint_config_url else None,
             "device": device_id,
             "extract_ema": True,
-            "from_safetensors": fname.endswith(".safetensors"),
+            "from_safetensors": "safetensor" in fname.lower(),
         }
     )
 
