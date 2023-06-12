@@ -25,10 +25,13 @@ class HTTPStorage(BaseStorage):
         print(f"Downloading {self.url} to {fname}...")
         resp = requests.get(self.url, stream=True)
         total = int(resp.headers.get("content-length", 0))
-        content_disposition = resp.headers["content-disposition"]
-        filename_search = re.search('filename="(.+)"', content_disposition)
-        if filename_search:
-            self.filename = filename_search.group(1)
+        content_disposition = resp.headers.get("content-disposition") 
+        if content_disposition:
+            filename_search = re.search('filename="(.+)"', content_disposition)
+            if filename_search:
+                self.filename = filename_search.group(1)
+        else:
+            print('Warning: content-disposition header is not found in the response.')
         # Can also replace 'file' with a io.BytesIO object
         with open(fname, "wb") as file, tqdm(
             desc="Downloading",
