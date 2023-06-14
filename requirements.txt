@@ -8,8 +8,8 @@ websockets<11.0
 # diffusers==0.4.1
 # git+https://github.com/huggingface/diffusers@v0.5.1
 
-# transformers==4.25.1
-transformers==4.26.0
+# transformers==4.26.0 until 2023-06-14
+transformers==4.30.2
 
 # scipy==1.9.3
 scipy==1.10.0
@@ -21,8 +21,8 @@ numpy==1.24.1
 
 scikit-image==0.19.3
 
-# accelerate==0.13.2
-accelerate==0.15.0
+# accelerate==0.15.0 until 2023-06-14
+accelerate==0.20.3
 
 # triton==2.0.0.dev20221105
 triton==2.0.0.dev20221202
@@ -34,8 +34,8 @@ spacy==3.5.0
 
 k-diffusion==0.0.12
 
-# safetensors==0.2.5
-safetensors==0.2.8
+# safetensors==0.2.8 until 2023-06-14
+safetensors==0.3.1
 
 # must match conda installed version in Dockerfile
 torch==1.12.1

@@ -39,7 +39,12 @@ RUN pip install -r requirements.txt
 
 # [9965cb5] [Community Pipelines] Update lpw_stable_diffusion pipeline (#3197)
 # Above was reverted shortly afterwards for not being backwards compatible.
-RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout 9965cb50eac12e397473f01535aab43aae76b4ab
+
+# [ce55049] Update pipeline_flax_stable_diffusion_controlnet.py (#3306)
+ARG DIFFUSERS_VERSION="ce5504934ac484fca39a1a5434ecfae09eabdf41"
+ENV DIFFUSERS_VERSION=${DIFFUSERS_VERSION}
+
+RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout ${DIFFUSERS_VERSION}
 WORKDIR /api
 RUN pip install -e diffusers
 
