@@ -130,6 +130,7 @@ def truncateInputs(inputs: dict):
 
 last_xformers_memory_efficient_attention = {}
 last_attn_procs = None
+last_lora_weights = None
 
 
 # Inference is ran for every server call
@@ -143,6 +144,7 @@ async def inference(all_inputs: dict, response) -> dict:
     global last_xformers_memory_efficient_attention
     global always_normalize_model_id
     global last_attn_procs
+    global last_lora_weights
 
     clearSession()
 
@@ -244,6 +246,8 @@ async def inference(all_inputs: dict, response) -> dict:
                 "loadModel", "done", {"startRequestId": startRequestId}, send_opts
             )
             last_model_id = normalized_model_id
+            last_attn_procs = None
+            last_lora_weights = None
     else:
         if always_normalize_model_id:
             normalized_model_id = always_normalize_model_id
@@ -312,8 +316,13 @@ async def inference(all_inputs: dict, response) -> dict:
     is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
 
+    # Better to use new lora_weights in next section
     attn_procs = call_inputs.get("attn_procs", None)
     if attn_procs is not last_attn_procs:
+        print(
+            "[DEPRECATED] Using `attn_procs` for LoRAs is deprecated. "
+            + "Please use `lora_weights` instead."
+        )
         last_attn_procs = attn_procs
         if attn_procs:
             storage = Storage(attn_procs, no_raise=True)
@@ -340,6 +349,40 @@ async def inference(all_inputs: dict, response) -> dict:
             if storage and not re.search(r".safetensors", attn_procs):
                 attn_procs = torch.load(attn_procs, map_location="cpu")
             pipeline.unet.load_attn_procs(attn_procs)
+        else:
+            print("Clearing attn procs")
+            pipeline.unet.set_attn_processor(CrossAttnProcessor())
+
+    # Currently we only support a single string, but we should allow
+    # and array too in anticipation of multi-LoRA support in diffusers
+    # tracked at https://github.com/huggingface/diffusers/issues/2613.
+    lora_weights = call_inputs.get("lora_weights", None)
+    if lora_weights is not last_lora_weights:
+        last_lora_weights = lora_weights
+        if lora_weights:
+            pipeline.unet.set_attn_processor(CrossAttnProcessor())
+            storage = Storage(lora_weights, no_raise=True)
+            if storage:
+                storage_query_fname = storage.query.get("fname")
+                if storage_query_fname:
+                    fname = storage_query_fname[0]
+                else:
+                    hash = sha256(lora_weights.encode("utf-8")).hexdigest()
+                    fname = "url_" + hash[:7] + "--" + storage.url.split("/").pop()
+                cache_fname = "lora_weights--" + fname
+                path = os.path.join(MODELS_DIR, cache_fname)
+                if not os.path.exists(path):
+                    storage.download_and_extract(path)
+                print("Load lora_weights `" + lora_weights + "` from `" + path + "`")
+                pipeline.load_lora_weights(
+                    MODELS_DIR, weight_name=cache_fname, local_files_only=True
+                )
+            else:
+                print("Loading from huggingface not supported yet: " + lora_weights)
+                # maybe something like sayakpaul/civitai-light-shadow-lora#lora=l_a_s.s9s?
+                # lora_model_id = "sayakpaul/civitai-light-shadow-lora"
+                # lora_filename = "light_and_shadow.safetensors"
+                # pipeline.load_lora_weights(lora_model_id, weight_name=lora_filename)
         else:
             print("Clearing attn procs")
             pipeline.unet.set_attn_processor(CrossAttnProcessor())
