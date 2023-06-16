@@ -49,17 +49,10 @@ torch.set_grad_enabled(False)
 always_normalize_model_id = None
 
 
-class DummySafetyChecker:
-    @staticmethod
-    def __call__(images, clip_input):
-        return images, False
-
-
 # Init is ran on server startup
 # Load your model to GPU as a global variable here using the variable name "model"
 def init():
     global model  # needed for bananna optimizations
-    global dummy_safety_checker
     global always_normalize_model_id
 
     asyncio.run(
@@ -74,8 +67,6 @@ def init():
             },
         )
     )
-
-    dummy_safety_checker = DummySafetyChecker()
 
     if MODEL_ID == "ALL" or RUNTIME_DOWNLOADS:
         global last_model_id
@@ -140,7 +131,6 @@ async def inference(all_inputs: dict, response) -> dict:
     global pipelines
     global last_model_id
     global schedulers
-    global dummy_safety_checker
     global last_xformers_memory_efficient_attention
     global always_normalize_model_id
     global last_attn_procs
@@ -310,9 +300,7 @@ async def inference(all_inputs: dict, response) -> dict:
         }
 
     safety_checker = call_inputs.get("safety_checker", True)
-    pipeline.safety_checker = (
-        model.safety_checker if safety_checker else dummy_safety_checker
-    )
+    pipeline.safety_checker = model.safety_checker if safety_checker else None
     is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
 
