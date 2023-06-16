@@ -4,6 +4,7 @@ import time
 import requests
 from tqdm import tqdm
 from .BaseStorage import BaseStorage
+import urllib.parse
 
 
 def get_now():
@@ -17,6 +18,10 @@ class HTTPStorage(BaseStorage):
 
     def __init__(self, url, **kwargs):
         super().__init__(url, **kwargs)
+        parts = self.url.split("#", 1)
+        self.url = parts[0]
+        if len(parts) > 1:
+            self.query = urllib.parse.parse_qs(parts[1])
 
     def upload_file(self, source, dest):
         raise RuntimeError("HTTP PUT not implemented yet")
@@ -25,13 +30,13 @@ class HTTPStorage(BaseStorage):
         print(f"Downloading {self.url} to {fname}...")
         resp = requests.get(self.url, stream=True)
         total = int(resp.headers.get("content-length", 0))
-        content_disposition = resp.headers.get("content-disposition") 
+        content_disposition = resp.headers.get("content-disposition")
         if content_disposition:
             filename_search = re.search('filename="(.+)"', content_disposition)
             if filename_search:
                 self.filename = filename_search.group(1)
         else:
-            print('Warning: content-disposition header is not found in the response.')
+            print("Warning: content-disposition header is not found in the response.")
         # Can also replace 'file' with a io.BytesIO object
         with open(fname, "wb") as file, tqdm(
             desc="Downloading",

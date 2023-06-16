@@ -9,6 +9,7 @@ class BaseArchive(ABC):
     def __init__(self, path, status=None):
         self.path = path
         self.status = status
+        self.query = {}
 
     def updateStatus(self, type, progress):
         if self.status:
