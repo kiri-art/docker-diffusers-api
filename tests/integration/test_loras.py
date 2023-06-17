@@ -75,22 +75,41 @@ class TestLoRAs:
 
     # These formats are not supported by diffusers yet :(
     def test_lora_http_download_civitai_safetensors(self):
-        result = runTest(
-            "txt2img",
-            self.TEST_ARGS,
-            {
-                "MODEL_ID": "runwayml/stable-diffusion-v1-5",
-                "MODEL_REVISION": "fp16",
-                "MODEL_PRECISION": "fp16",
-                # https://civitai.com/models/5373/makima-chainsaw-man-lora
-                "lora_weights": "https://civitai.com/api/download/models/6244#fname=makima_offset.safetensors",
-                "safety_checker": False,
-            },
-            {
-                "num_inference_steps": 1,
-                "prompt": "masterpiece, (photorealistic:1.4), best quality, beautiful lighting, (ulzzang-6500:0.5), makima \(chainsaw man\), (red hair)+(long braided hair)+(bangs), yellow eyes, golden eyes, ((ringed eyes)), (white shirt), (necktie), RAW photo, 8k uhd, film grain",
-                "seed": 1,
-            },
-        )
+        quickTest = True
+
+        callInputs = {
+            "MODEL_ID": "NED-v1-22",
+            # https://civitai.com/models/10028/neverending-dream-ned?modelVersionId=64094
+            "CHECKPOINT_URL": "https://civitai.com/api/download/models/64094#fname=neverendingDreamNED_v122BakedVae.safetensors",
+            "MODEL_PRECISION": "fp16",
+            # https://civitai.com/models/5373/makima-chainsaw-man-lora
+            "lora_weights": "https://civitai.com/api/download/models/6244#fname=makima_offset.safetensors",
+            "safety_checker": False,
+        }
+        modelInputs = {
+            # https://civitai.com/images/709482
+            "num_inference_steps": 30,
+            "prompt": "masterpiece, (photorealistic:1.4), best quality, beautiful lighting, (ulzzang-6500:0.5), makima \(chainsaw man\), (red hair)+(long braided hair)+(bangs), yellow eyes, golden eyes, ((ringed eyes)), (white shirt), (necktie), RAW photo, 8k uhd, film grain",
+            "negative_prompt": "(painting by bad-artist-anime:0.9), (painting by bad-artist:0.9), watermark, text, error, blurry, jpeg artifacts, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, artist name, (worst quality, low quality:1.4), bad anatomy",
+            "width": 584,
+            "height": 880,
+            "seed": 2281759351,
+            "guidance_scale": 9,
+        }
+
+        if quickTest:
+            callInputs.update(
+                {
+                    # i.e. use a model we already have
+                    "MODEL_ID": "runwayml/stable-diffusion-v1-5",
+                    "MODEL_REVISION": "fp16",
+                }
+            )
+            modelInputs.update(
+                {
+                    "num_inference_steps": 1,
+                }
+            )
+        result = runTest("txt2img", self.TEST_ARGS, callInputs, modelInputs)
 
         assert result["image_base64"]
