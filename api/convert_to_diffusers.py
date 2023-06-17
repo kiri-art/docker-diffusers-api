@@ -22,14 +22,15 @@ def main(
     checkpoint_url: str,
     checkpoint_config_url: str,
     checkpoint_args: dict = {},
+    path=None,
 ):
-    fname = CHECKPOINT_DIR + "/" + checkpoint_url.split("/").pop()
+    if not path:
+        fname = checkpoint_url.split("/").pop()
+        path = os.path.join(CHECKPOINT_DIR, fname)
 
     if checkpoint_config_url and checkpoint_config_url != "":
         storage = Storage(checkpoint_config_url)
-        configPath = (
-            CHECKPOINT_DIR + "/" + checkpoint_url.split("/").pop() + "_config.yaml"
-        )
+        configPath = CHECKPOINT_DIR + "/" + path + "_config.yaml"
         print(f"Downloading {checkpoint_config_url} to {configPath}...")
         storage.download_file(configPath)
 
@@ -47,7 +48,7 @@ def main(
     #     "./diffusers/scripts/convert_original_stable_diffusion_to_diffusers.py"
     # )
 
-    print("Converting " + fname + " to diffusers model " + model_id + "...", flush=True)
+    print("Converting " + path + " to diffusers model " + model_id + "...", flush=True)
 
     # These are now in main requirements.txt.
     # subprocess.run(
@@ -112,11 +113,11 @@ def main(
     # our defaults
     args.update(
         {
-            "checkpoint_path": fname,
+            "checkpoint_path": path,
             "original_config_file": configPath if checkpoint_config_url else None,
             "device": device_id,
             "extract_ema": True,
-            "from_safetensors": "safetensor" in fname.lower(),
+            "from_safetensors": "safetensor" in path.lower(),
         }
     )
 

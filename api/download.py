@@ -80,11 +80,12 @@ async def download_model(
             await asyncio.to_thread(storage.download_and_extract, model_file, model_dir)
         else:
             if checkpoint_url:
-                download_checkpoint(checkpoint_url)
+                path = download_checkpoint(checkpoint_url)
                 convert_to_diffusers(
                     model_id=model_id,
                     checkpoint_url=checkpoint_url,
                     checkpoint_config_url=checkpoint_config_url,
+                    path=path,
                 )
             else:
                 print("Does not exist, let's try find it on huggingface")
@@ -138,11 +139,12 @@ async def download_model(
 
     else:
         if checkpoint_url:
-            download_checkpoint(checkpoint_url)
+            path = download_checkpoint(checkpoint_url)
             convert_to_diffusers(
                 model_id=model_id,
                 checkpoint_url=checkpoint_url,
                 checkpoint_config_url=checkpoint_config_url,
+                path=path,
             )
         else:
             # do a dry run of loading the huggingface model, which will download weights at build time
