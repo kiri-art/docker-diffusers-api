@@ -85,14 +85,15 @@ class TestLoRAs:
             # https://civitai.com/models/5373/makima-chainsaw-man-lora
             "lora_weights": "https://civitai.com/api/download/models/6244#fname=makima_offset.safetensors",
             "safety_checker": False,
+            "PIPELINE": "lpw_stable_diffusion",
         }
         modelInputs = {
             # https://civitai.com/images/709482
             "num_inference_steps": 30,
             "prompt": "masterpiece, (photorealistic:1.4), best quality, beautiful lighting, (ulzzang-6500:0.5), makima \(chainsaw man\), (red hair)+(long braided hair)+(bangs), yellow eyes, golden eyes, ((ringed eyes)), (white shirt), (necktie), RAW photo, 8k uhd, film grain",
             "negative_prompt": "(painting by bad-artist-anime:0.9), (painting by bad-artist:0.9), watermark, text, error, blurry, jpeg artifacts, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, artist name, (worst quality, low quality:1.4), bad anatomy",
-            "width": 584,
-            "height": 880,
+            "width": 864,
+            "height": 1304,
             "seed": 2281759351,
             "guidance_scale": 9,
         }
@@ -108,6 +109,8 @@ class TestLoRAs:
             modelInputs.update(
                 {
                     "num_inference_steps": 1,
+                    "width": 512,
+                    "height": 512,
                 }
             )
         result = runTest("txt2img", self.TEST_ARGS, callInputs, modelInputs)
