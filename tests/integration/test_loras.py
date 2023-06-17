@@ -104,6 +104,7 @@ class TestLoRAs:
                     # i.e. use a model we already have
                     "MODEL_ID": "runwayml/stable-diffusion-v1-5",
                     "MODEL_REVISION": "fp16",
+                    "CHECKPOINT_URL": None,
                 }
             )
             modelInputs.update(
