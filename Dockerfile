@@ -37,11 +37,8 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# [9965cb5] [Community Pipelines] Update lpw_stable_diffusion pipeline (#3197)
-# Above was reverted shortly afterwards for not being backwards compatible.
-
-# [ce55049] Update pipeline_flax_stable_diffusion_controlnet.py (#3306)
-ARG DIFFUSERS_VERSION="ce5504934ac484fca39a1a5434ecfae09eabdf41"
+# [b9feed8] move to 0.19.0dev (#4048)
+ARG DIFFUSERS_VERSION="b9feed87958c27074b0618cc543696c05f58e2c9"
 ENV DIFFUSERS_VERSION=${DIFFUSERS_VERSION}
 
 RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout ${DIFFUSERS_VERSION}
@@ -69,7 +66,8 @@ ENV USE_DREAMBOOTH=${USE_DREAMBOOTH}
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # By specifying the same torch version as conda, it won't download again.
     # Without this, it will upgrade torch, break xformers, make bigger image.
-    pip install -r diffusers/examples/dreambooth/requirements.txt bitsandbytes torch==1.12.1 ; \
+    # bitsandbytes==0.40.0.post4 had failed cuda detection on dreambooth test.
+    pip install -r diffusers/examples/dreambooth/requirements.txt bitsandbytes==0.39.1 torch==1.12.1 ; \
   fi
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 
