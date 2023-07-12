@@ -270,7 +270,13 @@ async def inference(all_inputs: dict, response) -> dict:
             pipeline_name = "StableDiffusionPipeline"
             result["$meta"].update({"PIPELINE": pipeline_name})
 
-        pipeline = getPipelineForModel(pipeline_name, model, normalized_model_id)
+        pipeline = getPipelineForModel(
+            pipeline_name,
+            model,
+            normalized_model_id,
+            model_revision=model_revision if RUNTIME_DOWNLOADS else MODEL_REVISION,
+            model_precision=model_precision if RUNTIME_DOWNLOADS else MODEL_PRECISION,
+        )
         if not pipeline:
             return {
                 "$error": {

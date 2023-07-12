@@ -4,6 +4,7 @@ from diffusers import (
     DiffusionPipeline,
     pipelines as diffusers_pipelines,
 )
+from precision import torch_dtype_from_precision
 
 HOME = os.path.expanduser("~")
 MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
@@ -47,7 +48,9 @@ def clearPipelines():
     _pipelines = {}
 
 
-def getPipelineForModel(pipeline_name: str, model, model_id):
+def getPipelineForModel(
+    pipeline_name: str, model, model_id, model_revision, model_precision
+):
     """
     Inits a new pipeline, re-using components from a previously loaded
     model.  The pipeline is cached and future calls with the same
@@ -82,8 +85,8 @@ def getPipelineForModel(pipeline_name: str, model, model_id):
 
         pipeline = DiffusionPipeline.from_pretrained(
             model_dir or model_id,
-            # revision=revision,
-            # torch_dtype=torch_dtype,
+            revision=model_revision,
+            torch_dtype=torch_dtype_from_precision(model_precision),
             custom_pipeline="./diffusers/examples/community/" + pipeline_name + ".py",
             local_files_only=True,
             **model.components,
