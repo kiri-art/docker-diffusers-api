@@ -1,3 +1,23 @@
+# [1.6.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.5.0...v1.6.0) (2023-07-12)
+
+
+### Bug Fixes
+
+* **BaseStorage:** mv misplaced .query from BaseArchive to BaseStorage ([0c7a757](https://github.com/kiri-art/docker-diffusers-api/commit/0c7a757634cb62bacb3efda7f9a6e4b85bb3cb4e))
+* **conversion:** recognize "safetensor" anywhere in filename ([1ceab7d](https://github.com/kiri-art/docker-diffusers-api/commit/1ceab7dfb1d0d507b3b61f777453d81caf5190c2))
+* **deps:** bump diffusers to b9feed8, lock bitsandbytes==0.39.1 ([be1c322](https://github.com/kiri-art/docker-diffusers-api/commit/be1c32218cd0e312077de2b7a10b41f2f5be07e0))
+* **deps:** diffusers to 0.17.0 + latest commits, other packages ([a6e9db0](https://github.com/kiri-art/docker-diffusers-api/commit/a6e9db09382d972da3c6c08786ff92986e7585b7))
+* **pipelines:** pass revision/precision for community pipelines too ([20311cf](https://github.com/kiri-art/docker-diffusers-api/commit/20311cf51babf16609af1495585a4e9fca1f05e4))
+* **safety_checker:** drop DummySafetyChecker and just use None ([e4fbf22](https://github.com/kiri-art/docker-diffusers-api/commit/e4fbf225e0f09c8591f2537e3061977fad6386ed))
+
+
+### Features
+
+* **checkpoints:** support #fname query in HTTPStorage ([0cb839d](https://github.com/kiri-art/docker-diffusers-api/commit/0cb839db75f86c07d568b4a379bedba971340eb0))
+* **dreambooth:** update / merge in all upstream changes to date ([a40129a](https://github.com/kiri-art/docker-diffusers-api/commit/a40129a2b2f47282cc463d1249985d4b07ec16c9))
+* **loras:** use load_lora_weights (works with A1111 files too) ([7a64846](https://github.com/kiri-art/docker-diffusers-api/commit/7a6484642a11fc3f3de780d4627de2dd48607d89))
+* **storage:** allow #a=1&b=2 params; HTTP can use #fname=XXX ([4fe13ef](https://github.com/kiri-art/docker-diffusers-api/commit/4fe13ef7fbd4948e5f665e3d38a57430def561b8))
+
 # [1.5.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.4.0...v1.5.0) (2023-05-24)
 
 
