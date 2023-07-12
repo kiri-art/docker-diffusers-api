@@ -5,6 +5,7 @@
 1. [General Hints](#general)
 1. [Development / Editor Setup](#editors)
   1. [Visual Studio Code (vscode)](#vscode)
+1. [Testing][#testing]
 1. [Using Buildkit](#buildkit)
 1. [Local HTTP(S) Caching Proxy](#caching)
 1. [Local S3 Server](#local-s3-server)
@@ -30,6 +31,27 @@ This repo includes VSCode settings that allow for a) editing inside a docker con
 1. Install [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
 1. Open your docker-diffusers-api folder, you'll get a popup in the bottom right that a dev container environment was detected, click "reload in container"
 1. Look for the "( ) Watch" on status bar and click it so it changes to "( ) XX Coverage"
+
+<a name="testing"></a>
+## Testing
+
+1. **Unit testing**: exists but is sorely lacking for now.  If you use the
+recommended editor setup above, it's probably working already.  However:
+
+1. **Integation / E2E**: cover most features used in production.
+`pytest -s tests/integration`.
+The `-s` is optional but streams stdout so you can follow along.
+Add also `-k test_name` to test a specific test.  E2E tests are LONG but you can
+greatly reduce subsequent run time by following the steps below for a
+[Local HTTP(S) Caching Proxy](#caching) and [Local S3 Server](#local-s3-server).
+
+Docker-Diffusers-API follows Semantic Versioning.  We follow the
+[conventional commits](https://www.conventionalcommits.org/en/v1.0.0/)
+standard.
+
+* On a commit to `dev`, if all CI tests pass, a new release is made to `:dev` tag.
+* On a commit to `main`, if all CI tests pass, a new release with appropriate
+major / minor / patch is made, based on appropriate tags in the commit history.
 
 <a name="buildkit"></a>
 ## Using BuildKit
