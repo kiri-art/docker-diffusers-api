@@ -6,6 +6,9 @@ import json
 from diffusers.pipelines.stable_diffusion.convert_from_ckpt import (
     download_from_original_stable_diffusion_ckpt,
 )
+from diffusers.pipelines.stable_diffusion import (
+    StableDiffusionInpaintPipeline,
+)
 from utils import Storage
 from device import device_id
 
@@ -120,6 +123,9 @@ def main(
             "from_safetensors": "safetensor" in path.lower(),
         }
     )
+
+    if "inpaint" in path or "Inpaint" in path:
+        args.update({"pipeline_class": StableDiffusionInpaintPipeline})
 
     # user overrides
     args.update(checkpoint_args)
