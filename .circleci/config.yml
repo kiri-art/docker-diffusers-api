@@ -20,7 +20,8 @@ jobs:
       - run: docker build -t gadicc/diffusers-api .
 
       # unit tests
-      - run: docker run gadicc/diffusers-api conda run --no-capture -n xformers pytest --cov=. --cov-report=xml --ignore=diffusers
+      # - run: docker run gadicc/diffusers-api conda run --no-capture -n xformers pytest --cov=. --cov-report=xml --ignore=diffusers
+      - run: docker run gadicc/diffusers-api pytest --cov=. --cov-report=xml --ignore=diffusers
 
       - run: echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
 
