@@ -120,7 +120,7 @@ def truncateInputs(inputs: dict):
     return clone
 
 
-last_xformers_memory_efficient_attention = {}
+# last_xformers_memory_efficient_attention = {}
 last_attn_procs = None
 last_lora_weights = None
 
@@ -132,7 +132,7 @@ async def inference(all_inputs: dict, response) -> dict:
     global pipelines
     global last_model_id
     global schedulers
-    global last_xformers_memory_efficient_attention
+    # global last_xformers_memory_efficient_attention
     global always_normalize_model_id
     global last_attn_procs
     global last_lora_weights
@@ -456,25 +456,25 @@ async def inference(all_inputs: dict, response) -> dict:
         model_inputs["mask_image"] = PIL.Image.fromarray(mask)
 
     # Turning on takes 3ms and turning off 1ms... don't worry, I've got your back :)
-    x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", True)
-    last_x_m_e_a = last_xformers_memory_efficient_attention.get(pipeline, None)
-    if x_m_e_a != last_x_m_e_a:
-        if x_m_e_a == True:
-            print("pipeline.enable_xformers_memory_efficient_attention()")
-            pipeline.enable_xformers_memory_efficient_attention()  # default on
-        elif x_m_e_a == False:
-            print("pipeline.disable_xformers_memory_efficient_attention()")
-            pipeline.disable_xformers_memory_efficient_attention()
-        else:
-            return {
-                "$error": {
-                    "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
-                    "message": f"x_m_e_a expects True or False, not: {x_m_e_a}",
-                    "requested": x_m_e_a,
-                    "available": [True, False],
-                }
-            }
-        last_xformers_memory_efficient_attention.update({pipeline: x_m_e_a})
+    # x_m_e_a = call_inputs.get("xformers_memory_efficient_attention", True)
+    # last_x_m_e_a = last_xformers_memory_efficient_attention.get(pipeline, None)
+    # if x_m_e_a != last_x_m_e_a:
+    #     if x_m_e_a == True:
+    #         print("pipeline.enable_xformers_memory_efficient_attention()")
+    #         pipeline.enable_xformers_memory_efficient_attention()  # default on
+    #     elif x_m_e_a == False:
+    #         print("pipeline.disable_xformers_memory_efficient_attention()")
+    #         pipeline.disable_xformers_memory_efficient_attention()
+    #     else:
+    #         return {
+    #             "$error": {
+    #                 "code": "INVALID_XFORMERS_MEMORY_EFFICIENT_ATTENTION_VALUE",
+    #                 "message": f"x_m_e_a expects True or False, not: {x_m_e_a}",
+    #                 "requested": x_m_e_a,
+    #                 "available": [True, False],
+    #             }
+    #         }
+    #     last_xformers_memory_efficient_attention.update({pipeline: x_m_e_a})
 
     # Run the model
     # with autocast(device_id):

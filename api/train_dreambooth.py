@@ -159,7 +159,7 @@ def TrainDreamBooth(model_id: str, pipeline, model_inputs, call_inputs, send_opt
         # 1.10.and an Nvidia Ampere GPU.  Default to  fp16 if a GPU is available else fp32.
         "prior_generation_precision": None,  # "no", "fp32", "fp16", "bf16"
         "local_rank": -1,
-        "enable_xformers_memory_efficient_attention": True,  # DDA, was: None
+        "enable_xformers_memory_efficient_attention": None,
         # Save more memory by using setting grads to None instead of zero. Be aware, that this changes certain
         # behaviors, so disable this argument if it causes any problems. More info:
         # https://pytorch.org/docs/stable/generated/torch.optim.Optimizer.zero_grad.html
