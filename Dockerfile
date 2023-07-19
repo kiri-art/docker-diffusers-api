@@ -21,7 +21,9 @@ RUN if [ -n "$http_proxy" ] ; then \
 ARG REQUESTS_CA_BUNDLE=${http_proxy:+/usr/local/share/ca-certificates/squid-self-signed.crt}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -yqq git
+RUN apt-get update
+RUN apt-get install -yq apt-utils
+RUN apt-get install -yqq git zstd wget curl
 
 FROM base AS patchmatch
 ARG USE_PATCHMATCH=0
@@ -71,10 +73,10 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
     # bitsandbytes==0.40.0.post4 had failed cuda detection on dreambooth test.
     pip install -r diffusers/examples/dreambooth/requirements.txt ; \
   fi
-RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
+RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install -yqq git-lfs ; fi
 
 ARG USE_REALESRGAN=1
-RUN if [ "$USE_REALESRGAN" = "1" ] ; then apt-get install -y libgl1-mesa-glx libglib2.0-0 ; fi
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then apt-get install -yqq libgl1-mesa-glx libglib2.0-0 ; fi
 RUN if [ "$USE_REALESRGAN" = "1" ] ; then git clone https://github.com/xinntao/Real-ESRGAN.git ; fi
 # RUN if [ "$USE_REALESRGAN" = "1" ] ; then pip install numba==0.57.1 chardet ; fi
 RUN if [ "$USE_REALESRGAN" = "1" ] ; then pip install basicsr==1.4.2 facexlib==0.2.5 gfpgan==1.3.8 ; fi
