@@ -21,6 +21,10 @@ RUN if [ -n "$http_proxy" ] ; then \
 ARG REQUESTS_CA_BUNDLE=${http_proxy:+/usr/local/share/ca-certificates/squid-self-signed.crt}
 
 ARG DEBIAN_FRONTEND=noninteractive
+
+ARG TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN apt-get update
 RUN apt-get install -yq apt-utils
 RUN apt-get install -yqq git zstd wget curl
