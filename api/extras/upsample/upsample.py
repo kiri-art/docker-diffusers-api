@@ -211,4 +211,4 @@ async def upsample(model_inputs, call_inputs, send_opts={}, startRequestId=None)
     await send("inference", "done", {"startRequestId": startRequestId}, send_opts)
 
     # Return the results as a dictionary
-    return {"image_base64": image_base64}
+    return {"$meta": {}, "image_base64": image_base64}
