@@ -27,6 +27,7 @@ from diffusers.models.cross_attention import CrossAttnProcessor
 from utils import Storage
 from hashlib import sha256
 from threading import Timer
+import extras
 
 
 RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
@@ -109,7 +110,7 @@ def truncateInputs(inputs: dict):
     clone = inputs.copy()
     if "modelInputs" in clone:
         modelInputs = clone["modelInputs"] = clone["modelInputs"].copy()
-        for item in ["init_image", "mask_image", "image"]:
+        for item in ["init_image", "mask_image", "image", "input_image"]:
             if item in modelInputs:
                 modelInputs[item] = modelInputs[item][0:6] + "..."
         if "instance_images" in modelInputs:
@@ -173,6 +174,27 @@ async def inference(all_inputs: dict, response) -> dict:
         }
 
     startRequestId = call_inputs.get("startRequestId", None)
+
+    use_extra = call_inputs.get("use_extra", None)
+    if use_extra:
+        extra = getattr(extras, use_extra, None)
+        if not extra:
+            return {
+                "$error": {
+                    "code": "NO_SUCH_EXTRA",
+                    "message": 'Requested "'
+                    + use_extra
+                    + '", available: "'
+                    + '", "'.join(extras.keys())
+                    + '"',
+                }
+            }
+        return await extra(
+            model_inputs,
+            call_inputs,
+            send_opts=send_opts,
+            startRequestId=startRequestId,
+        )
 
     model_id = call_inputs.get("MODEL_ID", None)
     if not model_id:

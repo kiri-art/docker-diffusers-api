@@ -52,6 +52,7 @@ async def inference(request):
     try:
         output = await user_src.inference(all_inputs, streaming_response)
     except Exception as err:
+        print(err)
         output = {
             "$error": {
                 "code": "APP_INFERENCE_ERROR",

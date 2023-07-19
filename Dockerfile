@@ -71,6 +71,13 @@ RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then \
   fi
 RUN if [ "$USE_DREAMBOOTH" = "1" ] ; then apt-get install git-lfs ; fi
 
+ARG USE_REALESRGAN=1
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then conda install -c pytorch torchvision ; fi
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then apt-get install -y libgl1-mesa-glx libglib2.0-0 ; fi
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then git clone https://github.com/xinntao/Real-ESRGAN.git ; fi
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then pip install numba==0.57.1 chardet ; fi
+RUN if [ "$USE_REALESRGAN" = "1" ] ; then cd Real-ESRGAN && python3 setup.py develop ; fi
+
 COPY api/ .
 EXPOSE 8000
 
