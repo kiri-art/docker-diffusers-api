@@ -130,3 +130,4 @@ dmypy.json
 permutations
 tests/output
 node_modules
+.devcontainer/local.env

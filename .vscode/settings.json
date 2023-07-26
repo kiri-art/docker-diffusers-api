@@ -3,12 +3,15 @@
     "--cov=.",
     "--cov-report=xml",
     "--ignore=test.py",
+    "--ignore=tests/integration",
+    "--ignore=diffusers",
     // "unit_tests.py"
     // "."
   ],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.defaultInterpreterPath": "/opt/conda/envs/xformers/bin/python",
+  // "python.defaultInterpreterPath": "/opt/conda/envs/xformers/bin/python",
+  "python.defaultInterpreterPath": "/opt/conda/bin/python",
   "runItOn": {
     "commands": [
         {
