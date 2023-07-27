@@ -29,22 +29,22 @@ from hashlib import sha256
 from threading import Timer
 import extras
 
+from lib.textual_inversions import handle_textual_inversions
+from lib.vars import (
+    RUNTIME_DOWNLOADS,
+    USE_DREAMBOOTH,
+    MODEL_ID,
+    PIPELINE,
+    HF_AUTH_TOKEN,
+    HOME,
+    MODELS_DIR,
+)
 
-RUNTIME_DOWNLOADS = os.getenv("RUNTIME_DOWNLOADS") == "1"
-USE_DREAMBOOTH = os.getenv("USE_DREAMBOOTH") == "1"
 if USE_DREAMBOOTH:
     from train_dreambooth import TrainDreamBooth
-
-MODEL_ID = os.environ.get("MODEL_ID")
-PIPELINE = os.environ.get("PIPELINE")
-HF_AUTH_TOKEN = os.getenv("HF_AUTH_TOKEN")
-HOME = os.path.expanduser("~")
-MODELS_DIR = os.path.join(HOME, ".cache", "diffusers-api")
-
 print(os.environ.get("USE_PATCHMATCH"))
 if os.environ.get("USE_PATCHMATCH") == "1":
     from PyPatchMatch import patch_match
-
 
 torch.set_grad_enabled(False)
 always_normalize_model_id = None
@@ -332,6 +332,9 @@ async def inference(all_inputs: dict, response) -> dict:
     is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
 
+    textual_inversions = call_inputs.get("textual_inversions", [])
+    handle_textual_inversions(textual_inversions, model)
+
     # Better to use new lora_weights in next section
     attn_procs = call_inputs.get("attn_procs", None)
     if attn_procs is not last_attn_procs:
@@ -388,7 +391,7 @@ async def inference(all_inputs: dict, response) -> dict:
                 cache_fname = "lora_weights--" + fname
                 path = os.path.join(MODELS_DIR, cache_fname)
                 if not os.path.exists(path):
-                    storage.download_and_extract(path)
+                    storage.download_and_extract(path, status=status)
                 print("Load lora_weights `" + lora_weights + "` from `" + path + "`")
                 pipeline.load_lora_weights(
                     MODELS_DIR, weight_name=cache_fname, local_files_only=True
