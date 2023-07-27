@@ -4,11 +4,12 @@
 
 1. [General Hints](#general)
 1. [Development / Editor Setup](#editors)
-  1. [Visual Studio Code (vscode)](#vscode)
-1. [Testing][#testing]
+    1. [Visual Studio Code (vscode)](#vscode)
+1. [Testing](#testing)
 1. [Using Buildkit](#buildkit)
 1. [Local HTTP(S) Caching Proxy](#caching)
 1. [Local S3 Server](#local-s3-server)
+1. [Stop on Suspend](#stop-on-suspend)
 
 <a name="general"></a>
 ## General
@@ -138,3 +139,31 @@ Typical policy:
 
 Then set the **build-arg** `AWS_S3_ENDPOINT_URL="http://172.17.0.1:9000"`
 or as appropriate if you've changed the default docker network.
+
+<a name="stop-on-suspend"></a>
+## Stop on Suspend
+
+Maybe it's just me, but frequently I'll have issues when suspending with
+the container running (I guess its a CUDA issue), either a freeze on resume,
+or a stuck-forever defunct process.  I found it useful to automatically stop
+the container / process on suspend.
+
+I'm running ArchLinux and set up a `systemd` suspend hook as described
+[here](https://wiki.archlinux.org/title/Power_management#Sleep_hooks), to
+call a script, which contains:
+
+```bash
+# Stop a matching docker container
+PID=`docker ps -qf ancestor=gadicc/diffusers-api`
+if [ ! -z $PID ] ; then
+	echo "Stopping diffusers-api pid $PID"
+	docker stop $PID
+fi
+
+# For a VSCode devcontainer, just kill the watchmedo process.
+PID=`docker ps -qf volume=/home/dragon/root-cache`
+if [ ! -z $PID ] ; then
+	echo "Stopping watchmedo in container $PID"
+	docker exec $PID /bin/bash -c 'kill `pidof -sx watchmedo`'
+fi
+```
