@@ -23,7 +23,6 @@ from download import download_model, normalize_model_id
 import traceback
 from precision import MODEL_REVISION, MODEL_PRECISION
 from device import device, device_id, device_name
-from diffusers.models.cross_attention import CrossAttnProcessor
 from utils import Storage
 from hashlib import sha256
 from threading import Timer
@@ -338,39 +337,40 @@ async def inference(all_inputs: dict, response) -> dict:
     # Better to use new lora_weights in next section
     attn_procs = call_inputs.get("attn_procs", None)
     if attn_procs is not last_attn_procs:
-        print(
-            "[DEPRECATED] Using `attn_procs` for LoRAs is deprecated. "
-            + "Please use `lora_weights` instead."
-        )
-        last_attn_procs = attn_procs
         if attn_procs:
-            storage = Storage(attn_procs, no_raise=True)
-            if storage:
-                hash = sha256(attn_procs.encode("utf-8")).hexdigest()
-                attn_procs_from_safetensors = call_inputs.get(
-                    "attn_procs_from_safetensors", None
-                )
-                fname = storage.url.split("/").pop()
-                if attn_procs_from_safetensors and not re.match(
-                    r".safetensors", attn_procs
-                ):
-                    fname += ".safetensors"
-                if True:
-                    # TODO, way to specify explicit name
-                    path = os.path.join(
-                        MODELS_DIR, "attn_proc--url_" + hash[:7] + "--" + fname
-                    )
-                attn_procs = path
-                if not os.path.exists(path):
-                    storage.download_and_extract(path)
-            print("Load attn_procs " + attn_procs)
-            # Workaround https://github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119
-            if storage and not re.search(r".safetensors", attn_procs):
-                attn_procs = torch.load(attn_procs, map_location="cpu")
-            pipeline.unet.load_attn_procs(attn_procs)
-        else:
-            print("Clearing attn procs")
-            pipeline.unet.set_attn_processor(CrossAttnProcessor())
+            raise Exception(
+                "[REMOVED] Using `attn_procs` for LoRAs is no longer supported. "
+                + "Please use `lora_weights` instead."
+            )
+        last_attn_procs = attn_procs
+    #     if attn_procs:
+    #         storage = Storage(attn_procs, no_raise=True)
+    #         if storage:
+    #             hash = sha256(attn_procs.encode("utf-8")).hexdigest()
+    #             attn_procs_from_safetensors = call_inputs.get(
+    #                 "attn_procs_from_safetensors", None
+    #             )
+    #             fname = storage.url.split("/").pop()
+    #             if attn_procs_from_safetensors and not re.match(
+    #                 r".safetensors", attn_procs
+    #             ):
+    #                 fname += ".safetensors"
+    #             if True:
+    #                 # TODO, way to specify explicit name
+    #                 path = os.path.join(
+    #                     MODELS_DIR, "attn_proc--url_" + hash[:7] + "--" + fname
+    #                 )
+    #             attn_procs = path
+    #             if not os.path.exists(path):
+    #                 storage.download_and_extract(path)
+    #         print("Load attn_procs " + attn_procs)
+    #         # Workaround https://github.com/huggingface/diffusers/pull/2448#issuecomment-1453938119
+    #         if storage and not re.search(r".safetensors", attn_procs):
+    #             attn_procs = torch.load(attn_procs, map_location="cpu")
+    #         pipeline.unet.load_attn_procs(attn_procs)
+    #     else:
+    #         print("Clearing attn procs")
+    #         pipeline.unet.set_attn_processor(CrossAttnProcessor())
 
     # Currently we only support a single string, but we should allow
     # and array too in anticipation of multi-LoRA support in diffusers
@@ -380,11 +380,10 @@ async def inference(all_inputs: dict, response) -> dict:
     if last_lora_weights != lora_weights_joined:
         last_lora_weights = lora_weights_joined
         print("Unloading previous LoRA weights")
-        pipeline.unet.set_attn_processor(CrossAttnProcessor())
-        # pipeline.unload_lora_weights()
+        pipeline.unload_lora_weights()
 
         if type(lora_weights) is not list:
-            lora_weights = [lora_weights]
+            lora_weights = [lora_weights] if lora_weights else []
 
         if len(lora_weights) > 0:
             for weights in lora_weights:

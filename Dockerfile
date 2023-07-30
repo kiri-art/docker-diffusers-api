@@ -46,7 +46,7 @@ ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 # [b9feed8] move to 0.19.0dev (#4048)
-ARG DIFFUSERS_VERSION="b9feed87958c27074b0618cc543696c05f58e2c9"
+ARG DIFFUSERS_VERSION="aae27262f408957ff53c64b3a18581959e8fd8e0"
 ENV DIFFUSERS_VERSION=${DIFFUSERS_VERSION}
 
 RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout ${DIFFUSERS_VERSION}
