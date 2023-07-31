@@ -122,6 +122,7 @@ def truncateInputs(inputs: dict):
 # last_xformers_memory_efficient_attention = {}
 last_attn_procs = None
 last_lora_weights = None
+cross_attention_kwargs = None
 
 
 # Inference is ran for every server call
@@ -135,6 +136,7 @@ async def inference(all_inputs: dict, response) -> dict:
     global always_normalize_model_id
     global last_attn_procs
     global last_lora_weights
+    global cross_attention_kwargs
 
     clearSession()
 
@@ -379,6 +381,7 @@ async def inference(all_inputs: dict, response) -> dict:
     lora_weights_joined = json.dumps(lora_weights)
     if last_lora_weights != lora_weights_joined:
         last_lora_weights = lora_weights_joined
+        cross_attention_kwargs = {}
         print("Unloading previous LoRA weights")
         pipeline.unload_lora_weights()
 
@@ -390,6 +393,12 @@ async def inference(all_inputs: dict, response) -> dict:
                 storage = Storage(weights, no_raise=True, status=status)
                 if storage:
                     storage_query_fname = storage.query.get("fname")
+                    storage_query_scale = (
+                        float(storage.query.get("scale")[0])
+                        if storage.query.get("scale")
+                        else 1
+                    )
+                    cross_attention_kwargs.update({"scale": storage_query_scale})
                     if storage_query_fname:
                         fname = storage_query_fname[0]
                     else:
@@ -413,9 +422,22 @@ async def inference(all_inputs: dict, response) -> dict:
         print("No changes to LoRAs since last call")
 
     # TODO, generalize
-    cross_attention_kwargs = model_inputs.get("cross_attention_kwargs", None)
-    if isinstance(cross_attention_kwargs, str):
-        model_inputs["cross_attention_kwargs"] = json.loads(cross_attention_kwargs)
+    mi_cross_attention_kwargs = model_inputs.get("cross_attention_kwargs", None)
+    if mi_cross_attention_kwargs:
+        model_inputs.pop("cross_attention_kwargs")
+        if isinstance(mi_cross_attention_kwargs, str):
+            cross_attention_kwargs.update(json.loads(mi_cross_attention_kwargs))
+        elif type(mi_cross_attention_kwargs) == dict:
+            cross_attention_kwargs.update(mi_cross_attention_kwargs)
+        else:
+            return {
+                "$error": {
+                    "code": "INVALID_CROSS_ATTENTION_KWARGS",
+                    "message": "`cross_attention_kwargs` should be a dict or json string",
+                }
+            }
+
+    print({"cross_attention_kwargs": cross_attention_kwargs})
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
@@ -555,6 +577,7 @@ async def inference(all_inputs: dict, response) -> dict:
                 getattr(pipeline, custom_pipeline_method)
                 if custom_pipeline_method
                 else pipeline,
+                cross_attention_kwargs=cross_attention_kwargs,
                 callback=callback,
                 **model_inputs,
             )
