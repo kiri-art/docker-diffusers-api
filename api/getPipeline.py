@@ -65,8 +65,11 @@ def getPipelineForModel(
     start = time.time()
 
     if hasattr(diffusers_pipelines, pipeline_name):
-        if hasattr(model, "components"):
-            pipeline = getattr(diffusers_pipelines, pipeline_name)(**model.components)
+        pipeline_class = getattr(diffusers_pipelines, pipeline_name)
+        if hasattr(pipeline_class, "from_pipe"):
+            pipeline = pipeline_class.from_pipe(model)
+        elif hasattr(model, "components"):
+            pipeline = pipeline_class(**model.components)
         else:
             pipeline = getattr(diffusers_pipelines, pipeline_name)(
                 vae=model.vae,

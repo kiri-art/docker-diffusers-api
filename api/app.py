@@ -28,7 +28,10 @@ from hashlib import sha256
 from threading import Timer
 import extras
 
+from diffusers import StableDiffusionXLPipeline
+
 from lib.textual_inversions import handle_textual_inversions
+from lib.prompts import prepare_prompts
 from lib.vars import (
     RUNTIME_DOWNLOADS,
     USE_DREAMBOOTH,
@@ -290,7 +293,7 @@ async def inference(all_inputs: dict, response) -> dict:
     if PIPELINE == "ALL":
         pipeline_name = call_inputs.get("PIPELINE", None)
         if not pipeline_name:
-            pipeline_name = "StableDiffusionPipeline"
+            pipeline_name = "AutoPipelineForText2Image"
             result["$meta"].update({"PIPELINE": pipeline_name})
 
         pipeline = getPipelineForModel(
@@ -329,7 +332,11 @@ async def inference(all_inputs: dict, response) -> dict:
         }
 
     safety_checker = call_inputs.get("safety_checker", True)
-    pipeline.safety_checker = model.safety_checker if safety_checker else None
+    pipeline.safety_checker = (
+        model.safety_checker
+        if safety_checker and hasattr(model, "safety_checker")
+        else None
+    )
     is_url = call_inputs.get("is_url", False)
     image_decoder = getFromUrl if is_url else decodeBase64Image
 
@@ -399,6 +406,8 @@ async def inference(all_inputs: dict, response) -> dict:
                         else 1
                     )
                     cross_attention_kwargs.update({"scale": storage_query_scale})
+                    # https://github.com/damian0815/compel/issues/42#issuecomment-1656989385
+                    pipeline._lora_scale = storage_query_scale
                     if storage_query_fname:
                         fname = storage_query_fname[0]
                     else:
@@ -569,8 +578,22 @@ async def inference(all_inputs: dict, response) -> dict:
                 "inference", step / model_inputs.get("num_inference_steps", 50)
             )
 
+    is_sdxl = isinstance(model, StableDiffusionXLPipeline)
+    print("is_sdxl", is_sdxl)
+
     with torch.inference_mode():
         custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
+        print(
+            pipeline,
+            {
+                "cross_attention_kwargs": cross_attention_kwargs,
+                "callback": callback,
+                "**model_inputs": model_inputs,
+            },
+        )
+
+        if call_inputs.get("compel_prompts", False):
+            prepare_prompts(pipeline, model_inputs, is_sdxl)
 
         try:
             async_pipeline = asyncio.to_thread(
@@ -581,13 +604,13 @@ async def inference(all_inputs: dict, response) -> dict:
                 callback=callback,
                 **model_inputs,
             )
-            if call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
-                # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
-                # still broken in 0.5.1
-                with autocast(device_id):
-                    images = (await async_pipeline).images
-            else:
-                images = (await async_pipeline).images
+            # if call_inputs.get("PIPELINE") != "StableDiffusionPipeline":
+            #    # autocast im2img and inpaint which are broken in 0.4.0, 0.4.1
+            #    # still broken in 0.5.1
+            #    with autocast(device_id):
+            #        images = (await async_pipeline).images
+            # else:
+            images = (await async_pipeline).images
 
         except Exception as err:
             return {

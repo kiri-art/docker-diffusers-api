@@ -1,6 +1,6 @@
 import torch
 import os
-from diffusers import pipelines as _pipelines, StableDiffusionPipeline
+from diffusers import pipelines as _pipelines, AutoPipelineForText2Image
 from getScheduler import getScheduler, DEFAULT_SCHEDULER
 from precision import torch_dtype_from_precision
 from device import device
@@ -25,7 +25,14 @@ MODEL_IDS = [
 ]
 
 
-def loadModel(model_id: str, load=True, precision=None, revision=None, send_opts={}):
+def loadModel(
+    model_id: str,
+    load=True,
+    precision=None,
+    revision=None,
+    send_opts={},
+    pipeline_class=AutoPipelineForText2Image,
+):
     torch_dtype = torch_dtype_from_precision(precision)
     if revision == "":
         revision = None
@@ -46,9 +53,7 @@ def loadModel(model_id: str, load=True, precision=None, revision=None, send_opts
         + (f" ({revision})" if revision else "")
     )
 
-    pipeline = (
-        StableDiffusionPipeline if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
-    )
+    pipeline = pipeline_class if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
 
     scheduler = getScheduler(model_id, DEFAULT_SCHEDULER, not load)
 
