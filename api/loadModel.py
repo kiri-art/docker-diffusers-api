@@ -54,6 +54,7 @@ def loadModel(
     )
 
     pipeline = pipeline_class if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
+    print("pipeline", pipeline_class)
 
     scheduler = getScheduler(model_id, DEFAULT_SCHEDULER, not load)
 

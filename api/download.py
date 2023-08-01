@@ -47,6 +47,7 @@ async def download_model(
     hf_model_id=None,
     model_precision=None,
     send_opts={},
+    pipeline_class=None,
 ):
     print(
         "download_model",
@@ -104,12 +105,17 @@ async def download_model(
                     False,
                     precision=model_precision,
                     revision=model_revision,
+                    pipeline_class=pipeline_class,
                 )  # download
                 await send("download", "done", {}, send_opts)
 
             print("load")
             model = loadModel(
-                hf_model_id, True, precision=model_precision, revision=model_revision
+                hf_model_id,
+                True,
+                precision=model_precision,
+                revision=model_revision,
+                pipeline_class=pipeline_class,
             )  # load
             # dir = "models--" + model_id.replace("/", "--") + "--dda"
             dir = os.path.join(MODELS_DIR, normalized_model_id)
@@ -153,6 +159,7 @@ async def download_model(
                 load=False,
                 precision=model_precision,
                 revision=model_revision,
+                pipeline_class=pipeline_class,
             )
 
     # if USE_DREAMBOOTH:

@@ -28,7 +28,12 @@ from hashlib import sha256
 from threading import Timer
 import extras
 
-from diffusers import StableDiffusionXLPipeline
+from diffusers import (
+    StableDiffusionXLPipeline,
+    StableDiffusionXLImg2ImgPipeline,
+    StableDiffusionXLInpaintPipeline,
+    pipelines as diffusers_pipelines,
+)
 
 from lib.textual_inversions import handle_textual_inversions
 from lib.prompts import prepare_prompts
@@ -221,6 +226,9 @@ async def inference(all_inputs: dict, response) -> dict:
         checkpoint_config_url = call_inputs.get("CHECKPOINT_CONFIG_URL", None)
         normalized_model_id = normalize_model_id(model_id, model_revision)
         model_dir = os.path.join(MODELS_DIR, normalized_model_id)
+        pipeline_name = call_inputs.get("PIPELINE", None)
+        if pipeline_name:
+            pipeline_class = getattr(diffusers_pipelines, pipeline_name)
         if last_model_id != normalized_model_id:
             # if not downloaded_models.get(normalized_model_id, None):
             if not os.path.isdir(model_dir):
@@ -242,6 +250,7 @@ async def inference(all_inputs: dict, response) -> dict:
                     hf_model_id=hf_model_id,
                     model_precision=model_precision,
                     send_opts=send_opts,
+                    pipeline_class=pipeline_class,
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
@@ -257,6 +266,7 @@ async def inference(all_inputs: dict, response) -> dict:
                 precision=model_precision,
                 revision=model_revision,
                 send_opts=send_opts,
+                pipeline_class=pipeline_class,
             )
             await send(
                 "loadModel", "done", {"startRequestId": startRequestId}, send_opts
@@ -387,10 +397,12 @@ async def inference(all_inputs: dict, response) -> dict:
     lora_weights = call_inputs.get("lora_weights", None)
     lora_weights_joined = json.dumps(lora_weights)
     if last_lora_weights != lora_weights_joined:
+        if last_lora_weights != None and last_lora_weights != "[]":
+            print("Unloading previous LoRA weights")
+            pipeline.unload_lora_weights()
+
         last_lora_weights = lora_weights_joined
         cross_attention_kwargs = {}
-        print("Unloading previous LoRA weights")
-        pipeline.unload_lora_weights()
 
         if type(lora_weights) is not list:
             lora_weights = [lora_weights] if lora_weights else []
@@ -578,7 +590,11 @@ async def inference(all_inputs: dict, response) -> dict:
                 "inference", step / model_inputs.get("num_inference_steps", 50)
             )
 
-    is_sdxl = isinstance(model, StableDiffusionXLPipeline)
+    is_sdxl = (
+        isinstance(model, StableDiffusionXLPipeline)
+        or isinstance(model, StableDiffusionXLImg2ImgPipeline)
+        or isinstance(model, StableDiffusionXLInpaintPipeline)
+    )
     print("is_sdxl", is_sdxl)
 
     with torch.inference_mode():
