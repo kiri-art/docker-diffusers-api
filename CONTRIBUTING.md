@@ -33,6 +33,13 @@ This repo includes VSCode settings that allow for a) editing inside a docker con
 1. Open your docker-diffusers-api folder, you'll get a popup in the bottom right that a dev container environment was detected, click "reload in container"
 1. Look for the "( ) Watch" on status bar and click it so it changes to "( ) XX Coverage"
 
+**Live Development**
+
+1. **Run Task** (either Ctrl-Shift-P and "Run Task", or in Terminals, the Plus ("+") DROPDOWN selector and choose, "Run Task..." at the bottom)
+1. Choose **Watching Server**.  Port 8000 will be forwarded.  The server will be reloaded
+on every file safe (make sure to give it enough time to fully load before sending another
+request, otherwise that request will hang).
+
 <a name="testing"></a>
 ## Testing
 
