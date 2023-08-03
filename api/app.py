@@ -254,6 +254,7 @@ async def inference(all_inputs: dict, response) -> dict:
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
+            cross_attention_kwargs = None
             if model:
                 model.to("cpu")  # Necessary to avoid a memory leak
             await send(
@@ -287,6 +288,7 @@ async def inference(all_inputs: dict, response) -> dict:
     if MODEL_ID == "ALL":
         if last_model_id != normalized_model_id:
             clearPipelines()
+            cross_attention_kwargs = None
             model = loadModel(normalized_model_id, send_opts=send_opts)
             last_model_id = normalized_model_id
     else:
@@ -447,8 +449,12 @@ async def inference(all_inputs: dict, response) -> dict:
     if mi_cross_attention_kwargs:
         model_inputs.pop("cross_attention_kwargs")
         if isinstance(mi_cross_attention_kwargs, str):
+            if not cross_attention_kwargs:
+                cross_attention_kwargs = {}
             cross_attention_kwargs.update(json.loads(mi_cross_attention_kwargs))
         elif type(mi_cross_attention_kwargs) == dict:
+            if not cross_attention_kwargs:
+                cross_attention_kwargs = {}
             cross_attention_kwargs.update(mi_cross_attention_kwargs)
         else:
             return {
@@ -459,6 +465,8 @@ async def inference(all_inputs: dict, response) -> dict:
             }
 
     print({"cross_attention_kwargs": cross_attention_kwargs})
+    if cross_attention_kwargs:
+        model_inputs.update({"cross_attention_kwargs": cross_attention_kwargs})
 
     # Parse out your arguments
     # prompt = model_inputs.get("prompt", None)
@@ -595,14 +603,11 @@ async def inference(all_inputs: dict, response) -> dict:
         or isinstance(model, StableDiffusionXLImg2ImgPipeline)
         or isinstance(model, StableDiffusionXLInpaintPipeline)
     )
-    print("is_sdxl", is_sdxl)
 
     with torch.inference_mode():
         custom_pipeline_method = call_inputs.get("custom_pipeline_method", None)
         print(
-            pipeline,
             {
-                "cross_attention_kwargs": cross_attention_kwargs,
                 "callback": callback,
                 "**model_inputs": model_inputs,
             },
@@ -616,7 +621,6 @@ async def inference(all_inputs: dict, response) -> dict:
                 getattr(pipeline, custom_pipeline_method)
                 if custom_pipeline_method
                 else pipeline,
-                cross_attention_kwargs=cross_attention_kwargs,
                 callback=callback,
                 **model_inputs,
             )
