@@ -16,7 +16,12 @@ import numpy as np
 import skimage
 import skimage.measure
 from getScheduler import getScheduler, SCHEDULERS
-from getPipeline import getPipelineForModel, listAvailablePipelines, clearPipelines
+from getPipeline import (
+    getPipelineClass,
+    getPipelineForModel,
+    listAvailablePipelines,
+    clearPipelines,
+)
 import re
 import requests
 from download import download_model, normalize_model_id
@@ -228,7 +233,7 @@ async def inference(all_inputs: dict, response) -> dict:
         model_dir = os.path.join(MODELS_DIR, normalized_model_id)
         pipeline_name = call_inputs.get("PIPELINE", None)
         if pipeline_name:
-            pipeline_class = getattr(diffusers_pipelines, pipeline_name)
+            pipeline_class = getPipelineClass(pipeline_name)
         if last_model_id != normalized_model_id:
             # if not downloaded_models.get(normalized_model_id, None):
             if not os.path.isdir(model_dir):
@@ -250,7 +255,7 @@ async def inference(all_inputs: dict, response) -> dict:
                     hf_model_id=hf_model_id,
                     model_precision=model_precision,
                     send_opts=send_opts,
-                    pipeline_class=pipeline_class,
+                    pipeline_class=pipeline_class if pipeline_name else None,
                 )
                 # downloaded_models.update({normalized_model_id: True})
             clearPipelines()
@@ -267,7 +272,7 @@ async def inference(all_inputs: dict, response) -> dict:
                 precision=model_precision,
                 revision=model_revision,
                 send_opts=send_opts,
-                pipeline_class=pipeline_class,
+                pipeline_class=pipeline_class if pipeline_name else None,
             )
             await send(
                 "loadModel", "done", {"startRequestId": startRequestId}, send_opts

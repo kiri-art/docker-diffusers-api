@@ -31,7 +31,7 @@ def loadModel(
     precision=None,
     revision=None,
     send_opts={},
-    pipeline_class=AutoPipelineForText2Image,
+    pipeline_class=None,
 ):
     torch_dtype = torch_dtype_from_precision(precision)
     if revision == "":
@@ -44,17 +44,22 @@ def loadModel(
             "load": load,
             "precision": precision,
             "revision": revision,
+            "pipeline_class": pipeline_class,
         },
     )
+
+    if not pipeline_class:
+        pipeline_class = AutoPipelineForText2Image
+
+    pipeline = pipeline_class if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
+    print("pipeline", pipeline_class)
+
     print(
         ("Loading" if load else "Downloading")
         + " model: "
         + model_id
         + (f" ({revision})" if revision else "")
     )
-
-    pipeline = pipeline_class if PIPELINE == "ALL" else getattr(_pipelines, PIPELINE)
-    print("pipeline", pipeline_class)
 
     scheduler = getScheduler(model_id, DEFAULT_SCHEDULER, not load)
 

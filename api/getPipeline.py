@@ -48,6 +48,13 @@ def clearPipelines():
     _pipelines = {}
 
 
+def getPipelineClass(pipeline_name: str):
+    if hasattr(diffusers_pipelines, pipeline_name):
+        return getattr(diffusers_pipelines, pipeline_name)
+    elif pipeline_name in availableCommunityPipelines():
+        return DiffusionPipeline
+
+
 def getPipelineForModel(
     pipeline_name: str, model, model_id, model_revision, model_precision
 ):
