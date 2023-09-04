@@ -1,3 +1,30 @@
+# [1.7.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.6.0...v1.7.0) (2023-09-04)
+
+
+### Bug Fixes
+
+* **addons:** async TI download status, LoRA improvements ([de8cfdc](https://github.com/kiri-art/docker-diffusers-api/commit/de8cfdc63d7ae46bed90862fe3bffe65534d3e55))
+* **circleci:** pytest --ignore=Real-ESRGAN ([d7038b5](https://github.com/kiri-art/docker-diffusers-api/commit/d7038b5aa54c8b3dab2149ea773e007b9c0202ce))
+* **circleci:** remove conda from pytest call ([2f29af2](https://github.com/kiri-art/docker-diffusers-api/commit/2f29af2c012ef38ed2e2bc0ec116b59b8c429e57))
+* **diffusers:** bump to aae2726 (jul30) post v0.19.2 + fixes ([6c0a10a](https://github.com/kiri-art/docker-diffusers-api/commit/6c0a10a743abb7cd12cce9bf1cc6a598c6804e92))
+* **Dockerfile:** -yqq for apt-get, apt-utils, extra deps ([bf470da](https://github.com/kiri-art/docker-diffusers-api/commit/bf470dabb9b3c6d7f16d11126ffef0f4ee4806f5))
+* **Dockerfile:** TZ tzdata fix ([9c5d911](https://github.com/kiri-art/docker-diffusers-api/commit/9c5d911aafedc1a2dab94a5c1c1c25aa4bc0ce7a))
+* **misc:** fix failing tests, pipeline init in rare circumstances ([9338648](https://github.com/kiri-art/docker-diffusers-api/commit/933864893a35dfb9fa093b988a5b159af4e0a9ca))
+* **prime/update:** commit these useful utility scripts ([7b167c0](https://github.com/kiri-art/docker-diffusers-api/commit/7b167c0508e7a476d8c6719e056d6bdfa255e2d8))
+* **upsample:** return $meta for kiri ([b9dd6b7](https://github.com/kiri-art/docker-diffusers-api/commit/b9dd6b780005ad17090220fba99f0329b98f9c09))
+* **x_attn_kwargs:** only pass to pipeline if set ([3f1f980](https://github.com/kiri-art/docker-diffusers-api/commit/3f1f980930edb9bad28c6c026d31ca084887b442))
+
+
+### Features
+
+* **checkpoints:** use correct pipeline for "inpaint" in path ([16dd383](https://github.com/kiri-art/docker-diffusers-api/commit/16dd38327d291de29da012026a2ffcede0681526))
+* **loras:** ability to specify #?scale=0.1 -> cross_attn_kwargs ([747fc0d](https://github.com/kiri-art/docker-diffusers-api/commit/747fc0ddec1db91617fb01f4d7ef9b8291de221d))
+* **pytorch2:** bump deps, drop conda/xformers ([a3d8078](https://github.com/kiri-art/docker-diffusers-api/commit/a3d807896e2b0d831580b78be556fcc69be08353))
+* **sdxl,compel:** Support. AutoPipeline default, safety_check fix ([993be12](https://github.com/kiri-art/docker-diffusers-api/commit/993be124c2e5b0f04b1cf25ca285e3a6573ce19a))
+* **sdxl:** fix sd_xl, loras; ability to init load specific pipeline ([7e3af77](https://github.com/kiri-art/docker-diffusers-api/commit/7e3af77167b58481d3c974ae33c3991ef976fc28))
+* **textualInversion:** very early support ([2babd53](https://github.com/kiri-art/docker-diffusers-api/commit/2babd539a6fcb396bb1f323fe9c50cdccb91cf96))
+* **upsample:** initial RealESRGAN support for runtime downloads ([8929508](https://github.com/kiri-art/docker-diffusers-api/commit/8929508adea8cd0e50ccf79aaea2a13354f37fa8))
+
 # [1.6.0](https://github.com/kiri-art/docker-diffusers-api/compare/v1.5.0...v1.6.0) (2023-07-12)
 
 
