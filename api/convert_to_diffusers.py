@@ -116,7 +116,7 @@ def main(
     # our defaults
     args.update(
         {
-            "checkpoint_path": path,
+            "checkpoint_path_or_dict": path,
             "original_config_file": configPath if checkpoint_config_url else None,
             "device": device_id,
             "extract_ema": True,
