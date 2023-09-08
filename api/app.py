@@ -635,7 +635,8 @@ async def inference(all_inputs: dict, response) -> dict:
             #    with autocast(device_id):
             #        images = (await async_pipeline).images
             # else:
-            images = (await async_pipeline).images
+            pipeResult = await async_pipeline
+            images = pipeResult.images
 
         except Exception as err:
             return {
@@ -660,6 +661,10 @@ async def inference(all_inputs: dict, response) -> dict:
         result = result | {"images_base64": images_base64}
     else:
         result = result | {"image_base64": images_base64[0]}
+
+    nsfw_content_detected = pipeResult.get("nsfw_content_detected", None)
+    if nsfw_content_detected:
+        result = result | {"nsfw_content_detected", nsfw_content_detected}
 
     # TODO, move and generalize in device.py
     mem_usage = 0
