@@ -8,58 +8,35 @@ websockets<11.0
 # diffusers==0.4.1
 # git+https://github.com/huggingface/diffusers@v0.5.1
 
-# transformers==4.26.0 until 2023-06-14
-transformers==4.30.2
-
-# scipy==1.9.3
-scipy==1.10.0
-
+transformers==4.33.1       # was 4.30.2 until 2023-09-08
+scipy==1.11.2              # was 1.10.0 until 2023-09-08
 requests_futures==1.0.0
-
-# numpy==1.23.5
-numpy==1.24.1
-
-scikit-image==0.19.3
-
-# accelerate==0.15.0 until 2023-06-14
-accelerate==0.20.3
-
-# triton==2.0.0.dev20221105
-# triton==2.0.0.dev20221202 until 2023-07-19
-triton==2.0.0.post1 # released 2023-03-17
-
+numpy==1.25.1              # was 1.24.1 until 2023-09-08
+scikit-image==0.21.0       # was 0.19.3 until 2023-09-08
+accelerate==0.22.0         # was 0.20.3 until 2023-09-08
+triton==2.1.0              # was 2.0.0.post1 until 2023-09-08
 ftfy==6.1.1
+spacy==3.6.1               # was 3.5.0 until 2023-09-08
+k-diffusion==0.0.16        # was 0.0.15 until 2023-09-08
+safetensors==0.3.3         # was 0.3.1 until 2023-09-08
 
-# spacy==3.4.3
-spacy==3.5.0
-
-# k-diffusion==0.0.12 until 2023-07-19
-k-diffusion==0.0.15
-
-# safetensors==0.2.8 until 2023-06-14
-safetensors==0.3.1
-
-# torch==1.12.1 until 2023-07-19
-torch==2.0.1
+torch==2.0.1               # was 1.12.1 until 2023-07-19
 torchvision==0.15.2
+pytorch_lightning==2.0.8   # was 1.9.2 until 2023-09-08
 
-# boto3==1.26.12
-boto3==1.26.57
-# botocore==1.29.27
-botocore==1.29.57
+boto3==1.28.43             # was 1.26.57 until 2023-09-08
+botocore==1.31.43          # was 1.29.57 until 2023-09-08
 
-# pytest==7.2.0
-pytest==7.2.1
-pytest-cov==4.0.0
-datasets==2.8.0
+pytest==7.4.2              # was 7.2.1 until 2023-09-08
+pytest-cov==4.1.0          # was 4.0.0 until 2023-09-08
 
+datasets==2.14.5           # was 2.8.0 until 2023-09-08
 omegaconf==2.3.0
-pytorch_lightning==1.9.2
-tensorboard==2.12.0
+tensorboard==2.14.0        # was 2.12.0 until 2023-09-08
 
 xtarfile[zstd]==0.1.0
 
-bitsandbytes==0.40.2 # released 2023-07-17
+bitsandbytes==0.41.1       # was 0.40.2 until 2023-09-08
 
 invisible-watermark==0.2.0 # released 2023-07-06
-compel==2.0.1 # released 2023-07-29
+compel==2.0.2              # was 2.0.1 until 2023-09-08
