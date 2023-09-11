@@ -32,6 +32,8 @@ from utils import Storage
 from hashlib import sha256
 from threading import Timer
 import extras
+import jxlpy
+from jxlpy import JXLImagePlugin
 
 from diffusers import (
     StableDiffusionXLPipeline,
@@ -649,9 +651,11 @@ async def inference(all_inputs: dict, response) -> dict:
             }
 
     images_base64 = []
+    image_format = call_inputs.get("image_format", "PNG")
+    image_opts = { "lossless": True } if image_format == "PNG" else {}
     for image in images:
         buffered = BytesIO()
-        image.save(buffered, format="PNG")
+        image.save(buffered, format=image_format, **image_opts)
         images_base64.append(base64.b64encode(buffered.getvalue()).decode("utf-8"))
 
     await send("inference", "done", {"startRequestId": startRequestId}, send_opts)
