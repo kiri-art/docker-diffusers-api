@@ -652,7 +652,7 @@ async def inference(all_inputs: dict, response) -> dict:
 
     images_base64 = []
     image_format = call_inputs.get("image_format", "PNG")
-    image_opts = { "lossless": True } if image_format == "PNG" else {}
+    image_opts = {"lossless": True} if image_format == "PNG" else {}
     for image in images:
         buffered = BytesIO()
         image.save(buffered, format=image_format, **image_opts)
@@ -668,7 +668,7 @@ async def inference(all_inputs: dict, response) -> dict:
 
     nsfw_content_detected = pipeResult.get("nsfw_content_detected", None)
     if nsfw_content_detected:
-        result = result | {"nsfw_content_detected", nsfw_content_detected}
+        result = result | {"nsfw_content_detected": nsfw_content_detected}
 
     # TODO, move and generalize in device.py
     mem_usage = 0
