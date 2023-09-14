@@ -35,11 +35,14 @@ import extras
 import jxlpy
 from jxlpy import JXLImagePlugin
 
+
 from diffusers import (
     StableDiffusionXLPipeline,
     StableDiffusionXLImg2ImgPipeline,
     StableDiffusionXLInpaintPipeline,
     pipelines as diffusers_pipelines,
+    AutoencoderTiny,
+    AutoencoderKL,
 )
 
 from lib.textual_inversions import handle_textual_inversions
@@ -62,6 +65,27 @@ if os.environ.get("USE_PATCHMATCH") == "1":
 
 torch.set_grad_enabled(False)
 always_normalize_model_id = None
+
+tiny_vae = None
+
+
+# still working on this, not in use yet.
+def tinyVae(origVae: AutoencoderKL):
+    global tiny_vae
+    if not tiny_vae:
+        tiny_vae = AutoencoderTiny.from_pretrained(
+            "madebyollin/taesd",
+            torch_dtype=torch.float16,
+            in_channels=origVae.config.in_channels,
+            out_channels=origVae.config.out_channels,
+            act_fn=origVae.config.act_fn,
+            latent_channels=origVae.config.latent_channels,
+            scaling_factor=origVae.config.scaling_factor,
+            force_upcast=origVae.config.force_upcast,
+        )
+        tiny_vae.to("cuda")
+
+    return tiny_vae
 
 
 # Init is ran on server startup
@@ -599,11 +623,20 @@ async def inference(all_inputs: dict, response) -> dict:
             )
 
     else:
+        vae = pipeline.vae
+        # vae = tinyVae(vae)
+        scaling_factor = vae.config.scaling_factor
+        image_processor = pipeline.image_processor
 
         def callback(step: int, timestep: int, latents: torch.FloatTensor):
             status.update(
                 "inference", step / model_inputs.get("num_inference_steps", 50)
             )
+
+            # with torch.no_grad():
+            #     image = vae.decode(latents / scaling_factor, return_dict=False)[0]
+            #     image = image_processor.postprocess(image, output_type="pil")[0]
+            #     image.save(f"step_{step}_img0.png")
 
     is_sdxl = (
         isinstance(model, StableDiffusionXLPipeline)
