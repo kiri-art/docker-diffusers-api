@@ -45,8 +45,8 @@ WORKDIR /api
 ADD requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-# [dfec61f] [examples] T2IAdapter training script (#4934)
-ARG DIFFUSERS_VERSION="dfec61f4b3797bb140b570456ff44a00d7f52502"
+# [Import] Add missing settings / Correct some dummy imports (#5036) - 2023-09-14
+ARG DIFFUSERS_VERSION="3aa641289c995b3a0ce4ea895a76eb1128eff30c"
 ENV DIFFUSERS_VERSION=${DIFFUSERS_VERSION}
 
 RUN git clone https://github.com/huggingface/diffusers && cd diffusers && git checkout ${DIFFUSERS_VERSION}
