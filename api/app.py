@@ -685,7 +685,9 @@ async def inference(all_inputs: dict, response) -> dict:
 
     images_base64 = []
     image_format = call_inputs.get("image_format", "PNG")
-    image_opts = {"lossless": True} if image_format == "PNG" else {}
+    image_opts = (
+        {"lossless": True} if image_format == "PNG" or image_format == "WEBP" else {}
+    )
     for image in images:
         buffered = BytesIO()
         image.save(buffered, format=image_format, **image_opts)
